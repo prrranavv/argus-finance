@@ -106,11 +106,6 @@ export function KeyMetrics() {
             {getChangeIcon(data.currentBalance.change)}
             <span className="ml-1">{formatChange(data.currentBalance.change)} from last month</span>
           </div>
-          {data.currentBalance.month && (
-            <div className="text-xs text-muted-foreground mt-1">
-              Latest: {data.currentBalance.month}
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -127,11 +122,6 @@ export function KeyMetrics() {
             {getChangeIcon(-data.creditCardBill.change)}
             <span className="ml-1">{formatChange(data.creditCardBill.change)} from last month</span>
           </div>
-          {data.creditCardBill.month && data.creditCardBill.paymentMonth && (
-            <div className="text-xs text-muted-foreground mt-1">
-              {data.creditCardBill.month} expenses due in {data.creditCardBill.paymentMonth}
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -148,11 +138,6 @@ export function KeyMetrics() {
             {getChangeIcon(data.realBalance.change)}
             <span className="ml-1">{formatChange(data.realBalance.change)} from last month</span>
           </div>
-          {data.realBalance.month && (
-            <div className="text-xs text-muted-foreground mt-1">
-              Bank balance minus pending dues as of {data.realBalance.month}
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -169,11 +154,6 @@ export function KeyMetrics() {
             {getChangeIcon(data.rewardPoints.change)}
             <span className="ml-1">{formatChange(data.rewardPoints.change)} from last month</span>
           </div>
-          {data.rewardPoints.month && (
-            <div className="text-xs text-muted-foreground mt-1">
-              HDFC Diners points as of {data.rewardPoints.month}
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

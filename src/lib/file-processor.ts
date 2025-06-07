@@ -2,16 +2,23 @@ import { openai, MODEL_CONFIG, SYSTEM_PROMPTS } from './openai';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { z } from 'zod';
 
-// Zod schema for structured output
+// Zod schema for structured output - updated to include all fields OpenAI provides
 const TransactionSchema = z.object({
   date: z.string().describe('Transaction date in YYYY-MM-DD format'),
   description: z.string().describe('Clean merchant/payee name'),
   amount: z.number().positive().describe('Transaction amount as positive number'),
   closingBalance: z.number().nullable().describe('Account balance after this transaction (null if not available)'),
+  openingBalance: z.number().nullable().optional().describe('Account balance before this transaction'),
+  runningBalance: z.number().nullable().optional().describe('Running balance during transaction'),
   type: z.enum(['income', 'expense']).describe('Transaction type'),
   category: z.string().describe('Transaction category'),
   accountType: z.enum(['Bank Account', 'Credit Card']).describe('Type of account - Bank Account or Credit Card'),
-  bankName: z.enum(['Axis', 'HDFC', 'HDFC Diners', 'HDFC Swiggy', 'Axis Magnus', 'Flipkart Axis']).describe('Bank or credit card name')
+  bankName: z.enum(['Axis', 'HDFC', 'HDFC Diners', 'HDFC Swiggy', 'Axis Magnus', 'Flipkart Axis']).describe('Bank or credit card name'),
+  creditLimit: z.number().nullable().optional().describe('Credit limit for credit cards'),
+  dueDate: z.string().optional().describe('Due date for credit card payments'),
+  rewardPoints: z.number().nullable().optional().describe('Reward points earned or balance'),
+  merchantCategory: z.string().optional().describe('Merchant category code or description'),
+  mode: z.string().optional().describe('Payment mode (UPI, Card, Cash, etc.)')
 });
 
 const TransactionsResponseSchema = z.object({
@@ -23,10 +30,17 @@ export interface TransactionData {
   description: string;
   amount: number;
   closingBalance: number | null;
+  openingBalance?: number | null;
+  runningBalance?: number | null;
   type: 'income' | 'expense';
   category: string;
   accountType: 'Bank Account' | 'Credit Card';
   bankName: 'Axis' | 'HDFC' | 'HDFC Diners' | 'HDFC Swiggy' | 'Axis Magnus' | 'Flipkart Axis';
+  creditLimit?: number | null;
+  dueDate?: string;
+  rewardPoints?: number | null;
+  merchantCategory?: string;
+  mode?: string;
 }
 
 export interface ProcessedStatement {

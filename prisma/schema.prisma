@@ -8,20 +8,27 @@ datasource db {
 }
 
 model Transaction {
-  id             String     @id @default(cuid())
-  date           DateTime
-  description    String
-  amount         Float
-  category       String?
-  type           String
-  source         String
-  accountType    String
-  bankName       String
-  statementId    String?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
-  closingBalance Float?
-  statement      Statement? @relation(fields: [statementId], references: [id])
+  id               String     @id @default(cuid())
+  date             DateTime
+  description      String
+  amount           Float
+  category         String?
+  type             String
+  source           String
+  accountType      String
+  bankName         String
+  statementId      String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  closingBalance   Float?
+  openingBalance   Float?
+  runningBalance   Float?
+  creditLimit      Float?
+  dueDate          String?
+  rewardPoints     Float?
+  merchantCategory String?
+  mode             String?
+  statement        Statement? @relation(fields: [statementId], references: [id])
 
   @@index([date, description, amount, type], map: "idx_transaction_duplicate")
 }

@@ -126,12 +126,23 @@ export async function POST(request: NextRequest) {
               description: transaction.description,
               amount: transaction.amount,
               closingBalance: transaction.closingBalance,
+              openingBalance: transaction.openingBalance || null,
+              runningBalance: transaction.runningBalance || null,
               category: transaction.category,
               type: transaction.type,
               source: file.type.includes('pdf') ? 'bank' : 'csv',
               accountType: transaction.accountType,
               bankName: transaction.bankName,
-              statementId: statement.id,
+              creditLimit: transaction.creditLimit || null,
+              dueDate: transaction.dueDate || null,
+              rewardPoints: transaction.rewardPoints || null,
+              merchantCategory: transaction.merchantCategory || null,
+              mode: transaction.mode || null,
+              statement: {
+                connect: {
+                  id: statement.id
+                }
+              }
             },
           })
         )
