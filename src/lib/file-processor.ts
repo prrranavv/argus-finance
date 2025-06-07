@@ -15,10 +15,10 @@ const TransactionSchema = z.object({
   accountType: z.enum(['Bank Account', 'Credit Card']).describe('Type of account - Bank Account or Credit Card'),
   bankName: z.enum(['Axis', 'HDFC', 'HDFC Diners', 'HDFC Swiggy', 'Axis Magnus', 'Flipkart Axis']).describe('Bank or credit card name'),
   creditLimit: z.number().nullable().optional().describe('Credit limit for credit cards'),
-  dueDate: z.string().optional().describe('Due date for credit card payments'),
+  dueDate: z.string().nullable().optional().describe('Due date for credit card payments'),
   rewardPoints: z.number().nullable().optional().describe('Reward points earned or balance'),
-  merchantCategory: z.string().optional().describe('Merchant category code or description'),
-  mode: z.string().optional().describe('Payment mode (UPI, Card, Cash, etc.)')
+  merchantCategory: z.string().nullable().optional().describe('Merchant category code or description'),
+  mode: z.string().nullable().optional().describe('Payment mode (UPI, Card, Cash, etc.)')
 });
 
 const TransactionsResponseSchema = z.object({
@@ -37,10 +37,10 @@ export interface TransactionData {
   accountType: 'Bank Account' | 'Credit Card';
   bankName: 'Axis' | 'HDFC' | 'HDFC Diners' | 'HDFC Swiggy' | 'Axis Magnus' | 'Flipkart Axis';
   creditLimit?: number | null;
-  dueDate?: string;
+  dueDate?: string | null;
   rewardPoints?: number | null;
-  merchantCategory?: string;
-  mode?: string;
+  merchantCategory?: string | null;
+  mode?: string | null;
 }
 
 export interface ProcessedStatement {

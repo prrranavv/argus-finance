@@ -8,8 +8,8 @@ export async function GET() {
     // Fetch all bank account transactions (excluding credit card)
     const bankTransactions = await prisma.transaction.findMany({
       where: {
-        source: 'bank'
-      },
+        accountType: 'Bank Account'
+      } as any,
       orderBy: {
         date: 'asc'
       }
@@ -31,7 +31,12 @@ export async function GET() {
       }
       
       // Use the latest closing balance for each bank-month combination
-      if (!bankBalances[bankName][monthKey] || new Date(transaction.date) > bankBalances[bankName][monthKey].date) {
+      // If same date, use the higher balance (more recent transaction on same day)
+      const currentEntry = bankBalances[bankName][monthKey];
+      if (!currentEntry || 
+          new Date(transaction.date) > currentEntry.date ||
+          (new Date(transaction.date).getTime() === currentEntry.date.getTime() && 
+           (transaction as any).closingBalance > (currentEntry.balance || 0))) {
         bankBalances[bankName][monthKey] = {
           balance: (transaction as any).closingBalance,
           date: new Date(transaction.date)
