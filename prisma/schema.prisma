@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Transaction {
+  id             String     @id @default(cuid())
+  date           DateTime
+  description    String
+  amount         Float
+  category       String?
+  type           String
+  source         String
+  accountType    String
+  bankName       String
+  statementId    String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  closingBalance Float?
+  statement      Statement? @relation(fields: [statementId], references: [id])
+
+  @@index([date, description, amount, type], map: "idx_transaction_duplicate")
+}
+
+model Statement {
+  id           String        @id @default(cuid())
+  fileName     String
+  fileType     String
+  fileSize     Int
+  fileHash     String?
+  fileContent  Bytes?
+  uploadedAt   DateTime      @default(now())
+  processed    Boolean       @default(false)
+  transactions Transaction[]
+
+  @@index([fileName, fileSize], map: "idx_statement_duplicate")
+  @@index([fileHash], map: "idx_statement_hash")
+}

@@ -1,103 +1,179 @@
+'use client';
+
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UploadModal } from "@/components/upload-modal";
+import { UploadedStatementsModal } from "@/components/uploaded-statements-modal";
+import { AccountBalanceChart } from "@/components/account-balance-chart";
+import { MonthlySummary } from "@/components/monthly-summary";
+import { CreditCardBalanceChart } from "@/components/credit-card-balance-chart";
+import { CreditCardMonthlySummary } from "@/components/credit-card-monthly-summary";
+import { KeyMetrics } from "@/components/key-metrics";
+import Link from "next/link";
 import Image from "next/image";
+import { BarChart3, Brain, CreditCard } from "lucide-react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [selectedBank, setSelectedBank] = useState('Total');
+  const [selectedCreditCard, setSelectedCreditCard] = useState('Total');
+  const banks = ['Total', 'HDFC', 'Axis'];
+  const creditCards = ['Total', 'HDFC Diners', 'HDFC Swiggy', 'Axis Magnus', 'Axis Flipkart'];
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+  // Card image mapping
+  const getCardImage = (cardName: string) => {
+    const imageMap: Record<string, string> = {
+      'HDFC Diners': '/cardImages/dinersCard.png',
+      'HDFC Swiggy': '/cardImages/swiggyCard.png',
+      'Axis Magnus': '/cardImages/magnusCard.webp',
+      'Axis Flipkart': '/cardImages/flipkartCard.webp',
+    };
+    return imageMap[cardName];
+  };
+
+  return (
+    <div className="container mx-auto p-4 md:p-10 max-w-7xl">
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold tracking-tight">Personal Finance Dashboard</h1>
+        <p className="text-muted-foreground mt-2">Upload your financial statements and get AI-powered insights</p>
+      </div>
+      
+      {/* Main Action Cards */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle>Upload Statements</CardTitle>
+            <CardDescription>Upload your bank and credit card statements</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col flex-1">
+            <div className="flex-1"></div>
+            <div className="space-y-3">
+              <UploadModal />
+              <UploadedStatementsModal />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle>Spending Analysis</CardTitle>
+            <CardDescription>View your spending patterns and trends</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col flex-1">
+            <p className="text-sm text-muted-foreground mb-4">View your spending patterns and trends</p>
+            <div className="flex-1"></div>
+            <Link href="/transactions">
+              <Button variant="outline" className="w-full">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                View Transactions
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle>AI Insights</CardTitle>
+            <CardDescription>Get personalized financial insights</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col flex-1">
+            <p className="text-sm text-muted-foreground mb-4">Get personalized financial insights powered by GPT-4.5</p>
+            <div className="flex-1"></div>
+            <Button variant="outline" className="w-full" disabled>
+              <Brain className="mr-2 h-4 w-4" />
+              Coming Soon
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Key Metrics Section */}
+      <KeyMetrics />
+
+      {/* Bank Accounts Section */}
+      <div className="mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Bank Accounts</CardTitle>
+            <CardDescription>Select a bank to view account balance progression and monthly summary</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={selectedBank} onValueChange={setSelectedBank}>
+              <TabsList className="grid w-full grid-cols-3">
+                {banks.map(bank => (
+                  <TabsTrigger key={bank} value={bank}>
+                    {bank}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <TabsContent value={selectedBank} className="space-y-8 mt-6">
+                {/* Charts Section - Now above the table */}
+                <div>
+                  <AccountBalanceChart selectedBank={selectedBank} />
+                </div>
+                
+                {/* Monthly Summary Table */}
+                <div>
+                  <MonthlySummary selectedBank={selectedBank} />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Credit Cards Section */}
+      <div className="mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Credit Cards</CardTitle>
+            <CardDescription>Select a credit card to view outstanding balances and monthly spending</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs value={selectedCreditCard} onValueChange={setSelectedCreditCard}>
+              <TabsList className="grid w-full grid-cols-5 h-16">
+                {creditCards.map(card => (
+                  <TabsTrigger key={card} value={card} className="text-xs flex flex-col items-center gap-1 h-14 p-2">
+                    {card === 'Total' ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <CreditCard className="h-4 w-4" />
+                        <span className="text-[10px] font-medium">Total</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="relative w-8 h-5 rounded-sm overflow-hidden">
+                          <Image
+                            src={getCardImage(card)}
+                            alt={`${card} card`}
+                            fill
+                            className="object-cover"
+                            sizes="32px"
+                          />
+                        </div>
+                        <span className="text-[10px] font-medium leading-tight text-center">
+                          {card.replace('HDFC ', '').replace('Axis ', '')}
+                        </span>
+                      </div>
+                    )}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              <TabsContent value={selectedCreditCard} className="space-y-8 mt-6">
+                {/* Credit Card Balance Chart */}
+                <div>
+                  <CreditCardBalanceChart selectedCard={selectedCreditCard} />
+                </div>
+                
+                {/* Credit Card Monthly Summary */}
+                <div>
+                  <CreditCardMonthlySummary selectedCard={selectedCreditCard} />
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
