@@ -18,7 +18,7 @@ import { BarChart3, Brain, CreditCard, Eye, EyeOff } from "lucide-react";
 export default function Home() {
   const [selectedBank, setSelectedBank] = useState('Total');
   const [selectedCreditCard, setSelectedCreditCard] = useState('Total');
-  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+  const [isPrivacyMode, setIsPrivacyMode] = useState(true);
   const banks = ['Total', 'HDFC', 'Axis'];
   const creditCards = ['Total', 'HDFC Diners', 'HDFC Swiggy', 'Axis Magnus', 'Flipkart Axis'];
 

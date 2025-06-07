@@ -27,7 +27,7 @@ interface TransactionData {
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+  const [isPrivacyMode, setIsPrivacyMode] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
