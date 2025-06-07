@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { TransactionFilterTabs } from "@/components/transaction-filter-tabs";
+import { formatCurrencyInLakhs } from "@/lib/utils";
 
 interface Transaction {
   id: string;
@@ -22,23 +23,11 @@ interface Transaction {
 
 interface TransactionsListProps {
   transactions: Transaction[];
+  isPrivacyMode?: boolean;
 }
 
-export function TransactionsList({ transactions }: TransactionsListProps) {
+export function TransactionsList({ transactions, isPrivacyMode = false }: TransactionsListProps) {
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>(transactions);
-
-  const formatCurrency = (amount: number) => {
-    const absAmount = Math.abs(amount);
-    if (absAmount >= 100000) {
-      const lakhs = absAmount / 100000;
-      return `₹ ${lakhs.toFixed(2)} lakhs`;
-    } else if (absAmount >= 1000) {
-      const thousands = absAmount / 1000;
-      return `₹ ${thousands.toFixed(1)}K`;
-    } else {
-      return `₹ ${absAmount.toFixed(0)}`;
-    }
-  };
 
   const handleFilterChange = (filtered: Transaction[]) => {
     setFilteredTransactions(filtered);
@@ -100,11 +89,11 @@ export function TransactionsList({ transactions }: TransactionsListProps) {
                 }`}
               >
                 {transaction.type === 'income' ? '+' : '-'}
-                {formatCurrency(transaction.amount)}
+                {formatCurrencyInLakhs(transaction.amount, isPrivacyMode)}
               </div>
               {transaction.closingBalance !== null && (
                 <div className="text-xs text-muted-foreground">
-                  Balance: {formatCurrency(transaction.closingBalance)}
+                  Balance: {formatCurrencyInLakhs(transaction.closingBalance, isPrivacyMode)}
                 </div>
               )}
               <div className="text-xs text-muted-foreground capitalize">

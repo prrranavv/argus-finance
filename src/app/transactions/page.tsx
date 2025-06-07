@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { TransactionsList } from "@/components/transactions-list";
+import { TransactionMetrics } from "@/components/transaction-metrics";
 
 interface TransactionData {
   id: string;
@@ -26,6 +27,7 @@ interface TransactionData {
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,77 +61,58 @@ export default function TransactionsPage() {
     );
   }
 
-  // Calculate summary statistics
-  const totalTransactions = transactions.length;
-  const totalIncome = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
-  const totalExpenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const formatCurrency = (amount: number) => {
-    const absAmount = Math.abs(amount);
-    if (absAmount >= 100000) {
-      const lakhs = absAmount / 100000;
-      return `₹ ${lakhs.toFixed(2)} lakhs`;
-    } else if (absAmount >= 1000) {
-      const thousands = absAmount / 1000;
-      return `₹ ${thousands.toFixed(1)}K`;
-    } else {
-      return `₹ ${absAmount.toFixed(0)}`;
-    }
-  };
+  // Keep transactions for the TransactionsList component
 
   return (
     <div className="container mx-auto p-4 md:p-10 max-w-7xl">
       <div className="mb-8">
-        <div className="flex items-center space-x-4 mb-4">
+        <div className="flex items-center justify-between mb-4">
           <Link href="/">
             <Button variant="outline" size="sm">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Dashboard
             </Button>
           </Link>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsPrivacyMode(!isPrivacyMode)}
+            className="flex items-center space-x-2"
+          >
+            {isPrivacyMode ? (
+              <>
+                <EyeOff className="h-4 w-4" />
+                <span>Show Numbers</span>
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4" />
+                <span>Hide Numbers</span>
+              </>
+            )}
+          </Button>
         </div>
-        <h1 className="text-4xl font-bold tracking-tight">Transaction History</h1>
-        <p className="text-muted-foreground mt-2">Your processed financial data</p>
+        <h1 className="text-4xl font-bold tracking-tight">Transaction Analytics</h1>
+        <p className="text-muted-foreground mt-2">
+          Detailed insights from your financial data • Last 30 days
+        </p>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-8">
+      {/* Enhanced Metrics Section */}
+      <TransactionMetrics isPrivacyMode={isPrivacyMode} />
+
+      {/* Transactions List Section */}
+      <div className="mt-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold tracking-tight">All Transactions</h2>
+          <p className="text-muted-foreground mt-1">Complete transaction history with filters</p>
+        </div>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalTransactions}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Income</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses)}</div>
+          <CardContent className="pt-6">
+            <TransactionsList transactions={transactions} isPrivacyMode={isPrivacyMode} />
           </CardContent>
         </Card>
       </div>
-
-      {/* Transactions with Filter Tabs */}
-      <Card>
-        <CardContent className="pt-6">
-          <TransactionsList transactions={transactions} />
-        </CardContent>
-      </Card>
     </div>
   );
 } 

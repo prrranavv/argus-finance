@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrencyInLakhs } from '@/lib/utils';
+import { formatCurrencyInLakhs, formatPercentage, maskNumber } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface MetricData {
@@ -19,7 +19,11 @@ interface KeyMetricsData {
   rewardPoints: MetricData;
 }
 
-export function KeyMetrics() {
+interface KeyMetricsProps {
+  isPrivacyMode?: boolean;
+}
+
+export function KeyMetrics({ isPrivacyMode = false }: KeyMetricsProps) {
   const [data, setData] = useState<KeyMetricsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +48,9 @@ export function KeyMetrics() {
   }, []);
 
   const formatChange = (change: number) => {
+    if (isPrivacyMode) {
+      return "••%";
+    }
     const absChange = Math.abs(change);
     const sign = change > 0 ? '+' : change < 0 ? '-' : '';
     return `${sign}${absChange.toFixed(1)}%`;
@@ -100,7 +107,7 @@ export function KeyMetrics() {
             <div className="text-sm font-medium text-muted-foreground">CURRENT BANK BALANCE</div>
           </div>
           <div className="text-2xl font-bold text-green-600 mb-1">
-            {formatCurrencyInLakhs(data.currentBalance.value)}
+            {formatCurrencyInLakhs(data.currentBalance.value, isPrivacyMode)}
           </div>
           <div className={`flex items-center text-sm ${getChangeColor(data.currentBalance.change)}`}>
             {getChangeIcon(data.currentBalance.change)}
@@ -116,7 +123,7 @@ export function KeyMetrics() {
             <div className="text-sm font-medium text-muted-foreground">CREDIT CARD DUES</div>
           </div>
           <div className="text-2xl font-bold text-red-600 mb-1">
-            {formatCurrencyInLakhs(data.creditCardBill.value)}
+            {formatCurrencyInLakhs(data.creditCardBill.value, isPrivacyMode)}
           </div>
           <div className={`flex items-center text-sm ${getChangeColor(-data.creditCardBill.change)}`}>
             {getChangeIcon(-data.creditCardBill.change)}
@@ -132,7 +139,7 @@ export function KeyMetrics() {
             <div className="text-sm font-medium text-muted-foreground">AVAILABLE CREDIT</div>
           </div>
           <div className="text-2xl font-bold text-blue-600 mb-1">
-            {formatCurrencyInLakhs(data.realBalance.value)}
+            {formatCurrencyInLakhs(data.realBalance.value, isPrivacyMode)}
           </div>
           <div className={`flex items-center text-sm ${getChangeColor(data.realBalance.change)}`}>
             {getChangeIcon(data.realBalance.change)}
@@ -148,7 +155,7 @@ export function KeyMetrics() {
             <div className="text-sm font-medium text-muted-foreground">REWARD POINTS</div>
           </div>
           <div className="text-2xl font-bold text-purple-600 mb-1">
-            {data.rewardPoints.value.toLocaleString()}
+            {isPrivacyMode ? "••••" : data.rewardPoints.value.toLocaleString()}
           </div>
           <div className={`flex items-center text-sm ${getChangeColor(data.rewardPoints.change)}`}>
             {getChangeIcon(data.rewardPoints.change)}

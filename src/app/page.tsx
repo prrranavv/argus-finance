@@ -13,13 +13,14 @@ import { CreditCardMonthlySummary } from "@/components/credit-card-monthly-summa
 import { KeyMetrics } from "@/components/key-metrics";
 import Link from "next/link";
 import Image from "next/image";
-import { BarChart3, Brain, CreditCard } from "lucide-react";
+import { BarChart3, Brain, CreditCard, Eye, EyeOff } from "lucide-react";
 
 export default function Home() {
   const [selectedBank, setSelectedBank] = useState('Total');
   const [selectedCreditCard, setSelectedCreditCard] = useState('Total');
+  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
   const banks = ['Total', 'HDFC', 'Axis'];
-  const creditCards = ['Total', 'HDFC Diners', 'HDFC Swiggy', 'Axis Magnus', 'Axis Flipkart'];
+  const creditCards = ['Total', 'HDFC Diners', 'HDFC Swiggy', 'Axis Magnus', 'Flipkart Axis'];
 
   // Card image mapping
   const getCardImage = (cardName: string) => {
@@ -27,7 +28,7 @@ export default function Home() {
       'HDFC Diners': '/cardImages/dinersCard.png',
       'HDFC Swiggy': '/cardImages/swiggyCard.png',
       'Axis Magnus': '/cardImages/magnusCard.webp',
-      'Axis Flipkart': '/cardImages/flipkartCard.webp',
+      'Flipkart Axis': '/cardImages/flipkartCard.webp',
     };
     return imageMap[cardName];
   };
@@ -35,8 +36,30 @@ export default function Home() {
   return (
     <div className="container mx-auto p-4 md:p-10 max-w-7xl">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold tracking-tight">Personal Finance Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Upload your financial statements and get AI-powered insights</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight">Personal Finance Dashboard</h1>
+            <p className="text-muted-foreground mt-2">Upload your financial statements and get AI-powered insights</p>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsPrivacyMode(!isPrivacyMode)}
+            className="flex items-center space-x-2"
+          >
+            {isPrivacyMode ? (
+              <>
+                <EyeOff className="h-4 w-4" />
+                <span>Show Numbers</span>
+              </>
+            ) : (
+              <>
+                <Eye className="h-4 w-4" />
+                <span>Hide Numbers</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
       
       {/* Main Action Cards */}
@@ -89,7 +112,7 @@ export default function Home() {
       </div>
 
       {/* Key Metrics Section */}
-      <KeyMetrics />
+      <KeyMetrics isPrivacyMode={isPrivacyMode} />
 
       {/* Bank Accounts Section */}
       <div className="mb-8">
@@ -110,12 +133,12 @@ export default function Home() {
               <TabsContent value={selectedBank} className="space-y-8 mt-6">
                 {/* Charts Section - Now above the table */}
                 <div>
-                  <AccountBalanceChart selectedBank={selectedBank} />
+                  <AccountBalanceChart selectedBank={selectedBank} isPrivacyMode={isPrivacyMode} />
                 </div>
                 
                 {/* Monthly Summary Table */}
                 <div>
-                  <MonthlySummary selectedBank={selectedBank} />
+                  <MonthlySummary selectedBank={selectedBank} isPrivacyMode={isPrivacyMode} />
                 </div>
               </TabsContent>
             </Tabs>
@@ -152,7 +175,7 @@ export default function Home() {
                           />
                         </div>
                         <span className="text-[10px] font-medium leading-tight text-center">
-                          {card.replace('HDFC ', '').replace('Axis ', '')}
+                          {card === 'Flipkart Axis' ? 'Flipkart' : card.replace('HDFC ', '').replace('Axis ', '')}
                         </span>
                       </div>
                     )}
@@ -162,12 +185,12 @@ export default function Home() {
               <TabsContent value={selectedCreditCard} className="space-y-8 mt-6">
                 {/* Credit Card Balance Chart */}
                 <div>
-                  <CreditCardBalanceChart selectedCard={selectedCreditCard} />
+                  <CreditCardBalanceChart selectedCard={selectedCreditCard} isPrivacyMode={isPrivacyMode} />
                 </div>
                 
                 {/* Credit Card Monthly Summary */}
                 <div>
-                  <CreditCardMonthlySummary selectedCard={selectedCreditCard} />
+                  <CreditCardMonthlySummary selectedCard={selectedCreditCard} isPrivacyMode={isPrivacyMode} />
                 </div>
               </TabsContent>
             </Tabs>
