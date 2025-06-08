@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { processFinancialStatement } from '@/lib/file-processor';
 import crypto from 'crypto';
-
-const prisma = new PrismaClient();
 
 // Function to generate file hash
 async function generateFileHash(file: File): Promise<string> {
@@ -42,30 +40,24 @@ export async function POST(request: NextRequest) {
 
     // Generate file hash for content-based deduplication
     const fileHash = await generateFileHash(file);
-    
-    // Get file content as buffer for storage
-    const fileBuffer = Buffer.from(await file.arrayBuffer());
 
-    // Check for duplicate files by name and size (fileHash disabled temporarily)
-    const existingStatement = await prisma.statement.findFirst({
-      where: {
-        fileName: file.name,
-        fileSize: file.size,
-        processed: true
-      },
-      include: {
-        transactions: true
-      }
-    });
+    // Check for duplicate files by name and size
+    const { data: existingStatement, error: findError } = await supabase
+      .from('statements')
+      .select('*, transactions(*)')
+      .eq('file_name', file.name)
+      .eq('file_size', file.size)
+      .eq('processed', true)
+      .single();
 
-    if (existingStatement) {
+    if (!findError && existingStatement) {
       // Include metadata for duplicate files too so they can show updated titles
-      const metadata = existingStatement.transactions.length > 0 ? {
-        bankName: existingStatement.transactions[0].bankName,
-        accountType: existingStatement.transactions[0].accountType,
+      const metadata = existingStatement.transactions && existingStatement.transactions.length > 0 ? {
+        bankName: existingStatement.transactions[0].bank_name,
+        accountType: existingStatement.transactions[0].account_type,
         dateRange: {
-          start: Math.min(...existingStatement.transactions.map(t => new Date(t.date).getTime())),
-          end: Math.max(...existingStatement.transactions.map(t => new Date(t.date).getTime()))
+          start: Math.min(...existingStatement.transactions.map((t: any) => new Date(t.date).getTime())),
+          end: Math.max(...existingStatement.transactions.map((t: any) => new Date(t.date).getTime()))
         }
       } : null;
 
@@ -75,24 +67,68 @@ export async function POST(request: NextRequest) {
         message: 'File has already been processed',
         data: {
           statementId: existingStatement.id,
-          transactionCount: existingStatement.transactions.length,
-          uploadedAt: existingStatement.uploadedAt,
+          transactionCount: existingStatement.transactions?.length || 0,
+          uploadedAt: existingStatement.uploaded_at,
           metadata
         },
       });
     }
 
-    // Create statement record
-    const statement = await prisma.statement.create({
-      data: {
-        fileName: file.name,
-        fileType: file.type,
-        fileSize: file.size,
-        fileHash: fileHash,
-        fileContent: fileBuffer,
-        processed: false,
-      },
-    });
+    // Upload file to Supabase Storage
+    const fileName = `${Date.now()}-${file.name}`;
+    console.log('🎯 STEP 1: Attempting file upload to storage...');
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('statements')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('❌ STEP 1 FAILED - Storage upload error:', uploadError);
+      return NextResponse.json({ 
+        error: 'Failed to upload file to storage', 
+        details: uploadError 
+      }, { status: 500 });
+    }
+    
+    console.log('✅ STEP 1 SUCCESS - File uploaded to storage');
+
+    // Get public URL for the uploaded file
+    const { data: { publicUrl } } = supabase.storage
+      .from('statements')
+      .getPublicUrl(fileName);
+
+    // Create statement record using admin client to bypass RLS
+    const client = supabaseAdmin || supabase;
+    console.log('🎯 STEP 2: Attempting database insert...');
+    console.log('Using client:', supabaseAdmin ? 'ADMIN (service role)' : 'ANON (regular)');
+    
+    const statementData = {
+      file_name: file.name,
+      file_type: file.type,
+      file_size: file.size,
+      file_hash: fileHash,
+      file_url: publicUrl,
+      processed: false,
+    };
+    console.log('Statement data to insert:', statementData);
+    
+    const { data: statement, error: statementError } = await client
+      .from('statements')
+      .insert(statementData)
+      .select()
+      .single();
+
+    if (statementError || !statement) {
+      console.error('❌ STEP 2 FAILED - Database insert error:', statementError);
+      return NextResponse.json({ 
+        error: 'Failed to create statement record', 
+        details: statementError 
+      }, { status: 500 });
+    }
+    
+    console.log('✅ STEP 2 SUCCESS - Statement record created');
 
     try {
       // Process the file with OpenAI
@@ -102,14 +138,14 @@ export async function POST(request: NextRequest) {
       const uniqueTransactions = [];
       
       for (const transaction of processedData.transactions) {
-        const existingTransaction = await prisma.transaction.findFirst({
-          where: {
-            date: new Date(transaction.date),
-            description: transaction.description,
-            amount: transaction.amount,
-            type: transaction.type,
-          }
-        });
+        const { data: existingTransaction } = await supabase
+          .from('transactions')
+          .select('id')
+          .eq('date', new Date(transaction.date).toISOString().split('T')[0])
+          .eq('description', transaction.description)
+          .eq('amount', transaction.amount)
+          .eq('type', transaction.type)
+          .single();
 
         // Only add if transaction doesn't exist
         if (!existingTransaction) {
@@ -118,41 +154,51 @@ export async function POST(request: NextRequest) {
       }
 
       // Save only unique transactions to database
-      const transactions = await Promise.all(
-        uniqueTransactions.map(transaction =>
-          prisma.transaction.create({
-            data: {
-              date: new Date(transaction.date),
-              description: transaction.description,
-              amount: transaction.amount,
-              closingBalance: transaction.closingBalance,
-              openingBalance: transaction.openingBalance || null,
-              runningBalance: transaction.runningBalance || null,
-              category: transaction.category,
-              type: transaction.type,
-              source: file.type.includes('pdf') ? 'bank' : 'csv',
-              accountType: transaction.accountType,
-              bankName: transaction.bankName,
-              creditLimit: transaction.creditLimit || null,
-              dueDate: transaction.dueDate || null,
-              rewardPoints: transaction.rewardPoints || null,
-              merchantCategory: transaction.merchantCategory || null,
-              mode: transaction.mode || null,
-              statement: {
-                connect: {
-                  id: statement.id
-                }
-              }
-            },
-          })
-        )
-      );
+      const transactionInserts = uniqueTransactions.map(transaction => ({
+        date: new Date(transaction.date).toISOString().split('T')[0],
+        description: transaction.description,
+        amount: transaction.amount,
+        closing_balance: transaction.closingBalance,
+        opening_balance: transaction.openingBalance || null,
+        running_balance: transaction.runningBalance || null,
+        category: transaction.category,
+        type: transaction.type,
+        source: file.type.includes('pdf') ? 'bank' : 'csv',
+        account_type: transaction.accountType,
+        bank_name: transaction.bankName,
+        credit_limit: transaction.creditLimit || null,
+        due_date: transaction.dueDate || null,
+        reward_points: transaction.rewardPoints || null,
+        merchant_category: transaction.merchantCategory || null,
+        mode: transaction.mode || null,
+        statement_id: statement.id
+      }));
+
+      const { data: transactions, error: transError } = await client
+        .from('transactions')
+        .insert(transactionInserts)
+        .select();
+
+      if (transError) {
+        console.error('Error creating transactions:', transError);
+        // Update statement as failed
+        await client
+          .from('statements')
+          .update({ processed: false })
+          .eq('id', statement.id);
+
+        return NextResponse.json({ error: 'Failed to create transactions' }, { status: 500 });
+      }
 
       // Update statement as processed
-      await prisma.statement.update({
-        where: { id: statement.id },
-        data: { processed: true },
-      });
+      const { error: updateError } = await client
+        .from('statements')
+        .update({ processed: true })
+        .eq('id', statement.id);
+
+      if (updateError) {
+        console.error('Error updating statement:', updateError);
+      }
 
       const duplicatesSkipped = processedData.transactions.length - uniqueTransactions.length;
 
@@ -160,7 +206,7 @@ export async function POST(request: NextRequest) {
         success: true,
         data: {
           statementId: statement.id,
-          transactionCount: transactions.length,
+          transactionCount: transactions?.length || 0,
           duplicatesSkipped,
           summary: processedData.summary,
           // Add metadata for updated file titles using the original processed data
@@ -179,10 +225,10 @@ export async function POST(request: NextRequest) {
       console.error('Processing error:', processingError);
       
       // Update statement with error status
-      await prisma.statement.update({
-        where: { id: statement.id },
-        data: { processed: false },
-      });
+      await client
+        .from('statements')
+        .update({ processed: false })
+        .eq('id', statement.id);
 
       return NextResponse.json(
         { 
@@ -199,7 +245,5 @@ export async function POST(request: NextRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 } 

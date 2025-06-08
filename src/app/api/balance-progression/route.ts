@@ -1,21 +1,21 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { supabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
     // Fetch all bank account transactions (excluding credit card)
-    const bankTransactions = await prisma.transaction.findMany({
-      where: {
-        accountType: 'Bank Account'
-      },
-      orderBy: {
-        date: 'asc'
-      }
-    });
+    const { data: bankTransactions, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('account_type', 'Bank Account')
+      .order('date', { ascending: true });
 
-    if (bankTransactions.length === 0) {
+    if (error) {
+      console.error('Error fetching bank transactions:', error);
+      return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
+    }
+
+    if (!bankTransactions || bankTransactions.length === 0) {
       return NextResponse.json([]);
     }
 
@@ -24,7 +24,7 @@ export async function GET() {
     
     bankTransactions.forEach(transaction => {
       const monthKey = getMonthKey(new Date(transaction.date));
-      const bankName = transaction.bankName;
+      const bankName = transaction.bank_name;
       
       if (!bankBalances[bankName]) {
         bankBalances[bankName] = {};
@@ -36,9 +36,9 @@ export async function GET() {
       if (!currentEntry || 
           new Date(transaction.date) > currentEntry.date ||
           (new Date(transaction.date).getTime() === currentEntry.date.getTime() && 
-           transaction.closingBalance !== null && transaction.closingBalance > (currentEntry.balance || 0))) {
+           transaction.closing_balance !== null && transaction.closing_balance > (currentEntry.balance || 0))) {
         bankBalances[bankName][monthKey] = {
-          balance: transaction.closingBalance,
+          balance: transaction.closing_balance,
           date: new Date(transaction.date)
         };
       }

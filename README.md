@@ -31,10 +31,10 @@ So I built something better. **Argus Finance is privacy-first, AI-powered, and d
 - **Context-Aware Insights**: Understands your spending patterns
 
 ### 🔒 **Privacy by Design**
-- **Local-First**: Your data never leaves your device
-- **SQLite Database**: Everything stored locally and encrypted
-- **No Cloud Dependencies**: Works offline, always secure
+- **Secure Cloud Database**: Supabase with Row Level Security (RLS)
+- **No Third-Party Data Sharing**: Your financial data stays between you and your database
 - **Open Source**: Audit the code yourself
+- **Self-Hosted Ready**: Can be deployed to your own infrastructure
 
 ### ⚡ **Performance That Scales**
 - **Virtualized Lists**: Handle 10,000+ transactions smoothly
@@ -73,7 +73,7 @@ So I built something better. **Argus Finance is privacy-first, AI-powered, and d
 Built with modern, battle-tested technologies:
 - **Frontend**: Next.js 15, React 19, TypeScript
 - **UI**: shadcn/ui, Tailwind CSS (no CSS frameworks needed)
-- **Database**: Prisma + SQLite (local-first architecture)
+- **Database**: Supabase (PostgreSQL with real-time capabilities)
 - **AI**: OpenAI GPT-4 for transaction intelligence
 - **Performance**: Virtualization, skeleton loading, optimized queries
 
@@ -85,11 +85,13 @@ git clone https://github.com/prrranavv/argus-finance.git
 cd argus-finance
 npm install
 
-# 2. Add your OpenAI key (for AI categorization)
-echo "OPENAI_API_KEY=your_key_here" > .env.local
+# 2. Add your OpenAI and Supabase keys
+echo "OPENAI_API_KEY=your_key_here" >> .env.local
+echo "NEXT_PUBLIC_SUPABASE_URL=your_supabase_url" >> .env.local
+echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key" >> .env.local
+echo "SUPABASE_SERVICE_ROLE_KEY=your_service_key" >> .env.local
 
-# 3. Setup database and run
-npx prisma generate && npx prisma db push
+# 3. Run the app
 npm run dev
 ```
 

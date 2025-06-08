@@ -10,15 +10,15 @@ interface Transaction {
   date: Date;
   description: string;
   amount: number;
-  closingBalance: number | null;
+  closing_balance: number | null;
   category: string | null;
   type: string;
   source: string;
-  accountType: string;
-  bankName: string;
-  statementId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  account_type: string;
+  bank_name: string;
+  statement_id: string | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 interface TransactionFilterTabsProps {

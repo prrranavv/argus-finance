@@ -17,15 +17,15 @@ interface TransactionData {
   date: Date;
   description: string;
   amount: number;
-  closingBalance: number | null;
+  closing_balance: number | null;
   category: string | null;
   type: string;
   source: string;
-  accountType: string;
-  bankName: string;
-  statementId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  account_type: string;
+  bank_name: string;
+  statement_id: string | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 interface TransactionsGridProps {
@@ -104,7 +104,7 @@ function TransactionsGrid({
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(t => 
         t.description.toLowerCase().includes(query) ||
-        t.bankName.toLowerCase().includes(query) ||
+        t.bank_name.toLowerCase().includes(query) ||
         t.source.toLowerCase().includes(query) ||
         t.amount.toString().includes(query) ||
         formatCurrencyInLakhs(t.amount, false).toLowerCase().includes(query)
@@ -113,12 +113,12 @@ function TransactionsGrid({
 
     // Account type filter
     if (accountTypeFilter !== "all") {
-      filtered = filtered.filter(t => t.accountType === accountTypeFilter);
+      filtered = filtered.filter(t => t.account_type === accountTypeFilter);
     }
 
     // Bank/Source filter
     if (bankFilter !== "all") {
-      filtered = filtered.filter(t => t.bankName === bankFilter || t.source === bankFilter);
+      filtered = filtered.filter(t => t.bank_name === bankFilter || t.source === bankFilter);
     }
 
     // Time range filter
@@ -173,13 +173,13 @@ function TransactionsGrid({
             <div className="space-y-3">
               {/* Bank Logo - Centered and Consistent */}
               <div className="flex justify-center mb-3">
-                {getBankLogo(transaction.bankName, transaction.accountType, transaction.source) ? (
-                  <div className={`${transaction.accountType === 'Credit Card' ? 'w-20 h-12' : 'w-12 h-8'} rounded-lg bg-white shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden p-1`}>
+                {getBankLogo(transaction.bank_name, transaction.account_type, transaction.source) ? (
+                  <div className={`${transaction.account_type === 'Credit Card' ? 'w-20 h-12' : 'w-12 h-8'} rounded-lg bg-white shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden p-1`}>
                     <Image
-                      src={getBankLogo(transaction.bankName, transaction.accountType, transaction.source)}
-                      alt={`${transaction.source || transaction.bankName} logo`}
-                      width={transaction.accountType === 'Credit Card' ? 64 : 40}
-                      height={transaction.accountType === 'Credit Card' ? 40 : 25}
+                      src={getBankLogo(transaction.bank_name, transaction.account_type, transaction.source)}
+                      alt={`${transaction.source || transaction.bank_name} logo`}
+                      width={transaction.account_type === 'Credit Card' ? 64 : 40}
+                      height={transaction.account_type === 'Credit Card' ? 40 : 25}
                       className="object-contain filter drop-shadow-sm max-w-full max-h-full"
                       quality={100}
                       priority={false}
@@ -188,7 +188,7 @@ function TransactionsGrid({
                 ) : (
                   <div className="w-16 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 shadow-sm border border-gray-200 flex items-center justify-center">
                     <span className="text-lg font-bold text-gray-700">
-                      {transaction.bankName.charAt(0)}
+                      {transaction.bank_name.charAt(0)}
                     </span>
                   </div>
                 )}
@@ -211,9 +211,9 @@ function TransactionsGrid({
               </div>
               
               {/* Closing Balance */}
-              {transaction.closingBalance !== null && transaction.closingBalance !== 0 && (
+              {transaction.closing_balance !== null && transaction.closing_balance !== 0 && (
                 <div className="text-xs text-muted-foreground text-center">
-                  Balance: {formatCurrencyInLakhs(transaction.closingBalance, isPrivacyMode)}
+                  Balance: {formatCurrencyInLakhs(transaction.closing_balance, isPrivacyMode)}
                 </div>
               )}
             </div>
@@ -299,8 +299,8 @@ export default function TransactionsPage() {
         setTransactions(transactionsData.map((t: TransactionData) => ({
           ...t,
           date: new Date(t.date),
-          createdAt: new Date(t.createdAt),
-          updatedAt: new Date(t.updatedAt)
+          created_at: new Date(t.created_at),
+          updated_at: new Date(t.updated_at)
         })));
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -316,8 +316,8 @@ export default function TransactionsPage() {
   const bankOptions = useMemo(() => {
     const banks = new Set<string>();
     transactions.forEach(t => {
-      banks.add(t.bankName);
-      if (t.source && t.source !== t.bankName) {
+      banks.add(t.bank_name);
+      if (t.source && t.source !== t.bank_name) {
         banks.add(t.source);
       }
     });

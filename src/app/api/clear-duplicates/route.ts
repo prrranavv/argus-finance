@@ -1,26 +1,28 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { supabase } from '@/lib/supabase';
 
 export async function POST() {
   try {
     // Find duplicate transactions based on date, description, amount, and type
-    const transactions = await prisma.transaction.findMany({
-      orderBy: [
-        { date: 'asc' },
-        { description: 'asc' },
-        { amount: 'asc' },
-        { type: 'asc' },
-        { createdAt: 'asc' }
-      ]
-    });
+    const { data: transactions, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .order('date', { ascending: true })
+      .order('description', { ascending: true })
+      .order('amount', { ascending: true })
+      .order('type', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching transactions:', error);
+      return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
+    }
 
     const duplicates = [];
     const seen = new Set();
 
-    for (const transaction of transactions) {
-      const key = `${transaction.date.toISOString()}-${transaction.description}-${transaction.amount}-${transaction.type}`;
+    for (const transaction of transactions || []) {
+      const key = `${new Date(transaction.date).toISOString()}-${transaction.description}-${transaction.amount}-${transaction.type}`;
       
       if (seen.has(key)) {
         duplicates.push(transaction.id);
@@ -29,19 +31,29 @@ export async function POST() {
       }
     }
 
+    if (duplicates.length === 0) {
+      return NextResponse.json({
+        success: true,
+        message: 'No duplicates found',
+        duplicatesRemoved: 0
+      });
+    }
+
     // Delete duplicate transactions (keeping the first occurrence of each)
-    const deleteResult = await prisma.transaction.deleteMany({
-      where: {
-        id: {
-          in: duplicates
-        }
-      }
-    });
+    const { error: deleteError } = await supabase
+      .from('transactions')
+      .delete()
+      .in('id', duplicates);
+
+    if (deleteError) {
+      console.error('Error deleting duplicates:', deleteError);
+      return NextResponse.json({ error: 'Failed to delete duplicates' }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,
-      message: `Removed ${deleteResult.count} duplicate transactions`,
-      duplicatesRemoved: deleteResult.count
+      message: `Removed ${duplicates.length} duplicate transactions`,
+      duplicatesRemoved: duplicates.length
     });
 
   } catch (error) {
@@ -50,7 +62,5 @@ export async function POST() {
       { error: 'Failed to clear duplicates' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 } 

@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { supabase } from '@/lib/supabase';
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -16,38 +14,55 @@ export async function DELETE(request: NextRequest) {
     }
 
     // First, get the statement to return info about what's being deleted
-    const statement = await prisma.statement.findUnique({
-      where: { id: statementId },
-      include: {
-        transactions: true
-      }
-    });
+    const { data: statement, error: statementError } = await supabase
+      .from('statements')
+      .select('*')
+      .eq('id', statementId)
+      .single();
 
-    if (!statement) {
+    if (statementError || !statement) {
       return NextResponse.json(
         { error: 'Statement not found' },
         { status: 404 }
       );
     }
 
+    // Get transaction count before deleting
+    const { data: transactions, error: transCountError } = await supabase
+      .from('transactions')
+      .select('id')
+      .eq('statement_id', statementId);
+
+    const transactionCount = transactions?.length || 0;
+
     // Delete all associated transactions first (due to foreign key constraint)
-    const deletedTransactions = await prisma.transaction.deleteMany({
-      where: {
-        statementId: statementId
-      }
-    });
+    const { error: deleteTransError } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('statement_id', statementId);
+
+    if (deleteTransError) {
+      console.error('Error deleting transactions:', deleteTransError);
+      return NextResponse.json({ error: 'Failed to delete transactions' }, { status: 500 });
+    }
 
     // Then delete the statement
-    await prisma.statement.delete({
-      where: { id: statementId }
-    });
+    const { error: deleteStatementError } = await supabase
+      .from('statements')
+      .delete()
+      .eq('id', statementId);
+
+    if (deleteStatementError) {
+      console.error('Error deleting statement:', deleteStatementError);
+      return NextResponse.json({ error: 'Failed to delete statement' }, { status: 500 });
+    }
 
     return NextResponse.json({
       success: true,
-      message: `Deleted statement "${statement.fileName}" and ${deletedTransactions.count} associated transactions`,
+      message: `Deleted statement "${statement.file_name}" and ${transactionCount} associated transactions`,
       data: {
-        statementName: statement.fileName,
-        transactionsDeleted: deletedTransactions.count
+        statementName: statement.file_name,
+        transactionsDeleted: transactionCount
       }
     });
 
@@ -57,7 +72,5 @@ export async function DELETE(request: NextRequest) {
       { error: 'Failed to delete statement' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 } 

@@ -13,15 +13,15 @@ interface Transaction {
   date: Date;
   description: string;
   amount: number;
-  closingBalance: number | null;
+  closing_balance: number | null;
   category: string | null;
   type: string;
   source: string;
-  accountType: string;
-  bankName: string;
-  statementId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  account_type: string;
+  bank_name: string;
+  statement_id: string | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // interface TransactionMetrics {
@@ -189,7 +189,7 @@ export function TransactionsList({
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(t => 
         t.description.toLowerCase().includes(query) ||
-        t.bankName.toLowerCase().includes(query) ||
+        t.bank_name.toLowerCase().includes(query) ||
         t.source.toLowerCase().includes(query) ||
         t.amount.toString().includes(query) ||
         formatCurrencyInLakhs(t.amount, false).toLowerCase().includes(query)
@@ -198,12 +198,12 @@ export function TransactionsList({
 
     // Account type filter
     if (accountTypeFilter !== "all") {
-      filtered = filtered.filter(t => t.accountType === accountTypeFilter);
+      filtered = filtered.filter(t => t.account_type === accountTypeFilter);
     }
 
     // Bank/Source filter
     if (bankFilter !== "all") {
-      filtered = filtered.filter(t => t.bankName === bankFilter || t.source === bankFilter);
+      filtered = filtered.filter(t => t.bank_name === bankFilter || t.source === bankFilter);
     }
 
     // Time range filter

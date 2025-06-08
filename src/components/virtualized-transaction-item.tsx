@@ -7,15 +7,15 @@ interface Transaction {
   date: Date;
   description: string;
   amount: number;
-  closingBalance: number | null;
+  closing_balance: number | null;
   category: string | null;
   type: string;
   source: string;
-  accountType: string;
-  bankName: string;
-  statementId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  account_type: string;
+  bank_name: string;
+  statement_id: string | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 interface VirtualizedTransactionItemProps {
@@ -81,13 +81,13 @@ const VirtualizedTransactionItem = memo(function VirtualizedTransactionItem({
         <div className="flex items-center space-x-3 flex-1">
           {/* Bank Logo */}
           <div className="flex-shrink-0">
-            {getBankLogo(transaction.bankName, transaction.accountType, transaction.source) ? (
+            {getBankLogo(transaction.bank_name, transaction.account_type, transaction.source) ? (
               <div className="w-12 h-8 rounded bg-gray-50 flex items-center justify-center overflow-hidden">
                 <Image
-                  src={getBankLogo(transaction.bankName, transaction.accountType, transaction.source)}
-                  alt={`${transaction.source || transaction.bankName} logo`}
-                  width={transaction.accountType === 'Credit Card' ? 48 : 24}
-                  height={transaction.accountType === 'Credit Card' ? 30 : 24}
+                  src={getBankLogo(transaction.bank_name, transaction.account_type, transaction.source)}
+                  alt={`${transaction.source || transaction.bank_name} logo`}
+                  width={transaction.account_type === 'Credit Card' ? 48 : 24}
+                  height={transaction.account_type === 'Credit Card' ? 30 : 24}
                   className="object-contain"
                   quality={95}
                   priority={false}
@@ -96,7 +96,7 @@ const VirtualizedTransactionItem = memo(function VirtualizedTransactionItem({
             ) : (
               <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
                 <span className="text-xs font-medium text-gray-600">
-                  {transaction.bankName.charAt(0)}
+                  {transaction.bank_name.charAt(0)}
                 </span>
               </div>
             )}
@@ -125,9 +125,9 @@ const VirtualizedTransactionItem = memo(function VirtualizedTransactionItem({
             {transaction.type === 'income' ? '+' : '-'}
             {formatCurrencyInLakhs(transaction.amount, isPrivacyMode)}
           </div>
-          {transaction.closingBalance !== null && (
+          {transaction.closing_balance !== null && (
             <div className="text-xs text-gray-500">
-              Balance: {formatCurrencyInLakhs(transaction.closingBalance, isPrivacyMode)}
+              Balance: {formatCurrencyInLakhs(transaction.closing_balance, isPrivacyMode)}
             </div>
           )}
         </div>

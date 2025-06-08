@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: Request) {
   try {
@@ -37,90 +35,67 @@ export async function GET(request: Request) {
     previousPeriodStartDate.setDate(previousPeriodStartDate.getDate() - (daysBack * 2));
 
     // Build where clause for filtering
-    const buildWhereClause = (dateStart: Date, dateEnd?: Date) => {
-      const where: Record<string, unknown> = {
-        date: dateEnd ? {
-          gte: dateStart,
-          lt: dateEnd
-        } : {
-          gte: dateStart
-        }
-      };
+    const buildSupabaseQuery = (dateStart: Date, dateEnd?: Date) => {
+      let query = supabase
+        .from('transactions')
+        .select('*');
 
-      // Add search filter
-      if (search) {
-        where.OR = [
-          {
-            description: {
-              contains: search
-            }
-          },
-          {
-            bankName: {
-              contains: search
-            }
-          }
-        ];
+      // Add date filter
+      if (dateEnd) {
+        query = query.gte('date', dateStart.toISOString()).lt('date', dateEnd.toISOString());
+      } else {
+        query = query.gte('date', dateStart.toISOString());
       }
 
       // Add account type filter
       if (accountType && accountType !== 'all') {
-        where.accountType = accountType; // 'Bank Account' or 'Credit Card'
+        query = query.eq('account_type', accountType); // 'Bank Account' or 'Credit Card'
       }
 
-      // Add bank filter  
-      if (bank && bank !== 'all') {
-        // If search is already using OR, we need to combine filters with AND
-        if (where.OR) {
-          where.AND = [
-            { OR: where.OR },
-            {
-              OR: [
-                {
-                  bankName: {
-                    contains: bank
-                  }
-                },
-                {
-                  source: {
-                    contains: bank
-                  }
-                }
-              ]
-            }
-          ];
-          delete where.OR;
-        } else {
-          where.OR = [
-            {
-              bankName: {
-                contains: bank
-              }
-            },
-            {
-              source: {
-                contains: bank
-              }
-            }
-          ];
-        }
-      }
-
-      return where;
+      return query;
     };
 
     // Fetch transactions for current period
-    const recentTransactions = await prisma.transaction.findMany({
-      where: buildWhereClause(periodStartDate),
-      orderBy: {
-        date: 'desc'
-      }
-    });
+    let recentQuery = buildSupabaseQuery(periodStartDate);
+    const { data: allRecentTransactions, error: recentError } = await recentQuery;
+
+    if (recentError) {
+      console.error('Error fetching recent transactions:', recentError);
+      return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
+    }
 
     // Fetch transactions for previous period for comparison
-    const previousTransactions = await prisma.transaction.findMany({
-      where: buildWhereClause(previousPeriodStartDate, periodStartDate)
-    });
+    let previousQuery = buildSupabaseQuery(previousPeriodStartDate, periodStartDate);
+    const { data: allPreviousTransactions, error: prevError } = await previousQuery;
+
+    if (prevError) {
+      console.error('Error fetching previous transactions:', prevError);
+      return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
+    }
+
+    // Apply client-side filtering for complex search and bank filters
+    const applyClientFilters = (transactions: any[]) => {
+      return transactions.filter(transaction => {
+        // Search filter
+        if (search) {
+          const searchMatch = transaction.description?.toLowerCase().includes(search.toLowerCase()) ||
+                            transaction.bank_name?.toLowerCase().includes(search.toLowerCase());
+          if (!searchMatch) return false;
+        }
+
+        // Bank filter
+        if (bank && bank !== 'all') {
+          const bankMatch = transaction.bank_name?.toLowerCase().includes(bank.toLowerCase()) ||
+                           transaction.source?.toLowerCase().includes(bank.toLowerCase());
+          if (!bankMatch) return false;
+        }
+
+        return true;
+      });
+    };
+
+    const recentTransactions = applyClientFilters(allRecentTransactions || []);
+    const previousTransactions = applyClientFilters(allPreviousTransactions || []);
 
     // Calculate current period metrics
     const totalTransactions = recentTransactions.length;
@@ -159,20 +134,17 @@ export async function GET(request: Request) {
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-    const allQuizizzTransactions = await prisma.transaction.findMany({
-      where: {
-        type: 'income',
-        description: {
-          contains: 'quizizz'
-        },
-        date: {
-          gte: threeMonthsAgo
-        }
-      },
-      orderBy: {
-        date: 'desc'
-      }
-    });
+    const { data: allQuizizzTransactions, error: quizizzError } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('type', 'income')
+      .ilike('description', '%quizizz%')
+      .gte('date', threeMonthsAgo.toISOString())
+      .order('date', { ascending: false });
+
+    if (quizizzError) {
+      console.error('Error fetching Quizizz transactions:', quizizzError);
+    }
 
     // Group by month and sum up salaries
     interface TransactionData {
@@ -184,7 +156,7 @@ export async function GET(request: Request) {
       category?: string | null;
     }
     
-    const salaryByMonth = allQuizizzTransactions.reduce((acc: Record<string, {total: number, transactions: TransactionData[]}>, t) => {
+    const salaryByMonth = (allQuizizzTransactions || []).reduce((acc: Record<string, {total: number, transactions: TransactionData[]}>, t) => {
       const monthKey = new Date(t.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       if (!acc[monthKey]) {
         acc[monthKey] = { total: 0, transactions: [] };
@@ -292,7 +264,5 @@ export async function GET(request: Request) {
       { error: 'Failed to fetch transaction metrics' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 } 

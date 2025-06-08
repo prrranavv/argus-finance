@@ -1,4 +1,50 @@
 import { NextResponse } from 'next/server';
+import { supabase } from '@/lib/supabase';
+
+async function getRewardPoints() {
+  try {
+    // Get the latest two months of reward points from HDFC Diners transactions
+    const { data: rewardTransactions, error } = await supabase
+      .from('transactions')
+      .select('date, reward_points')
+      .eq('bank_name', 'HDFC Diners')
+      .not('reward_points', 'is', null)
+      .order('date', { ascending: false })
+      .limit(50);
+
+    if (error || !rewardTransactions || rewardTransactions.length === 0) {
+      // Fallback to default values if no data
+      return { currentRewardPoints: 29417, prevRewardPoints: 28100 };
+    }
+
+    // Group by month and get the latest reward points for each month
+    const monthlyRewards = new Map<string, number>();
+    
+    rewardTransactions.forEach(transaction => {
+      const date = new Date(transaction.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      
+      // Keep the highest reward points for each month (latest balance)
+      if (!monthlyRewards.has(monthKey) || (transaction.reward_points && transaction.reward_points > (monthlyRewards.get(monthKey) || 0))) {
+        monthlyRewards.set(monthKey, transaction.reward_points || 0);
+      }
+    });
+
+    // Get the two most recent months
+    const sortedMonths = Array.from(monthlyRewards.entries())
+      .sort(([a], [b]) => b.localeCompare(a));
+
+    const currentRewardPoints = sortedMonths[0]?.[1] || 29417;
+    const prevRewardPoints = sortedMonths[1]?.[1] || 28100;
+
+    return { currentRewardPoints, prevRewardPoints };
+    
+  } catch (error) {
+    console.error('Error fetching reward points:', error);
+    // Fallback to default values on error
+    return { currentRewardPoints: 29417, prevRewardPoints: 28100 };
+  }
+}
 
 async function getMonthlyBalances(request: Request) {
   // Use the existing monthly summary API logic to get accurate balance data
@@ -39,9 +85,8 @@ export async function GET(request: Request) {
     const realBalance = currentBalance - lastMonthCreditCardBill;
     const prevRealBalance = prevBankBalance - monthBeforePreviousBill;
 
-    // 4. HDFC Diners Reward Points (simplified - use fallback values)
-    const currentRewardPoints = 29417;
-    const prevRewardPoints = 28100;
+    // 4. Get actual reward points from Supabase
+    const { currentRewardPoints, prevRewardPoints } = await getRewardPoints();
 
     // Calculate percentage changes
     const calculatePercentageChange = (current: number, previous: number): number => {

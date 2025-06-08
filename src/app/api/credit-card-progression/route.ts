@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { supabase } from '@/lib/supabase';
 
 function getMonthKey(date: Date): string {
   return date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
@@ -10,16 +8,18 @@ function getMonthKey(date: Date): string {
 export async function GET() {
   try {
     // Fetch all credit card transactions
-    const creditCardTransactions = await prisma.transaction.findMany({
-      where: {
-        accountType: 'Credit Card'
-      },
-      orderBy: {
-        date: 'asc'
-      }
-    });
+    const { data: creditCardTransactions, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('account_type', 'Credit Card')
+      .order('date', { ascending: true });
 
-    if (creditCardTransactions.length === 0) {
+    if (error) {
+      console.error('Error fetching credit card transactions:', error);
+      return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
+    }
+
+    if (!creditCardTransactions || creditCardTransactions.length === 0) {
       return NextResponse.json([]);
     }
 
@@ -29,7 +29,7 @@ export async function GET() {
 
     creditCardTransactions.forEach(transaction => {
       const monthKey = getMonthKey(new Date(transaction.date));
-      const cardName = transaction.bankName;
+      const cardName = transaction.bank_name;
       
       if (!cardSpending[cardName]) {
         cardSpending[cardName] = {};
@@ -75,7 +75,5 @@ export async function GET() {
       { error: 'Failed to fetch credit card progression' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 } 

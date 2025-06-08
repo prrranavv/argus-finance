@@ -1,27 +1,42 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { supabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const statements = await prisma.statement.findMany({
-      orderBy: {
-        uploadedAt: 'desc'
-      },
-      include: {
-        transactions: true
-      }
-    });
+    // First get all statements
+    const { data: statements, error: statementsError } = await supabase
+      .from('statements')
+      .select('*')
+      .order('uploaded_at', { ascending: false });
 
-    return NextResponse.json(statements);
+    if (statementsError) {
+      console.error('Error fetching statements:', statementsError);
+      return NextResponse.json({ error: 'Failed to fetch statements' }, { status: 500 });
+    }
+
+    // Then get transactions for each statement
+    const statementsWithTransactions = await Promise.all(
+      (statements || []).map(async (statement) => {
+        const { data: transactions, error: transError } = await supabase
+          .from('transactions')
+          .select('*')
+          .eq('statement_id', statement.id);
+
+        if (transError) {
+          console.error('Error fetching transactions for statement:', transError);
+          return { ...statement, transactions: [] };
+        }
+
+        return { ...statement, transactions: transactions || [] };
+      })
+    );
+
+    return NextResponse.json(statementsWithTransactions);
   } catch (error) {
     console.error('Error fetching statements:', error);
     return NextResponse.json(
       { error: 'Failed to fetch statements' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 } 

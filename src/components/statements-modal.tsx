@@ -31,24 +31,24 @@ interface TransactionData {
   date: Date;
   description: string;
   amount: number;
-  closingBalance: number | null;
+  closing_balance: number | null;
   category: string | null;
   type: string;
   source: string;
-  accountType: string;
-  bankName: string;
-  statementId: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  account_type: string;
+  bank_name: string;
+  statement_id: string | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 interface StatementData {
   id: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  fileHash?: string | null;
-  uploadedAt: Date;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  file_hash?: string | null;
+  uploaded_at: Date;
   processed: boolean;
   transactions: TransactionData[];
 }
@@ -214,16 +214,21 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
     try {
       const response = await fetch('/api/statements');
       const data = await response.json();
-      setStatements(data.map((s: StatementData) => ({
+      console.log('📊 Raw statements data from API:', data);
+      
+      const processedStatements = data.map((s: StatementData) => ({
         ...s,
-        uploadedAt: new Date(s.uploadedAt),
+        uploaded_at: new Date(s.uploaded_at),
         transactions: s.transactions.map((t: TransactionData) => ({
           ...t,
           date: new Date(t.date),
-          createdAt: new Date(t.createdAt),
-          updatedAt: new Date(t.updatedAt)
+          created_at: new Date(t.created_at),
+          updated_at: new Date(t.updated_at)
         }))
-      })));
+      }));
+      
+      console.log('📈 Processed statements:', processedStatements);
+      setStatements(processedStatements);
     } catch (error) {
       console.error('Error fetching statements:', error);
     } finally {
@@ -233,12 +238,12 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
 
   const formatStatementTitle = (statement: StatementData): string => {
     if (!statement.transactions || statement.transactions.length === 0) {
-      return statement.fileName;
+      return statement.file_name;
     }
 
     const firstTransaction = statement.transactions[0];
-    const bankName = firstTransaction.bankName || 'Unknown Bank';
-    const accountType = firstTransaction.accountType || 'Account';
+    const bankName = firstTransaction.bank_name || 'Unknown Bank';
+    const accountType = firstTransaction.account_type || 'Account';
 
     const transactionDates = statement.transactions.map((t: TransactionData) => new Date(t.date));
     const earliestDate = new Date(Math.min(...transactionDates.map((d: Date) => d.getTime())));
@@ -259,8 +264,8 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
     statements.forEach(statement => {
       if (statement.transactions.length > 0) {
         const firstTransaction = statement.transactions[0];
-        accountTypesSet.add(firstTransaction.accountType);
-        bankNamesSet.add(firstTransaction.bankName);
+        accountTypesSet.add(firstTransaction.account_type);
+        bankNamesSet.add(firstTransaction.bank_name);
       }
     });
     
@@ -276,8 +281,8 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
       if (statement.transactions.length === 0) return true;
       
       const firstTransaction = statement.transactions[0];
-      const accountTypeMatch = accountTypeFilter === "All" || firstTransaction.accountType === accountTypeFilter;
-      const bankNameMatch = bankNameFilter === "All" || firstTransaction.bankName === bankNameFilter;
+      const accountTypeMatch = accountTypeFilter === "All" || firstTransaction.account_type === accountTypeFilter;
+      const bankNameMatch = bankNameFilter === "All" || firstTransaction.bank_name === bankNameFilter;
       
       return accountTypeMatch && bankNameMatch;
     });
@@ -468,12 +473,12 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
                                 {formatStatementTitle(statement)}
                               </h4>
                               <p className="text-xs text-muted-foreground">
-                                {statement.fileName} • {formatFileSize(statement.fileSize)}
+                                {statement.file_name} • {formatFileSize(statement.file_size)}
                               </p>
                             </div>
                             <DeleteStatementButton 
                               statementId={statement.id} 
-                              fileName={statement.fileName}
+                              fileName={statement.file_name}
                               transactionCount={statement.transactions.length}
                             />
                           </div>
@@ -487,11 +492,11 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
                                 </Badge>
                                 <Badge variant="outline" className="text-xs">
                                   <Calendar className="w-3 h-3 mr-1" />
-                                  {statement.uploadedAt.toLocaleDateString()}
+                                  {statement.uploaded_at.toLocaleDateString()}
                                 </Badge>
                                 {statement.transactions[0] && (
                                   <Badge variant="outline" className="text-xs">
-                                    {statement.transactions[0].accountType}
+                                    {statement.transactions[0].account_type}
                                   </Badge>
                                 )}
                               </>
