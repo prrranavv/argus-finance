@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
@@ -56,7 +57,7 @@ export async function GET(request: Request) {
     };
 
     // Fetch transactions for current period
-    let recentQuery = buildSupabaseQuery(periodStartDate);
+    const recentQuery = buildSupabaseQuery(periodStartDate);
     const { data: allRecentTransactions, error: recentError } = await recentQuery;
 
     if (recentError) {
@@ -65,7 +66,7 @@ export async function GET(request: Request) {
     }
 
     // Fetch transactions for previous period for comparison
-    let previousQuery = buildSupabaseQuery(previousPeriodStartDate, periodStartDate);
+    const previousQuery = buildSupabaseQuery(previousPeriodStartDate, periodStartDate);
     const { data: allPreviousTransactions, error: prevError } = await previousQuery;
 
     if (prevError) {
@@ -75,7 +76,7 @@ export async function GET(request: Request) {
 
     // Apply client-side filtering for complex search and bank filters
     const applyClientFilters = (transactions: any[]) => {
-      return transactions.filter(transaction => {
+      return transactions.filter((transaction: any) => {
         // Search filter
         if (search) {
           const searchMatch = transaction.description?.toLowerCase().includes(search.toLowerCase()) ||
@@ -100,8 +101,8 @@ export async function GET(request: Request) {
     // Calculate current period metrics
     const totalTransactions = recentTransactions.length;
     const totalExpenses = recentTransactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+      .filter((t: any) => t.type === 'expense')
+      .reduce((sum: any, t: any) => sum + t.amount, 0);
     const dailyAvgSpending = totalExpenses / daysBack;
     const avgTransactionAmount = totalTransactions > 0 ? totalExpenses / recentTransactions.filter(t => t.type === 'expense').length : 0;
 

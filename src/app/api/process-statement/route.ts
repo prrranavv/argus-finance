@@ -56,8 +56,8 @@ export async function POST(request: NextRequest) {
         bankName: existingStatement.transactions[0].bank_name,
         accountType: existingStatement.transactions[0].account_type,
         dateRange: {
-          start: Math.min(...existingStatement.transactions.map((t: any) => new Date(t.date).getTime())),
-          end: Math.max(...existingStatement.transactions.map((t: any) => new Date(t.date).getTime()))
+          start: Math.min(...existingStatement.transactions.map((t: { date: string }) => new Date(t.date).getTime())),
+          end: Math.max(...existingStatement.transactions.map((t: { date: string }) => new Date(t.date).getTime()))
         }
       } : null;
 
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     // Upload file to Supabase Storage
     const fileName = `${Date.now()}-${file.name}`;
     console.log('🎯 STEP 1: Attempting file upload to storage...');
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabase.storage
       .from('statements')
       .upload(fileName, file, {
         cacheControl: '3600',

@@ -97,6 +97,24 @@ npm run dev
 
 Open `localhost:3000` and upload your first statement. Watch the magic happen.
 
+## 🚀 Deploy to Vercel
+
+### Environment Variables Required:
+```bash
+OPENAI_API_KEY=your_openai_api_key_here
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+### One-Click Deploy:
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/prrranavv/argus-finance)
+
+Or manually:
+1. Import your GitHub repository to Vercel
+2. Add the environment variables above
+3. Deploy!
+
 ## 🎨 Visual Design
 
 **Beautiful by Design**: Argus features a stunning visual identity with:

@@ -28,7 +28,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Get transaction count before deleting
-    const { data: transactions, error: transCountError } = await supabase
+    const { data: transactions } = await supabase
       .from('transactions')
       .select('id')
       .eq('statement_id', statementId);
