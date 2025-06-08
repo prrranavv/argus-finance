@@ -73,15 +73,16 @@ export async function extractTextFromFile(file: File): Promise<string> {
       return new Promise<string>((resolve, reject) => {
         let pdfText = '';
         
-        new PdfReader().parseBuffer(buffer, (err: any, item: any) => {
+        new PdfReader().parseBuffer(buffer, (err: unknown, item: unknown) => {
           if (err) {
-            reject(new Error(`Failed to parse PDF: ${err.message}`));
+            const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+            reject(new Error(`Failed to parse PDF: ${errorMessage}`));
           } else if (!item) {
             // End of file
             resolve(pdfText);
-          } else if (item.text) {
+          } else if (typeof item === 'object' && item !== null && 'text' in item) {
             // Add text with space
-            pdfText += item.text + ' ';
+            pdfText += (item as { text: string }).text + ' ';
           }
         });
       });

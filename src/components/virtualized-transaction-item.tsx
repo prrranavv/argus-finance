@@ -1,9 +1,5 @@
 import React, { memo } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { formatCurrencyInLakhs } from "@/lib/utils";
-import { Edit2, Check, X } from "lucide-react";
 import Image from "next/image";
 
 interface Transaction {
@@ -25,24 +21,12 @@ interface Transaction {
 interface VirtualizedTransactionItemProps {
   transaction: Transaction;
   isPrivacyMode: boolean;
-  editingCategory: string | null;
-  newCategory: string;
-  onCategoryEdit: (transactionId: string, currentCategory: string | null) => void;
-  onCategorySave: (transactionId: string) => void;
-  onCategoryCancel: () => void;
-  onNewCategoryChange: (value: string) => void;
   style?: React.CSSProperties;
 }
 
 const VirtualizedTransactionItem = memo(function VirtualizedTransactionItem({
   transaction,
   isPrivacyMode,
-  editingCategory,
-  newCategory,
-  onCategoryEdit,
-  onCategorySave,
-  onCategoryCancel,
-  onNewCategoryChange,
   style
 }: VirtualizedTransactionItemProps) {
   const getBankLogo = (bankName: string, accountType: string, source: string) => {

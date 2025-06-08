@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Header } from "@/components/header";
-import Link from "next/link";
-import { ArrowLeft, Search, Filter, List, Grid3X3 } from "lucide-react";
+import { Search, Filter, List, Grid3X3 } from "lucide-react";
 import { TransactionsList } from "@/components/transactions-list";
 import { TransactionMetrics } from "@/components/transaction-metrics";
 import { formatCurrencyInLakhs } from "@/lib/utils";

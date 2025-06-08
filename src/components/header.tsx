@@ -11,10 +11,9 @@ import { usePathname } from "next/navigation";
 interface HeaderProps {
   isPrivacyMode: boolean;
   onPrivacyToggle: () => void;
-  subtitle?: string;
 }
 
-export function Header({ isPrivacyMode, onPrivacyToggle, subtitle }: HeaderProps) {
+export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
   const [showStatementsModal, setShowStatementsModal] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [displayedText, setDisplayedText] = useState("");

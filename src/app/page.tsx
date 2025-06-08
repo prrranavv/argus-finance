@@ -1,20 +1,15 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { UploadModal } from "@/components/upload-modal";
-import { UploadedStatementsModal } from "@/components/uploaded-statements-modal";
 import { AccountBalanceChart } from "@/components/account-balance-chart";
 import { MonthlySummary } from "@/components/monthly-summary";
 import { CreditCardBalanceChart } from "@/components/credit-card-balance-chart";
 import { CreditCardMonthlySummary } from "@/components/credit-card-monthly-summary";
 import { KeyMetrics } from "@/components/key-metrics";
 import { Header } from "@/components/header";
-import Link from "next/link";
 import Image from "next/image";
-import { BarChart3, Brain, CreditCard } from "lucide-react";
 
 export default function Home() {
   const [selectedBank, setSelectedBank] = useState('Total');
