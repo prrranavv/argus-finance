@@ -213,8 +213,7 @@ export function TransactionMetrics({
             <div className="text-2xl font-bold text-red-600">
               {formatCurrencyInLakhs(metrics.metrics.totalExpenses.current, isPrivacyMode)}
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-muted-foreground">Last {metrics.period.days} days</p>
+            <div className="mt-2">
               {formatPercentageChangeWithAmount(metrics.metrics.totalExpenses.change, metrics.metrics.totalExpenses.previous)}
             </div>
           </CardContent>
@@ -230,8 +229,7 @@ export function TransactionMetrics({
             <div className="text-2xl font-bold">
               {formatCurrencyInLakhs(metrics.metrics.dailyAvgSpending.current, isPrivacyMode)}
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-muted-foreground">Per day average</p>
+            <div className="mt-2">
               {formatPercentageChangeWithAmount(metrics.metrics.dailyAvgSpending.change, metrics.metrics.dailyAvgSpending.previous)}
             </div>
           </CardContent>
@@ -247,8 +245,7 @@ export function TransactionMetrics({
             <div className="text-2xl font-bold">
               {formatCurrencyInLakhs(metrics.metrics.avgTransaction.current, isPrivacyMode)}
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-muted-foreground">Average amount</p>
+            <div className="mt-2">
               {formatPercentageChangeWithAmount(metrics.metrics.avgTransaction.change, metrics.metrics.avgTransaction.previous)}
             </div>
           </CardContent>
@@ -264,8 +261,7 @@ export function TransactionMetrics({
             <div className="text-2xl font-bold">
               {maskNumber(metrics.metrics.totalTransactions.current, isPrivacyMode)}
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-muted-foreground">Last {metrics.period.days} days</p>
+            <div className="mt-2">
               {formatCountChangeWithAmount(metrics.metrics.totalTransactions.change, metrics.metrics.totalTransactions.previous)}
             </div>
           </CardContent>
@@ -274,28 +270,30 @@ export function TransactionMetrics({
 
       {/* Second Row - 2 Detailed Cards */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* Quizizz Salary Card - Only Last 3 Months */}
+        {/* Salary - Last 3 months */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Quizizz Salary</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle className="text-lg">Salary - Last 3 months</CardTitle>
           </CardHeader>
           <CardContent>
             {metrics.last3MonthsSalary.length > 0 ? (
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Last 3 months</p>
+              <div className="grid grid-cols-3 gap-3">
                 {metrics.last3MonthsSalary.map((salary, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-muted-foreground">{salary.month}</span>
-                    <span className="text-sm font-semibold text-green-600">
-                      {formatCurrencyInLakhs(salary.amount, isPrivacyMode)}
-                    </span>
-                  </div>
+                  <Card key={index} className="p-4">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-green-600 mb-1">
+                        {formatCurrencyInLakhs(salary.amount, isPrivacyMode)}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {salary.month}
+                      </div>
+                    </div>
+                  </Card>
                 ))}
               </div>
             ) : (
               <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">No Quizizz salary data found</p>
+                <p className="text-sm text-muted-foreground">No salary data found</p>
               </div>
             )}
           </CardContent>
@@ -303,87 +301,35 @@ export function TransactionMetrics({
 
         {/* Top 3 Expenses */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Top 3 Expenses</CardTitle>
-            <ShoppingBag className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {metrics.topExpenses.slice(0, 3).map((expense, index) => (
-                <div key={index} className="flex justify-between items-center">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{expense.merchant}</p>
-                    <p className="text-sm font-medium text-muted-foreground">{formatDate(expense.date)}</p>
-                  </div>
-                  <div className="text-sm font-bold text-red-600 ml-2">
-                    {formatCurrencyInLakhs(expense.amount, isPrivacyMode)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Category Breakdown and Recurring Payments */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Top Spending Categories</CardTitle>
-            <CardDescription>Last 30 days breakdown</CardDescription>
+            <CardTitle className="text-lg">Top 3 Expenses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {metrics.breakdown.topCategories.map((category, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="outline" className="text-xs">
-                      {category.category}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {formatPercentage(category.percentage, isPrivacyMode)}
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium">
-                    {formatCurrencyInLakhs(category.amount, isPrivacyMode)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center space-x-2">
-              <Repeat className="h-4 w-4" />
-              <span>Recurring Patterns</span>
-            </CardTitle>
-            <CardDescription>Detected recurring transactions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {metrics.insights.recurringPayments.length > 0 ? (
-                metrics.insights.recurringPayments.map((payment, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">{payment.pattern}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {maskNumber(payment.count, isPrivacyMode)} transactions • Avg: {formatCurrencyInLakhs(payment.avgAmount, isPrivacyMode)}
-                      </p>
+            {metrics.topExpenses.length > 0 ? (
+              <div className="grid grid-cols-3 gap-3">
+                {metrics.topExpenses.slice(0, 3).map((expense, index) => (
+                  <Card key={index} className="p-4">
+                    <div className="text-center">
+                      <div className="text-lg font-bold text-red-600 mb-1">
+                        {formatCurrencyInLakhs(expense.amount, isPrivacyMode)}
+                      </div>
+                      <div className="text-sm text-muted-foreground truncate">
+                        {expense.merchant.length > 15 ? expense.merchant.substring(0, 15) + '...' : expense.merchant}
+                      </div>
                     </div>
-                    <Badge variant={payment.type === 'expense' ? 'destructive' : 'default'} className="text-xs">
-                      {maskNumber(payment.count, isPrivacyMode)}x
-                    </Badge>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">No recurring patterns detected</p>
-              )}
-            </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">No expense data found</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
+
+
     </div>
   );
 } 

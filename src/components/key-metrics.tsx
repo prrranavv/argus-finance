@@ -106,12 +106,14 @@ export function KeyMetrics({ isPrivacyMode = false }: KeyMetricsProps) {
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm font-medium text-muted-foreground">CURRENT BANK BALANCE</div>
           </div>
-          <div className="text-2xl font-bold text-green-600 mb-1">
-            {formatCurrencyInLakhs(data.currentBalance.value, isPrivacyMode)}
-          </div>
-          <div className={`flex items-center text-sm ${getChangeColor(data.currentBalance.change)}`}>
-            {getChangeIcon(data.currentBalance.change)}
-            <span className="ml-1">{formatChange(data.currentBalance.change)} from last month</span>
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrencyInLakhs(data.currentBalance.value, isPrivacyMode)}
+            </div>
+            <div className={`flex items-center text-sm ${getChangeColor(data.currentBalance.change)}`}>
+              {getChangeIcon(data.currentBalance.change)}
+              <span className="ml-1">{formatChange(data.currentBalance.change)}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -122,12 +124,14 @@ export function KeyMetrics({ isPrivacyMode = false }: KeyMetricsProps) {
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm font-medium text-muted-foreground">CREDIT CARD DUES</div>
           </div>
-          <div className="text-2xl font-bold text-red-600 mb-1">
-            {formatCurrencyInLakhs(data.creditCardBill.value, isPrivacyMode)}
-          </div>
-          <div className={`flex items-center text-sm ${getChangeColor(-data.creditCardBill.change)}`}>
-            {getChangeIcon(-data.creditCardBill.change)}
-            <span className="ml-1">{formatChange(data.creditCardBill.change)} from last month</span>
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold text-red-600">
+              {formatCurrencyInLakhs(data.creditCardBill.value, isPrivacyMode)}
+            </div>
+            <div className={`flex items-center text-sm ${getChangeColor(-data.creditCardBill.change)}`}>
+              {getChangeIcon(-data.creditCardBill.change)}
+              <span className="ml-1">{formatChange(data.creditCardBill.change)}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -138,12 +142,14 @@ export function KeyMetrics({ isPrivacyMode = false }: KeyMetricsProps) {
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm font-medium text-muted-foreground">AVAILABLE CREDIT</div>
           </div>
-          <div className="text-2xl font-bold text-blue-600 mb-1">
-            {formatCurrencyInLakhs(data.realBalance.value, isPrivacyMode)}
-          </div>
-          <div className={`flex items-center text-sm ${getChangeColor(data.realBalance.change)}`}>
-            {getChangeIcon(data.realBalance.change)}
-            <span className="ml-1">{formatChange(data.realBalance.change)} from last month</span>
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold text-blue-600">
+              {formatCurrencyInLakhs(data.realBalance.value, isPrivacyMode)}
+            </div>
+            <div className={`flex items-center text-sm ${getChangeColor(data.realBalance.change)}`}>
+              {getChangeIcon(data.realBalance.change)}
+              <span className="ml-1">{formatChange(data.realBalance.change)}</span>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -154,12 +160,14 @@ export function KeyMetrics({ isPrivacyMode = false }: KeyMetricsProps) {
           <div className="flex items-center justify-between mb-2">
             <div className="text-sm font-medium text-muted-foreground">REWARD POINTS</div>
           </div>
-          <div className="text-2xl font-bold text-purple-600 mb-1">
-            {isPrivacyMode ? "••••" : data.rewardPoints.value.toLocaleString()}
-          </div>
-          <div className={`flex items-center text-sm ${getChangeColor(data.rewardPoints.change)}`}>
-            {getChangeIcon(data.rewardPoints.change)}
-            <span className="ml-1">{formatChange(data.rewardPoints.change)} from last month</span>
+          <div className="flex items-center gap-3">
+            <div className="text-2xl font-bold text-purple-600">
+              {isPrivacyMode ? "••••" : data.rewardPoints.value.toLocaleString()}
+            </div>
+            <div className={`flex items-center text-sm ${getChangeColor(data.rewardPoints.change)}`}>
+              {getChangeIcon(data.rewardPoints.change)}
+              <span className="ml-1">{formatChange(data.rewardPoints.change)}</span>
+            </div>
           </div>
         </CardContent>
       </Card>

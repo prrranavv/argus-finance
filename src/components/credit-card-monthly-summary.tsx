@@ -41,18 +41,18 @@ export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false }
 
   const formatCurrency = (amount: number) => {
     if (isPrivacyMode) {
-      return '₹ ••••';
+      return '₹••••';
     }
     
     const absAmount = Math.abs(amount);
     if (absAmount >= 100000) {
       const lakhs = absAmount / 100000;
-      return `₹ ${lakhs.toFixed(2)} lakhs`;
+      return `₹${lakhs.toFixed(2)}L`;
     } else if (absAmount >= 1000) {
       const thousands = absAmount / 1000;
-      return `₹ ${thousands.toFixed(1)}K`;
+      return `₹${thousands.toFixed(1)}K`;
     } else {
-      return `₹ ${absAmount.toFixed(0)}`;
+      return `₹${absAmount.toFixed(0)}`;
     }
   };
 

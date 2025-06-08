@@ -6,9 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Link from "next/link";
-import { ArrowLeft, Eye, EyeOff, Search, Filter } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Search, Filter, List, Grid3X3 } from "lucide-react";
 import { TransactionsList } from "@/components/transactions-list";
 import { TransactionMetrics } from "@/components/transaction-metrics";
+import { formatCurrencyInLakhs } from "@/lib/utils";
+import Image from "next/image";
 
 interface TransactionData {
   id: string;
@@ -26,6 +28,206 @@ interface TransactionData {
   updatedAt: Date;
 }
 
+interface TransactionsGridProps {
+  transactions: TransactionData[];
+  isPrivacyMode?: boolean;
+  searchQuery: string;
+  searchInput: string;
+  accountTypeFilter: string;
+  bankFilter: string;
+  timeRangeFilter: string;
+  onSearchChange: (value: string) => void;
+}
+
+function TransactionsGrid({ 
+  transactions, 
+  isPrivacyMode = false,
+  searchQuery,
+  searchInput,
+  accountTypeFilter,
+  bankFilter,
+  timeRangeFilter,
+  onSearchChange
+}: TransactionsGridProps) {
+  const getBankLogo = (bankName: string, accountType: string, source: string) => {
+    // For credit cards, use specific card images
+    if (accountType === 'Credit Card') {
+      const cardImageMap: Record<string, string> = {
+        'HDFC Diners': '/cardImages/diners3dCard.png',
+        'HDFC Swiggy': '/cardImages/swiggyCard.png',
+        'Axis Magnus': '/cardImages/magnusCard.webp',
+        'Flipkart Axis': '/cardImages/flipkartCard.webp',
+      };
+      
+      // Check if source matches any of our card types
+      if (cardImageMap[source]) {
+        return cardImageMap[source];
+      }
+      
+      // If no exact match, try to match based on bankName + keywords
+      if (source.includes('Swiggy') || bankName === 'HDFC Swiggy') {
+        return '/cardImages/swiggyCard.png';
+      }
+      if (source.includes('Diners') || bankName === 'HDFC Diners') {
+        return '/cardImages/diners3dCard.png';
+      }
+      if (source.includes('Magnus') || bankName === 'Axis Magnus') {
+        return '/cardImages/magnusCard.webp';
+      }
+      if (source.includes('Flipkart') || bankName === 'Flipkart Axis') {
+        return '/cardImages/flipkartCard.webp';
+      }
+    }
+    
+    // For bank accounts, use bank logos
+    const logoMap: Record<string, string> = {
+      'HDFC': '/cardImages/hdfclogo.png',
+      'Axis': '/cardImages/axislogo.png',
+    };
+    return logoMap[bankName];
+  };
+
+  // Apply filters to transactions
+  const filteredTransactions = useMemo(() => {
+    let filtered = [...transactions];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(t => 
+        t.description.toLowerCase().includes(query) ||
+        t.bankName.toLowerCase().includes(query) ||
+        t.source.toLowerCase().includes(query) ||
+        t.amount.toString().includes(query) ||
+        formatCurrencyInLakhs(t.amount, false).toLowerCase().includes(query)
+      );
+    }
+
+    // Account type filter
+    if (accountTypeFilter !== "all") {
+      filtered = filtered.filter(t => t.accountType === accountTypeFilter);
+    }
+
+    // Bank/Source filter
+    if (bankFilter !== "all") {
+      filtered = filtered.filter(t => t.bankName === bankFilter || t.source === bankFilter);
+    }
+
+    // Time range filter
+    if (timeRangeFilter !== "all") {
+      const now = new Date();
+      let startDate = new Date();
+      
+      switch (timeRangeFilter) {
+        case "7days":
+          startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case "30days":
+          startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case "60days":
+          startDate = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+          break;
+      }
+      
+      if (timeRangeFilter !== "all") {
+        filtered = filtered.filter(t => new Date(t.date) >= startDate);
+      }
+    }
+
+    return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [transactions, searchQuery, accountTypeFilter, bankFilter, timeRangeFilter]);
+
+  // Limit to 25 transactions for 5x5 grid
+  const gridTransactions = filteredTransactions.slice(0, 25);
+
+  return (
+    <div className="space-y-4">
+      {/* Search Input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          placeholder="Search transactions by merchant, bank, or amount..."
+          value={searchInput}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* 5x5 Grid */}
+      <div className="grid grid-cols-5 gap-6 relative">
+        {gridTransactions.map((transaction) => (
+          <Card 
+            key={transaction.id} 
+            className="p-4 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.2] hover:z-10 relative group"
+          >
+            <div className="space-y-3">
+              {/* Bank Logo - Centered and Consistent */}
+              <div className="flex justify-center mb-3">
+                {getBankLogo(transaction.bankName, transaction.accountType, transaction.source) ? (
+                  <div className="w-16 h-12 rounded-lg bg-white shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden p-2">
+                    <Image
+                      src={getBankLogo(transaction.bankName, transaction.accountType, transaction.source)}
+                      alt={`${transaction.source || transaction.bankName} logo`}
+                      width={transaction.accountType === 'Credit Card' ? 56 : 32}
+                      height={transaction.accountType === 'Credit Card' ? 36 : 32}
+                      className="object-contain filter drop-shadow-sm"
+                      quality={100}
+                      priority={false}
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 shadow-sm border border-gray-200 flex items-center justify-center">
+                    <span className="text-lg font-bold text-gray-700">
+                      {transaction.bankName.charAt(0)}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Amount */}
+              <div className={`text-lg font-bold text-center ${transaction.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
+                {transaction.type === 'expense' ? '-' : '+'}
+                {formatCurrencyInLakhs(transaction.amount, isPrivacyMode)}
+              </div>
+              
+              {/* Transaction Description */}
+              <div className="text-sm font-medium text-gray-900 text-center truncate px-1">
+                {transaction.description}
+              </div>
+              
+              {/* Date */}
+              <div className="text-xs text-muted-foreground text-center">
+                {new Date(transaction.date).toLocaleDateString()}
+              </div>
+              
+              {/* Closing Balance */}
+              {transaction.closingBalance && (
+                <div className="text-xs text-muted-foreground text-center">
+                  Balance: {formatCurrencyInLakhs(transaction.closingBalance, isPrivacyMode)}
+                </div>
+              )}
+            </div>
+          </Card>
+        ))}
+        
+        {/* Fill empty slots if less than 25 transactions */}
+        {Array.from({ length: Math.max(0, 25 - gridTransactions.length) }).map((_, index) => (
+          <Card key={`empty-${index}`} className="p-4 border-dashed border-gray-200 bg-gray-50/50">
+            <div className="h-full flex items-center justify-center text-gray-400 text-sm">
+              No data
+            </div>
+          </Card>
+        ))}
+      </div>
+      
+      <p className="text-sm text-muted-foreground text-center">
+        Showing {Math.min(gridTransactions.length, 25)} of {filteredTransactions.length} transactions
+      </p>
+    </div>
+  );
+}
+
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,6 +241,7 @@ export default function TransactionsPage() {
   const [accountTypeFilter, setAccountTypeFilter] = useState("all");
   const [bankFilter, setBankFilter] = useState("all");
   const [timeRangeFilter, setTimeRangeFilter] = useState("30days");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   // Debounce search input with 1 second delay
   useEffect(() => {
@@ -145,69 +348,60 @@ export default function TransactionsPage() {
         <p className="text-muted-foreground mt-2">
           AI-powered insights from your financial data • {getTimeRangeLabel()}
         </p>
-      </div>
-
-      {/* Global Filters Section */}
-              <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Smart Filters</CardTitle>
-          <CardDescription>Refine your data view with intelligent filtering</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Filters Row */}
-          <div className="flex flex-wrap gap-3 items-center">
-            <div className="flex items-center space-x-2">
-              <Filter className="w-4 h-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">Filters:</span>
-            </div>
-
-            {/* Account Type Filter */}
-            <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Account Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="Bank Account">Bank Account</SelectItem>
-                <SelectItem value="Credit Card">Credit Card</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Bank/Card Filter */}
-            <Select value={bankFilter} onValueChange={setBankFilter}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Bank/Card" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Banks/Cards</SelectItem>
-                {bankOptions.map(bank => (
-                  <SelectItem key={bank} value={bank}>{bank}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Time Range Filter */}
-            <Select value={timeRangeFilter} onValueChange={setTimeRangeFilter}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Time Range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Time</SelectItem>
-                <SelectItem value="7days">Last 7 days</SelectItem>
-                <SelectItem value="30days">Last 30 days</SelectItem>
-                <SelectItem value="60days">Last 60 days</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Clear Filters */}
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
-                Clear Filters
-              </Button>
-            )}
+        
+        {/* Filters Row */}
+        <div className="flex flex-wrap gap-3 items-center mt-6">
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">Filters:</span>
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Account Type Filter */}
+          <Select value={accountTypeFilter} onValueChange={setAccountTypeFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Account Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="Bank Account">Bank Account</SelectItem>
+              <SelectItem value="Credit Card">Credit Card</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Bank/Card Filter */}
+          <Select value={bankFilter} onValueChange={setBankFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Bank/Card" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Banks/Cards</SelectItem>
+              {bankOptions.map(bank => (
+                <SelectItem key={bank} value={bank}>{bank}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Time Range Filter */}
+          <Select value={timeRangeFilter} onValueChange={setTimeRangeFilter}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Time Range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="7days">Last 7 days</SelectItem>
+              <SelectItem value="30days">Last 30 days</SelectItem>
+              <SelectItem value="60days">Last 60 days</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Clear Filters */}
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters}>
+              Clear Filters
+            </Button>
+          )}
+        </div>
+      </div>
 
       {/* Enhanced Metrics Section */}
       <TransactionMetrics 
@@ -220,24 +414,60 @@ export default function TransactionsPage() {
 
       {/* Transactions List Section */}
       <div className="mt-8">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold tracking-tight">All Transactions</h2>
-          <p className="text-muted-foreground mt-1">Complete transaction history with applied filters</p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">All Transactions</h2>
+            <p className="text-muted-foreground mt-1">Complete transaction history with applied filters</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="flex items-center space-x-1"
+            >
+              <List className="h-4 w-4" />
+              <span>List</span>
+            </Button>
+            <Button
+              variant={viewMode === "grid" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className="flex items-center space-x-1"
+            >
+              <Grid3X3 className="h-4 w-4" />
+              <span>Grid</span>
+            </Button>
+          </div>
         </div>
-        <Card>
-          <CardContent className="pt-6">
-            <TransactionsList 
-              transactions={transactions} 
-              isPrivacyMode={isPrivacyMode}
-              searchQuery={debouncedSearchQuery}
-              searchInput={searchInput}
-              accountTypeFilter={accountTypeFilter}
-              bankFilter={bankFilter}
-              timeRangeFilter={timeRangeFilter}
-              onSearchChange={setSearchInput}
-            />
-          </CardContent>
-        </Card>
+        
+        {viewMode === "list" ? (
+          <Card>
+            <CardContent className="pt-6">
+              <TransactionsList 
+                transactions={transactions} 
+                isPrivacyMode={isPrivacyMode}
+                searchQuery={debouncedSearchQuery}
+                searchInput={searchInput}
+                accountTypeFilter={accountTypeFilter}
+                bankFilter={bankFilter}
+                timeRangeFilter={timeRangeFilter}
+                onSearchChange={setSearchInput}
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <TransactionsGrid 
+            transactions={transactions} 
+            isPrivacyMode={isPrivacyMode}
+            searchQuery={debouncedSearchQuery}
+            searchInput={searchInput}
+            accountTypeFilter={accountTypeFilter}
+            bankFilter={bankFilter}
+            timeRangeFilter={timeRangeFilter}
+            onSearchChange={setSearchInput}
+          />
+        )}
       </div>
     </div>
   );

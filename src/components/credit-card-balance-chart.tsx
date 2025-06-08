@@ -45,18 +45,18 @@ export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false }: 
 
   const formatCurrency = (value: number) => {
     if (isPrivacyMode) {
-      return '₹ ••••';
+      return '₹••••';
     }
     
     const absValue = Math.abs(value);
     if (absValue >= 100000) {
       const lakhs = absValue / 100000;
-      return `₹ ${lakhs.toFixed(2)} lakhs`;
+      return `₹${lakhs.toFixed(2)}L`;
     } else if (absValue >= 1000) {
       const thousands = absValue / 1000;
-      return `₹ ${thousands.toFixed(1)}K`;
+      return `₹${thousands.toFixed(1)}K`;
     } else {
-      return `₹ ${absValue.toFixed(0)}`;
+      return `₹${absValue.toFixed(0)}`;
     }
   };
 
@@ -176,7 +176,7 @@ export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false }: 
           tickLine={false}
           tickFormatter={(value) => {
             if (isPrivacyMode) {
-              return '₹ ••••';
+              return '₹••••';
             }
             if (Math.abs(value) >= 100000) {
               return `₹${(Math.abs(value) / 100000).toFixed(1)}L`;

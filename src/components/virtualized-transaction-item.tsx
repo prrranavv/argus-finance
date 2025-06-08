@@ -120,62 +120,13 @@ const VirtualizedTransactionItem = memo(function VirtualizedTransactionItem({
 
           {/* Transaction Details */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center space-x-2 mb-1">
+            <div className="mb-1">
               <h4 className="font-medium text-gray-900 truncate">
                 {transaction.description}
               </h4>
-              {transaction.category && (
-                <div className="flex items-center space-x-1">
-                  {editingCategory === transaction.id ? (
-                    <div className="flex items-center space-x-1">
-                      <Input
-                        value={newCategory}
-                        onChange={(e) => onNewCategoryChange(e.target.value)}
-                        className="h-6 w-20 text-xs"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') onCategorySave(transaction.id);
-                          if (e.key === 'Escape') onCategoryCancel();
-                        }}
-                        autoFocus
-                      />
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0"
-                        onClick={() => onCategorySave(transaction.id)}
-                      >
-                        <Check className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 w-6 p-0"
-                        onClick={onCategoryCancel}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div
-                      className="flex items-center space-x-1 cursor-pointer group"
-                      onClick={() => onCategoryEdit(transaction.id, transaction.category)}
-                    >
-                      <Badge 
-                        variant={transaction.type === 'income' ? 'default' : 'secondary'}
-                        className="text-xs px-2 py-0.5"
-                      >
-                        {transaction.category}
-                      </Badge>
-                      <Edit2 className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
-            <div className="flex items-center space-x-2 text-xs text-gray-500">
+            <div className="text-xs text-gray-500">
               <span>{formatDate(transaction.date)}</span>
-              <span>•</span>
-              <span>{transaction.source || transaction.bankName}</span>
             </div>
           </div>
         </div>

@@ -146,6 +146,18 @@ export default function Home() {
         </Card>
       </div>
 
+      {/* Section Divider */}
+      <div className="mb-12">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-200"></div>
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="px-6 bg-white text-gray-500 font-medium">Financial Overview</span>
+          </div>
+        </div>
+      </div>
+
       {/* Key Metrics Section */}
       <KeyMetrics isPrivacyMode={isPrivacyMode} />
 

@@ -43,20 +43,20 @@ export function AccountBalanceChart({ selectedBank, isPrivacyMode = false }: Acc
 
   const formatCurrency = (value: number) => {
     if (isPrivacyMode) {
-      return '₹ ••••';
+      return '₹••••';
     }
     
     const absValue = Math.abs(value);
     if (absValue >= 100000) {
       const lakhs = absValue / 100000;
       const sign = value < 0 ? '-' : '';
-      return `${sign}₹ ${lakhs.toFixed(2)} lakhs`;
+      return `${sign}₹${lakhs.toFixed(2)}L`;
     } else if (absValue >= 1000) {
       const thousands = absValue / 1000;
       const sign = value < 0 ? '-' : '';
-      return `${sign}₹ ${thousands.toFixed(1)}K`;
+      return `${sign}₹${thousands.toFixed(1)}K`;
     } else {
-      return `₹ ${value.toFixed(0)}`;
+      return `₹${value.toFixed(0)}`;
     }
   };
 
@@ -200,17 +200,17 @@ export function AccountBalanceChart({ selectedBank, isPrivacyMode = false }: Acc
                 tick={{ fontSize: 12 }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(value) => {
-                  if (isPrivacyMode) {
-                    return '₹ ••••';
-                  }
-                  if (value >= 100000) {
-                    return `₹${(value / 100000).toFixed(1)}L`;
-                  } else if (value >= 1000) {
-                    return `₹${(value / 1000).toFixed(0)}K`;
-                  }
-                  return `₹${value}`;
-                }}
+                              tickFormatter={(value) => {
+                if (isPrivacyMode) {
+                  return '₹••••';
+                }
+                if (value >= 100000) {
+                  return `₹${(value / 100000).toFixed(1)}L`;
+                } else if (value >= 1000) {
+                  return `₹${(value / 1000).toFixed(0)}K`;
+                }
+                return `₹${value}`;
+              }}
               />
               <Area
                 type="monotone"

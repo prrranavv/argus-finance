@@ -7,26 +7,26 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(amount: number, isPrivacyMode: boolean = false): string {
   if (isPrivacyMode) {
-    return "₹ ••••";
+    return "₹••••";
   }
-  return `₹ ${amount.toLocaleString('en-IN')}`;
+  return `₹${amount.toLocaleString('en-IN')}`;
 }
 
 export function formatCurrencyInLakhs(amount: number, isPrivacyMode: boolean = false): string {
   if (isPrivacyMode) {
-    return "₹ ••••";
+    return "₹••••";
   }
   
   const roundedAmount = Math.round(amount);
   
   if (roundedAmount >= 100000) {
     const lakhs = roundedAmount / 100000;
-    return `₹ ${lakhs.toFixed(2)} lakhs`;
+    return `₹${lakhs.toFixed(2)}L`;
   } else if (roundedAmount >= 1000) {
     const thousands = roundedAmount / 1000;
-    return `₹ ${thousands.toFixed(1)}K`;
+    return `₹${thousands.toFixed(1)}K`;
   } else {
-    return `₹ ${roundedAmount.toLocaleString('en-IN')}`;
+    return `₹${roundedAmount.toLocaleString('en-IN')}`;
   }
 }
 
