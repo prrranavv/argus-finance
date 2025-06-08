@@ -95,9 +95,15 @@ npm run dev
 
 Open `localhost:3000` and upload your first statement. Watch the magic happen.
 
-## 🎨 Screenshots
+## 🎨 Visual Design
 
-*Coming soon - the UI is too beautiful not to show off*
+**Beautiful by Design**: Argus features a stunning visual identity with:
+- **Custom 3D Card Renders**: Your actual credit cards rendered in beautiful 3D
+- **Sophisticated Logo**: Clean, modern branding that reflects financial intelligence
+- **Smooth Animations**: Buttery 1.4x hover effects and seamless transitions
+- **Dark/Light Mode**: Adapts to your system preferences automatically
+
+*Screenshots coming soon - the UI is too beautiful not to show off*
 
 ## 💭 Philosophy
 

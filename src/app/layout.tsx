@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Personal Finance Dashboard",
-  description: "Track and analyze your financial data with AI-powered insights",
+  title: "Argus - AI-Powered Financial Intelligence",
+  description: "Take control of your finances with Argus. AI-powered transaction analysis, beautiful 3D card visualization, and privacy-first local storage. Transform your bank statements into actionable insights.",
 };
 
 export default function RootLayout({

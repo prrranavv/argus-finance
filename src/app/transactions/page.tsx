@@ -141,17 +141,17 @@ export default function TransactionsPage() {
             )}
           </Button>
         </div>
-        <h1 className="text-4xl font-bold tracking-tight">Transaction Analytics</h1>
+        <h1 className="text-4xl font-bold tracking-tight">Transaction Intelligence</h1>
         <p className="text-muted-foreground mt-2">
-          Detailed insights from your financial data • {getTimeRangeLabel()}
+          AI-powered insights from your financial data • {getTimeRangeLabel()}
         </p>
       </div>
 
       {/* Global Filters Section */}
-      <Card className="mb-8">
+              <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Filters & Search</CardTitle>
-          <CardDescription>Apply filters to all sections below</CardDescription>
+          <CardTitle>Smart Filters</CardTitle>
+          <CardDescription>Refine your data view with intelligent filtering</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters Row */}

@@ -176,14 +176,14 @@ export function UploadModal() {
       <DialogTrigger asChild>
         <Button className="w-full">
           <Upload className="mr-2 h-4 w-4" />
-          Upload Statements
+          Import Data
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Upload Financial Statements</DialogTitle>
+          <DialogTitle>Import Financial Data</DialogTitle>
           <DialogDescription>
-            Upload your bank statements, credit card statements, or CSV files. Supported formats: PDF, CSV, XLS, XLSX.
+            Securely process any bank or credit card statement with Argus AI. Supported formats: PDF, CSV, XLS, XLSX.
           </DialogDescription>
         </DialogHeader>
 
@@ -280,7 +280,7 @@ export function UploadModal() {
                 }
                 className="flex-1"
                               >
-                Process with AI
+                Analyze with Argus AI
               </Button>
               <Button
                 variant="outline"

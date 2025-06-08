@@ -38,9 +38,20 @@ export default function Home() {
     <div className="container mx-auto p-4 md:p-10 max-w-7xl">
       <div className="mb-8">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight">Personal Finance Dashboard</h1>
-            <p className="text-muted-foreground mt-2">Upload your financial statements and get AI-powered insights</p>
+          <div className="flex items-center space-x-4">
+            <div className="w-16 h-16 relative">
+              <Image
+                src="/cardImages/argusLogo.png"
+                alt="Argus Logo"
+                fill
+                className="object-contain"
+                priority={true}
+              />
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold tracking-tight">Argus</h1>
+              <p className="text-muted-foreground mt-2">AI-powered financial intelligence that protects your privacy</p>
+            </div>
           </div>
           <Button
             variant="outline"
@@ -67,8 +78,8 @@ export default function Home() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle>Upload Statements</CardTitle>
-            <CardDescription>Upload your bank and credit card statements</CardDescription>
+            <CardTitle>Import Statements</CardTitle>
+            <CardDescription>Securely process any bank or credit card statement</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col flex-1">
             <div className="flex-1"></div>
@@ -81,16 +92,16 @@ export default function Home() {
 
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle>Spending Analysis</CardTitle>
-            <CardDescription>View your spending patterns and trends</CardDescription>
+            <CardTitle>Transaction Intelligence</CardTitle>
+            <CardDescription>Discover patterns in your spending behavior</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col flex-1">
-            <p className="text-sm text-muted-foreground mb-4">View your spending patterns and trends</p>
+            <p className="text-sm text-muted-foreground mb-4">Explore intelligent categorization and spending insights</p>
             <div className="flex-1"></div>
             <Link href="/transactions">
               <Button variant="outline" className="w-full">
                 <BarChart3 className="mr-2 h-4 w-4" />
-                View Transactions
+                Analyze Transactions
               </Button>
             </Link>
           </CardContent>
@@ -98,11 +109,11 @@ export default function Home() {
 
         <Card className="flex flex-col">
           <CardHeader>
-            <CardTitle>AI Insights</CardTitle>
-            <CardDescription>Get personalized financial insights</CardDescription>
+            <CardTitle>Smart Insights</CardTitle>
+            <CardDescription>AI-powered financial recommendations</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col flex-1">
-            <p className="text-sm text-muted-foreground mb-4">Get personalized financial insights powered by GPT-4.5</p>
+            <p className="text-sm text-muted-foreground mb-4">Personalized insights powered by advanced AI models</p>
             <div className="flex-1"></div>
             <Button variant="outline" className="w-full" disabled>
               <Brain className="mr-2 h-4 w-4" />
@@ -119,8 +130,8 @@ export default function Home() {
       <div className="mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>Bank Accounts</CardTitle>
-            <CardDescription>Select a bank to view account balance progression and monthly summary</CardDescription>
+            <CardTitle>Account Overview</CardTitle>
+            <CardDescription>Track balance trends and monthly spending across all your accounts</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs value={selectedBank} onValueChange={setSelectedBank}>
@@ -151,8 +162,8 @@ export default function Home() {
       <div className="mb-8">
         <Card>
           <CardHeader>
-            <CardTitle>Credit Cards</CardTitle>
-            <CardDescription>Click on a card to view outstanding balances and monthly spending</CardDescription>
+            <CardTitle>Credit Card Portfolio</CardTitle>
+            <CardDescription>Interactive 3D card selection with real-time spending analytics</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex gap-8">
