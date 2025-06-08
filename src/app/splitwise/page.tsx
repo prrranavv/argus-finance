@@ -105,7 +105,7 @@ interface CurrentUser {
 }
 
 export default function SplitvisePage() {
-  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+  const [isPrivacyMode, setIsPrivacyMode] = useState(true);
   const [groups, setGroups] = useState<SplitwiseGroup[]>([]);
   const [expenses, setExpenses] = useState<SplitwiseExpense[]>([]);
   const [friends, setFriends] = useState<SplitviseFriend[]>([]);
@@ -124,6 +124,21 @@ export default function SplitvisePage() {
   const [hoverTimeout, setHoverTimeout] = useState<NodeJS.Timeout | null>(null);
   const [showTimeout, setShowTimeout] = useState<NodeJS.Timeout | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
+
+  // Load privacy preference from localStorage on mount
+  useEffect(() => {
+    const savedPrivacyMode = localStorage.getItem('privacyMode');
+    if (savedPrivacyMode !== null) {
+      setIsPrivacyMode(JSON.parse(savedPrivacyMode));
+    }
+  }, []);
+
+  // Save privacy preference to localStorage when changed
+  const handlePrivacyToggle = () => {
+    const newPrivacyMode = !isPrivacyMode;
+    setIsPrivacyMode(newPrivacyMode);
+    localStorage.setItem('privacyMode', JSON.stringify(newPrivacyMode));
+  };
 
   const fetchData = async (isInitial: boolean = true) => {
     if (isInitial) {
@@ -766,7 +781,7 @@ export default function SplitvisePage() {
     <div className="container mx-auto p-4 md:p-10 max-w-7xl">
       <Header 
         isPrivacyMode={isPrivacyMode}
-        onPrivacyToggle={() => setIsPrivacyMode(!isPrivacyMode)}
+        onPrivacyToggle={handlePrivacyToggle}
       />
 
       {error && (
