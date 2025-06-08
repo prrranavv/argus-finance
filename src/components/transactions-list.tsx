@@ -5,6 +5,7 @@ import { formatCurrencyInLakhs } from "@/lib/utils";
 import VirtualizedTransactionItem from './virtualized-transaction-item';
 import { TransactionSkeleton } from './transaction-skeleton';
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
 interface Transaction {
@@ -60,6 +61,10 @@ interface TransactionsListProps {
   bankFilter: string;
   timeRangeFilter: string;
   onSearchChange: (value: string) => void;
+  currentPage?: number;
+  itemsPerPage?: number;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
 }
 
 export function TransactionsList({ 
@@ -70,7 +75,11 @@ export function TransactionsList({
   accountTypeFilter,
   bankFilter,
   timeRangeFilter,
-  onSearchChange
+  onSearchChange,
+  currentPage = 1,
+  itemsPerPage = 25,
+  onLoadMore,
+  hasMore = true
 }: TransactionsListProps) {
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [newCategory, setNewCategory] = useState("");
@@ -229,6 +238,12 @@ export function TransactionsList({
     setFilteredTransactions(filteredAndSearchedTransactions);
   }, [filteredAndSearchedTransactions]);
 
+  // Apply pagination to filtered transactions
+  const paginatedTransactions = useMemo(() => {
+    const totalItemsToShow = currentPage * itemsPerPage;
+    return filteredTransactions.slice(0, totalItemsToShow);
+  }, [filteredTransactions, currentPage, itemsPerPage]);
+
   const formatPercentageChange = (change: number, previousAmount: number) => {
     if (change === 0) return "No change";
     const direction = change > 0 ? "higher" : "lower";
@@ -298,9 +313,9 @@ export function TransactionsList({
       <div className="space-y-3">
         {isLoading ? (
           <TransactionSkeleton count={5} />
-        ) : filteredTransactions.length > 0 ? (
+        ) : paginatedTransactions.length > 0 ? (
                      <div className="space-y-4">
-             {filteredTransactions.map((transaction) => (
+             {paginatedTransactions.map((transaction) => (
                <VirtualizedTransactionItem
                  key={transaction.id}
                  transaction={transaction}
@@ -321,6 +336,27 @@ export function TransactionsList({
             <div className="text-sm">Try adjusting your search or filter criteria.</div>
           </div>
         ) : null}
+
+        {/* Load More Button */}
+        {onLoadMore && hasMore && paginatedTransactions.length < filteredTransactions.length && (
+          <div className="flex justify-center pt-6">
+            <Button 
+              onClick={onLoadMore}
+              variant="outline"
+              size="sm"
+              className="flex items-center space-x-2"
+            >
+              <span>Load More ({Math.min(itemsPerPage, filteredTransactions.length - paginatedTransactions.length)} more)</span>
+            </Button>
+          </div>
+        )}
+
+        {/* Transaction Count Display */}
+        {paginatedTransactions.length > 0 && (
+          <p className="text-sm text-muted-foreground text-center pt-4">
+            Showing {paginatedTransactions.length} of {filteredTransactions.length} transactions
+          </p>
+        )}
       </div>
     </div>
   );

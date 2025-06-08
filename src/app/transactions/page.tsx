@@ -38,6 +38,10 @@ interface TransactionsGridProps {
   bankFilter: string;
   timeRangeFilter: string;
   onSearchChange: (value: string) => void;
+  currentPage: number;
+  itemsPerPage: number;
+  onLoadMore: () => void;
+  hasMore: boolean;
 }
 
 function TransactionsGrid({ 
@@ -48,15 +52,19 @@ function TransactionsGrid({
   accountTypeFilter,
   bankFilter,
   timeRangeFilter,
-  onSearchChange
+  onSearchChange,
+  currentPage,
+  itemsPerPage,
+  onLoadMore,
+  hasMore
 }: TransactionsGridProps) {
   const getBankLogo = (bankName: string, accountType: string, source: string) => {
-    // For credit cards, use specific card images
+    // For credit cards, use specific card images - matching main page
     if (accountType === 'Credit Card') {
       const cardImageMap: Record<string, string> = {
-        'HDFC Diners': '/cardImages/diners3dCard.png',
+        'HDFC Diners': '/cardImages/dinersCard.png',
         'HDFC Swiggy': '/cardImages/swiggyCard.png',
-        'Axis Magnus': '/cardImages/magnusCard.webp',
+        'Axis Magnus': '/cardImages/magnusCard.png',
         'Flipkart Axis': '/cardImages/flipkartCard.webp',
       };
       
@@ -70,10 +78,10 @@ function TransactionsGrid({
         return '/cardImages/swiggyCard.png';
       }
       if (source.includes('Diners') || bankName === 'HDFC Diners') {
-        return '/cardImages/diners3dCard.png';
+        return '/cardImages/dinersCard.png';
       }
       if (source.includes('Magnus') || bankName === 'Axis Magnus') {
-        return '/cardImages/magnusCard.webp';
+        return '/cardImages/magnusCard.png';
       }
       if (source.includes('Flipkart') || bankName === 'Flipkart Axis') {
         return '/cardImages/flipkartCard.webp';
@@ -139,8 +147,9 @@ function TransactionsGrid({
     return filtered.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [transactions, searchQuery, accountTypeFilter, bankFilter, timeRangeFilter]);
 
-  // Limit to 25 transactions for 5x5 grid
-  const gridTransactions = filteredTransactions.slice(0, 25);
+  // Calculate transactions to show based on pagination
+  const totalItemsToShow = currentPage * itemsPerPage;
+  const gridTransactions = filteredTransactions.slice(0, totalItemsToShow);
 
   return (
     <div className="space-y-4">
@@ -155,8 +164,8 @@ function TransactionsGrid({
         />
       </div>
 
-      {/* 5x5 Grid */}
-      <div className="grid grid-cols-5 gap-6 relative">
+      {/* Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 relative">
         {gridTransactions.map((transaction) => (
           <Card 
             key={transaction.id} 
@@ -166,13 +175,13 @@ function TransactionsGrid({
               {/* Bank Logo - Centered and Consistent */}
               <div className="flex justify-center mb-3">
                 {getBankLogo(transaction.bankName, transaction.accountType, transaction.source) ? (
-                  <div className="w-16 h-12 rounded-lg bg-white shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden p-2">
+                  <div className={`${transaction.accountType === 'Credit Card' ? 'w-20 h-12' : 'w-12 h-8'} rounded-lg bg-white shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden p-1`}>
                     <Image
                       src={getBankLogo(transaction.bankName, transaction.accountType, transaction.source)}
                       alt={`${transaction.source || transaction.bankName} logo`}
-                      width={transaction.accountType === 'Credit Card' ? 56 : 32}
-                      height={transaction.accountType === 'Credit Card' ? 36 : 32}
-                      className="object-contain filter drop-shadow-sm"
+                      width={transaction.accountType === 'Credit Card' ? 64 : 40}
+                      height={transaction.accountType === 'Credit Card' ? 40 : 25}
+                      className="object-contain filter drop-shadow-sm max-w-full max-h-full"
                       quality={100}
                       priority={false}
                     />
@@ -203,7 +212,7 @@ function TransactionsGrid({
               </div>
               
               {/* Closing Balance */}
-              {transaction.closingBalance && (
+              {transaction.closingBalance !== null && transaction.closingBalance !== 0 && (
                 <div className="text-xs text-muted-foreground text-center">
                   Balance: {formatCurrencyInLakhs(transaction.closingBalance, isPrivacyMode)}
                 </div>
@@ -212,18 +221,25 @@ function TransactionsGrid({
           </Card>
         ))}
         
-        {/* Fill empty slots if less than 25 transactions */}
-        {Array.from({ length: Math.max(0, 25 - gridTransactions.length) }).map((_, index) => (
-          <Card key={`empty-${index}`} className="p-4 border-dashed border-gray-200 bg-gray-50/50">
-            <div className="h-full flex items-center justify-center text-gray-400 text-sm">
-              No data
-            </div>
-          </Card>
-        ))}
+
       </div>
       
+      {/* Load More Button */}
+      {hasMore && gridTransactions.length < filteredTransactions.length && (
+        <div className="flex justify-center pt-4">
+          <Button 
+            onClick={onLoadMore}
+            variant="outline"
+            size="sm"
+            className="flex items-center space-x-2"
+          >
+            <span>Load More ({Math.min(itemsPerPage, filteredTransactions.length - gridTransactions.length)} more)</span>
+          </Button>
+        </div>
+      )}
+      
       <p className="text-sm text-muted-foreground text-center">
-        Showing {Math.min(gridTransactions.length, 25)} of {filteredTransactions.length} transactions
+        Showing {gridTransactions.length} of {filteredTransactions.length} transactions
       </p>
     </div>
   );
@@ -258,6 +274,13 @@ export default function TransactionsPage() {
   const [bankFilter, setBankFilter] = useState("all");
   const [timeRangeFilter, setTimeRangeFilter] = useState("30days");
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  
+  // Pagination states for infinite scroll
+  const [gridPage, setGridPage] = useState(1);
+  const [listPage, setListPage] = useState(1);
+  const [hasMoreTransactions, setHasMoreTransactions] = useState(true);
+  
+  const ITEMS_PER_PAGE = 10;
 
   // Debounce search input with 1 second delay
   useEffect(() => {
@@ -308,7 +331,33 @@ export default function TransactionsPage() {
     setAccountTypeFilter("all");
     setBankFilter("all");
     setTimeRangeFilter("30days");
+    setGridPage(1);
+    setListPage(1);
+    setHasMoreTransactions(true);
   };
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setGridPage(1);
+    setListPage(1);
+    setHasMoreTransactions(true);
+  }, [debouncedSearchQuery, accountTypeFilter, bankFilter, timeRangeFilter]);
+
+  // Reset pagination when view mode changes
+  useEffect(() => {
+    setGridPage(1);
+    setListPage(1);
+    setHasMoreTransactions(true);
+  }, [viewMode]);
+
+  // Infinite scroll handler
+  const loadMoreTransactions = useCallback(() => {
+    if (viewMode === "grid") {
+      setGridPage(prev => prev + 1);
+    } else {
+      setListPage(prev => prev + 1);
+    }
+  }, [viewMode]);
 
   const hasActiveFilters = debouncedSearchQuery || accountTypeFilter !== "all" || bankFilter !== "all" || timeRangeFilter !== "30days";
 
@@ -445,6 +494,10 @@ export default function TransactionsPage() {
                 bankFilter={bankFilter}
                 timeRangeFilter={timeRangeFilter}
                 onSearchChange={setSearchInput}
+                currentPage={listPage}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onLoadMore={loadMoreTransactions}
+                hasMore={hasMoreTransactions}
               />
             </CardContent>
           </Card>
@@ -460,6 +513,10 @@ export default function TransactionsPage() {
                 bankFilter={bankFilter}
                 timeRangeFilter={timeRangeFilter}
                 onSearchChange={setSearchInput}
+                currentPage={gridPage}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onLoadMore={loadMoreTransactions}
+                hasMore={hasMoreTransactions}
               />
             </CardContent>
           </Card>
