@@ -15,9 +15,10 @@ interface MonthlySummaryData {
 
 interface MonthlySummaryProps {
   selectedBank: string;
+  isPrivacyMode?: boolean;
 }
 
-export function MonthlySummary({ selectedBank }: MonthlySummaryProps) {
+export function MonthlySummary({ selectedBank, isPrivacyMode = false }: MonthlySummaryProps) {
   const [data, setData] = useState<MonthlySummaryData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -114,16 +115,16 @@ export function MonthlySummary({ selectedBank }: MonthlySummaryProps) {
                 <TableRow key={index}>
                   <TableCell className="font-medium">{row.month}</TableCell>
                   <TableCell className="text-right">
-                    {row.accountBalance !== null ? formatCurrencyInLakhs(row.accountBalance) : '-'}
+                    {row.accountBalance !== null ? formatCurrencyInLakhs(row.accountBalance, isPrivacyMode) : '-'}
                   </TableCell>
                   <TableCell className="text-right text-green-600">
-                    {formatCurrencyInLakhs(row.credited)}
+                    {formatCurrencyInLakhs(row.credited, isPrivacyMode)}
                   </TableCell>
                   <TableCell className="text-right text-red-600">
-                    {formatCurrencyInLakhs(row.debited)}
+                    {formatCurrencyInLakhs(row.debited, isPrivacyMode)}
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatCurrencyInLakhs(row.totalCreditBill)}
+                    {formatCurrencyInLakhs(row.totalCreditBill, isPrivacyMode)}
                   </TableCell>
                 </TableRow>
               ))}

@@ -10,15 +10,16 @@ interface CreditCardBalanceData {
   'HDFC Diners'?: number | null;
   'HDFC Swiggy'?: number | null;
   'Axis Magnus'?: number | null;
-  'Axis Flipkart'?: number | null;
+  'Flipkart Axis'?: number | null;
   [key: string]: string | number | null | undefined;
 }
 
 interface CreditCardBalanceChartProps {
   selectedCard: string;
+  isPrivacyMode?: boolean;
 }
 
-export function CreditCardBalanceChart({ selectedCard }: CreditCardBalanceChartProps) {
+export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false }: CreditCardBalanceChartProps) {
   const [data, setData] = useState<CreditCardBalanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +44,10 @@ export function CreditCardBalanceChart({ selectedCard }: CreditCardBalanceChartP
   }, []);
 
   const formatCurrency = (value: number) => {
+    if (isPrivacyMode) {
+      return '₹ ••••';
+    }
+    
     const absValue = Math.abs(value);
     if (absValue >= 100000) {
       const lakhs = absValue / 100000;
@@ -84,7 +89,7 @@ export function CreditCardBalanceChart({ selectedCard }: CreditCardBalanceChartP
       case 'HDFC Diners': return '#dc2626';
       case 'HDFC Swiggy': return '#ea580c';
       case 'Axis Magnus': return '#16a34a';
-      case 'Axis Flipkart': return '#0891b2';
+      case 'Flipkart Axis': return '#0891b2';
       default: return '#8b5cf6';
     }
   };
@@ -170,6 +175,9 @@ export function CreditCardBalanceChart({ selectedCard }: CreditCardBalanceChartP
           axisLine={false}
           tickLine={false}
           tickFormatter={(value) => {
+            if (isPrivacyMode) {
+              return '₹ ••••';
+            }
             if (Math.abs(value) >= 100000) {
               return `₹${(Math.abs(value) / 100000).toFixed(1)}L`;
             } else if (Math.abs(value) >= 1000) {

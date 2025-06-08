@@ -3,36 +3,123 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // Get date 30 days ago
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    // Get date 60 days ago for comparison (30 days before the last 30 days)
-    const sixtyDaysAgo = new Date();
-    sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+    const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search');
+    const accountType = searchParams.get('accountType');
+    const bank = searchParams.get('bank');
+    const timeRange = searchParams.get('timeRange') || '30days';
 
-    // Fetch transactions for last 30 days
-    const recentTransactions = await prisma.transaction.findMany({
-      where: {
-        date: {
-          gte: thirtyDaysAgo
+    // Calculate date ranges based on timeRange
+    let daysBack = 30;
+    switch (timeRange) {
+      case '7days':
+        daysBack = 7;
+        break;
+      case '30days':
+        daysBack = 30;
+        break;
+      case '60days':
+        daysBack = 60;
+        break;
+      default:
+        daysBack = 30;
+        break;
+    }
+
+    // Get date for current period
+    const periodStartDate = new Date();
+    periodStartDate.setDate(periodStartDate.getDate() - daysBack);
+    
+    // Get date for previous period (for comparison)
+    const previousPeriodStartDate = new Date();
+    previousPeriodStartDate.setDate(previousPeriodStartDate.getDate() - (daysBack * 2));
+
+    // Build where clause for filtering
+    const buildWhereClause = (dateStart: Date, dateEnd?: Date) => {
+      const where: any = {
+        date: dateEnd ? {
+          gte: dateStart,
+          lt: dateEnd
+        } : {
+          gte: dateStart
         }
-      },
+      };
+
+      // Add search filter
+      if (search) {
+        where.OR = [
+          {
+            description: {
+              contains: search
+            }
+          },
+          {
+            bankName: {
+              contains: search
+            }
+          }
+        ];
+      }
+
+      // Add account type filter
+      if (accountType && accountType !== 'all') {
+        where.accountType = accountType; // 'Bank Account' or 'Credit Card'
+      }
+
+      // Add bank filter  
+      if (bank && bank !== 'all') {
+        // If search is already using OR, we need to combine filters with AND
+        if (where.OR) {
+          where.AND = [
+            { OR: where.OR },
+            {
+              OR: [
+                {
+                  bankName: {
+                    contains: bank
+                  }
+                },
+                {
+                  source: {
+                    contains: bank
+                  }
+                }
+              ]
+            }
+          ];
+          delete where.OR;
+        } else {
+          where.OR = [
+            {
+              bankName: {
+                contains: bank
+              }
+            },
+            {
+              source: {
+                contains: bank
+              }
+            }
+          ];
+        }
+      }
+
+      return where;
+    };
+
+    // Fetch transactions for current period
+    const recentTransactions = await prisma.transaction.findMany({
+      where: buildWhereClause(periodStartDate),
       orderBy: {
         date: 'desc'
       }
     });
 
-    // Fetch transactions for previous 30 days (31-60 days ago) for comparison
+    // Fetch transactions for previous period for comparison
     const previousTransactions = await prisma.transaction.findMany({
-      where: {
-        date: {
-          gte: sixtyDaysAgo,
-          lt: thirtyDaysAgo
-        }
-      }
+      where: buildWhereClause(previousPeriodStartDate, periodStartDate)
     });
 
     // Calculate current period metrics
@@ -40,7 +127,7 @@ export async function GET() {
     const totalExpenses = recentTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
-    const dailyAvgSpending = totalExpenses / 30;
+    const dailyAvgSpending = totalExpenses / daysBack;
     const avgTransactionAmount = totalTransactions > 0 ? totalExpenses / recentTransactions.filter(t => t.type === 'expense').length : 0;
 
     // Calculate previous period metrics for comparison
@@ -48,7 +135,7 @@ export async function GET() {
     const prevTotalExpenses = previousTransactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
-    const prevDailyAvgSpending = prevTotalExpenses / 30;
+    const prevDailyAvgSpending = prevTotalExpenses / daysBack;
     const prevAvgTransactionAmount = prevTotalTransactions > 0 ? prevTotalExpenses / previousTransactions.filter(t => t.type === 'expense').length : 0;
 
     // Calculate percentage changes
@@ -80,7 +167,7 @@ export async function GET() {
         },
         date: {
           gte: fourMonthsAgo,
-          lt: thirtyDaysAgo // Exclude current 30-day period
+          lt: periodStartDate // Exclude current period
         }
       },
       orderBy: {
@@ -156,9 +243,9 @@ export async function GET() {
 
     return NextResponse.json({
       period: {
-        start: thirtyDaysAgo,
+        start: periodStartDate,
         end: new Date(),
-        days: 30
+        days: daysBack
       },
       metrics: {
         totalExpenses: {

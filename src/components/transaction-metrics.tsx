@@ -66,16 +66,42 @@ interface TransactionMetrics {
 
 interface TransactionMetricsProps {
   isPrivacyMode?: boolean;
+  searchQuery?: string;
+  accountTypeFilter?: string;
+  bankFilter?: string;
+  timeRangeFilter?: string;
 }
 
-export function TransactionMetrics({ isPrivacyMode = false }: TransactionMetricsProps) {
+export function TransactionMetrics({ 
+  isPrivacyMode = false,
+  searchQuery,
+  accountTypeFilter,
+  bankFilter,
+  timeRangeFilter
+}: TransactionMetricsProps) {
   const [metrics, setMetrics] = useState<TransactionMetrics | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch('/api/transaction-metrics');
+        const params = new URLSearchParams();
+        
+        if (searchQuery) {
+          params.append('search', searchQuery);
+        }
+        if (accountTypeFilter && accountTypeFilter !== 'all') {
+          params.append('accountType', accountTypeFilter);
+        }
+        if (bankFilter && bankFilter !== 'all') {
+          params.append('bank', bankFilter);
+        }
+        if (timeRangeFilter && timeRangeFilter !== 'all') {
+          params.append('timeRange', timeRangeFilter);
+        }
+
+        const url = `/api/transaction-metrics${params.toString() ? `?${params.toString()}` : ''}`;
+        const response = await fetch(url);
         const data = await response.json();
         setMetrics(data);
       } catch (error) {
@@ -86,19 +112,29 @@ export function TransactionMetrics({ isPrivacyMode = false }: TransactionMetrics
     };
 
     fetchMetrics();
-  }, []);
+  }, [searchQuery, accountTypeFilter, bankFilter, timeRangeFilter]);
 
   const formatPercentageChangeWithAmount = (change: number, previousAmount: number) => {
     const isPositive = change >= 0;
     const Icon = isPositive ? TrendingUp : TrendingDown;
     const colorClass = isPositive ? 'text-green-600' : 'text-red-600';
-    const direction = isPositive ? 'higher' : 'lower';
+    const sign = isPositive ? '+' : '-';
+    
+    // Get the time period text
+    const getPeriodText = () => {
+      switch (timeRangeFilter) {
+        case "7days": return "last 7 days";
+        case "30days": return "last 30 days";
+        case "60days": return "last 60 days";
+        default: return "previous period";
+      }
+    };
     
     return (
       <div className={`flex items-center space-x-1 ${colorClass}`}>
         <Icon className="h-3 w-3" />
         <span className="text-xs font-medium">
-          {formatPercentage(Math.abs(change), isPrivacyMode)} {direction} from {formatCurrencyInLakhs(previousAmount, isPrivacyMode)}
+          {sign}{formatPercentage(Math.abs(change), isPrivacyMode)} from {getPeriodText()}
         </span>
       </div>
     );
@@ -108,13 +144,23 @@ export function TransactionMetrics({ isPrivacyMode = false }: TransactionMetrics
     const isPositive = change >= 0;
     const Icon = isPositive ? TrendingUp : TrendingDown;
     const colorClass = isPositive ? 'text-green-600' : 'text-red-600';
-    const direction = isPositive ? 'higher' : 'lower';
+    const sign = isPositive ? '+' : '-';
+    
+    // Get the time period text
+    const getPeriodText = () => {
+      switch (timeRangeFilter) {
+        case "7days": return "last 7 days";
+        case "30days": return "last 30 days";
+        case "60days": return "last 60 days";
+        default: return "previous period";
+      }
+    };
     
     return (
       <div className={`flex items-center space-x-1 ${colorClass}`}>
         <Icon className="h-3 w-3" />
         <span className="text-xs font-medium">
-          {formatPercentage(Math.abs(change), isPrivacyMode)} {direction} from {maskNumber(previousCount, isPrivacyMode)}
+          {sign}{formatPercentage(Math.abs(change), isPrivacyMode)} from {getPeriodText()}
         </span>
       </div>
     );
@@ -155,35 +201,8 @@ export function TransactionMetrics({ isPrivacyMode = false }: TransactionMetrics
 
   return (
     <div className="space-y-6">
-      {/* Main Metrics Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {/* Quizizz Salary Card - Only Last 3 Months */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Quizizz Salary</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {metrics.last3MonthsSalary.length > 0 ? (
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground mb-2">Last 3 months</p>
-                {metrics.last3MonthsSalary.map((salary, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <span className="text-xs text-muted-foreground">{salary.month}</span>
-                    <span className="text-sm font-semibold text-green-600">
-                      {formatCurrencyInLakhs(salary.amount, isPrivacyMode)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-4">
-                <p className="text-sm text-muted-foreground">No Quizizz salary data found</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
+      {/* First Row - 4 Equal Sized Metric Cards */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Total Expenses */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -195,7 +214,7 @@ export function TransactionMetrics({ isPrivacyMode = false }: TransactionMetrics
               {formatCurrencyInLakhs(metrics.metrics.totalExpenses.current, isPrivacyMode)}
             </div>
             <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-muted-foreground">Last 30 days</p>
+              <p className="text-xs text-muted-foreground">Last {metrics.period.days} days</p>
               {formatPercentageChangeWithAmount(metrics.metrics.totalExpenses.change, metrics.metrics.totalExpenses.previous)}
             </div>
           </CardContent>
@@ -246,9 +265,39 @@ export function TransactionMetrics({ isPrivacyMode = false }: TransactionMetrics
               {maskNumber(metrics.metrics.totalTransactions.current, isPrivacyMode)}
             </div>
             <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-muted-foreground">Last 30 days</p>
+              <p className="text-xs text-muted-foreground">Last {metrics.period.days} days</p>
               {formatCountChangeWithAmount(metrics.metrics.totalTransactions.change, metrics.metrics.totalTransactions.previous)}
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Second Row - 2 Detailed Cards */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* Quizizz Salary Card - Only Last 3 Months */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Quizizz Salary</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            {metrics.last3MonthsSalary.length > 0 ? (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Last 3 months</p>
+                {metrics.last3MonthsSalary.map((salary, index) => (
+                  <div key={index} className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-muted-foreground">{salary.month}</span>
+                    <span className="text-sm font-semibold text-green-600">
+                      {formatCurrencyInLakhs(salary.amount, isPrivacyMode)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">No Quizizz salary data found</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -264,7 +313,7 @@ export function TransactionMetrics({ isPrivacyMode = false }: TransactionMetrics
                 <div key={index} className="flex justify-between items-center">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{expense.merchant}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(expense.date)}</p>
+                    <p className="text-sm font-medium text-muted-foreground">{formatDate(expense.date)}</p>
                   </div>
                   <div className="text-sm font-bold text-red-600 ml-2">
                     {formatCurrencyInLakhs(expense.amount, isPrivacyMode)}

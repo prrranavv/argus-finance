@@ -18,17 +18,18 @@ import { BarChart3, Brain, CreditCard, Eye, EyeOff } from "lucide-react";
 export default function Home() {
   const [selectedBank, setSelectedBank] = useState('Total');
   const [selectedCreditCard, setSelectedCreditCard] = useState('Total');
-  const [isPrivacyMode, setIsPrivacyMode] = useState(true);
+  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
   const banks = ['Total', 'HDFC', 'Axis'];
   const creditCards = ['Total', 'HDFC Diners', 'HDFC Swiggy', 'Axis Magnus', 'Flipkart Axis'];
 
-  // Card image mapping
+  // Card image mapping - Updated to use 3D renders
   const getCardImage = (cardName: string) => {
     const imageMap: Record<string, string> = {
       'HDFC Diners': '/cardImages/dinersCard.png',
       'HDFC Swiggy': '/cardImages/swiggyCard.png',
-      'Axis Magnus': '/cardImages/magnusCard.webp',
+      'Axis Magnus': '/cardImages/magnusCardHor.png',
       'Flipkart Axis': '/cardImages/flipkartCard.webp',
+      'Total': '/cardImages/allcards.svg',
     };
     return imageMap[cardName];
   };
@@ -146,43 +147,82 @@ export default function Home() {
         </Card>
       </div>
 
-      {/* Credit Cards Section */}
+      {/* Credit Cards Section - Left Sidebar with 2x2 Grid */}
       <div className="mb-8">
         <Card>
           <CardHeader>
             <CardTitle>Credit Cards</CardTitle>
-            <CardDescription>Select a credit card to view outstanding balances and monthly spending</CardDescription>
+            <CardDescription>Click on a card to view outstanding balances and monthly spending</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={selectedCreditCard} onValueChange={setSelectedCreditCard}>
-              <TabsList className="grid w-full grid-cols-5 h-16">
-                {creditCards.map(card => (
-                  <TabsTrigger key={card} value={card} className="text-xs flex flex-col items-center gap-1 h-14 p-2">
-                    {card === 'Total' ? (
-                      <div className="flex flex-col items-center gap-1">
-                        <CreditCard className="h-4 w-4" />
-                        <span className="text-[10px] font-medium">Total</span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-1">
-                        <div className="relative w-8 h-5 rounded-sm overflow-hidden">
+            <div className="flex gap-8">
+              {/* Left Sidebar - Credit Card Selection */}
+              <div className="w-80 flex-shrink-0">
+                {/* Total Card - Full Width at Top */}
+                <div
+                  onClick={() => setSelectedCreditCard('Total')}
+                  className={`relative cursor-pointer transition-all duration-200 p-4 mb-4 ${
+                    selectedCreditCard === 'Total' 
+                      ? 'scale-[1.4]' 
+                      : 'hover:scale-[1.4]'
+                  }`}
+                >
+                  <div className="flex items-center justify-center">
+                    <div className="w-48 h-32 relative">
+                      <Image
+                        src={getCardImage('Total')}
+                        alt="All cards"
+                        fill
+                        className={`object-contain rounded-lg ${
+                          selectedCreditCard === 'Total'
+                            ? 'drop-shadow-2xl shadow-2xl'
+                            : ''
+                        }`}
+                        quality={95}
+                        priority={false}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Horizontal Divider */}
+                <div className="border-t border-border/20 my-4"></div>
+
+                {/* Individual Cards - Vertical List */}
+                <div className="space-y-8">
+                  {creditCards.filter(card => card !== 'Total').map((card) => (
+                    <div
+                      key={card}
+                      onClick={() => setSelectedCreditCard(card)}
+                      className={`relative cursor-pointer transition-all duration-200 p-3 ${
+                        selectedCreditCard === card 
+                          ? 'scale-[1.4]' 
+                          : 'hover:scale-[1.4]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-center">
+                        <div className="w-40 h-24 relative">
                           <Image
                             src={getCardImage(card)}
                             alt={`${card} card`}
                             fill
-                            className="object-cover"
-                            sizes="32px"
+                            className={`object-contain rounded-lg ${
+                              selectedCreditCard === card
+                                ? 'drop-shadow-2xl shadow-2xl'
+                                : ''
+                            }`}
+                            quality={95}
+                            priority={false}
                           />
                         </div>
-                        <span className="text-[10px] font-medium leading-tight text-center">
-                          {card === 'Flipkart Axis' ? 'Flipkart' : card.replace('HDFC ', '').replace('Axis ', '')}
-                        </span>
                       </div>
-                    )}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              <TabsContent value={selectedCreditCard} className="space-y-8 mt-6">
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right Side - Charts and Data */}
+              <div className="flex-1 space-y-8">
                 {/* Credit Card Balance Chart */}
                 <div>
                   <CreditCardBalanceChart selectedCard={selectedCreditCard} isPrivacyMode={isPrivacyMode} />
@@ -192,8 +232,8 @@ export default function Home() {
                 <div>
                   <CreditCardMonthlySummary selectedCard={selectedCreditCard} isPrivacyMode={isPrivacyMode} />
                 </div>
-              </TabsContent>
-            </Tabs>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -14,9 +14,10 @@ interface BalanceData {
 
 interface AccountBalanceChartProps {
   selectedBank: string;
+  isPrivacyMode?: boolean;
 }
 
-export function AccountBalanceChart({ selectedBank }: AccountBalanceChartProps) {
+export function AccountBalanceChart({ selectedBank, isPrivacyMode = false }: AccountBalanceChartProps) {
   const [data, setData] = useState<BalanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +42,10 @@ export function AccountBalanceChart({ selectedBank }: AccountBalanceChartProps) 
   }, []);
 
   const formatCurrency = (value: number) => {
+    if (isPrivacyMode) {
+      return '₹ ••••';
+    }
+    
     const absValue = Math.abs(value);
     if (absValue >= 100000) {
       const lakhs = absValue / 100000;
@@ -55,12 +60,12 @@ export function AccountBalanceChart({ selectedBank }: AccountBalanceChartProps) 
     }
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey: string; value: number; color: string }>; label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-xl">
           <p className="text-sm font-medium text-foreground mb-2">{`Month: ${label}`}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <div key={index} className="flex items-center gap-2 mb-1">
               <div 
                 className="w-3 h-3 rounded-full" 
@@ -196,6 +201,9 @@ export function AccountBalanceChart({ selectedBank }: AccountBalanceChartProps) 
                 axisLine={false}
                 tickLine={false}
                 tickFormatter={(value) => {
+                  if (isPrivacyMode) {
+                    return '₹ ••••';
+                  }
                   if (value >= 100000) {
                     return `₹${(value / 100000).toFixed(1)}L`;
                   } else if (value >= 1000) {

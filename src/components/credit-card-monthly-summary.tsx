@@ -12,9 +12,10 @@ interface CreditCardSummaryData {
 
 interface CreditCardMonthlySummaryProps {
   selectedCard: string;
+  isPrivacyMode?: boolean;
 }
 
-export function CreditCardMonthlySummary({ selectedCard }: CreditCardMonthlySummaryProps) {
+export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false }: CreditCardMonthlySummaryProps) {
   const [data, setData] = useState<CreditCardSummaryData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +40,10 @@ export function CreditCardMonthlySummary({ selectedCard }: CreditCardMonthlySumm
   }, [selectedCard]);
 
   const formatCurrency = (amount: number) => {
+    if (isPrivacyMode) {
+      return '₹ ••••';
+    }
+    
     const absAmount = Math.abs(amount);
     if (absAmount >= 100000) {
       const lakhs = absAmount / 100000;
