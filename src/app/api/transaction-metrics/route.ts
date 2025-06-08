@@ -38,7 +38,7 @@ export async function GET(request: Request) {
 
     // Build where clause for filtering
     const buildWhereClause = (dateStart: Date, dateEnd?: Date) => {
-      const where: any = {
+      const where: Record<string, unknown> = {
         date: dateEnd ? {
           gte: dateStart,
           lt: dateEnd
@@ -175,7 +175,16 @@ export async function GET(request: Request) {
     });
 
     // Group by month and sum up salaries
-    const salaryByMonth = allQuizizzTransactions.reduce((acc: Record<string, {total: number, transactions: any[]}>, t) => {
+    interface TransactionData {
+      id: string;
+      date: Date;
+      amount: number;
+      description: string;
+      type: string;
+      category?: string | null;
+    }
+    
+    const salaryByMonth = allQuizizzTransactions.reduce((acc: Record<string, {total: number, transactions: TransactionData[]}>, t) => {
       const monthKey = new Date(t.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       if (!acc[monthKey]) {
         acc[monthKey] = { total: 0, transactions: [] };
@@ -212,7 +221,7 @@ export async function GET(request: Request) {
       }));
 
     // Detect recurring payments (transactions with similar descriptions)
-    const descriptionGroups = recentTransactions.reduce((acc: Record<string, any[]>, t) => {
+    const descriptionGroups = recentTransactions.reduce((acc: Record<string, TransactionData[]>, t) => {
       // Normalize description for pattern matching
       const normalizedDesc = t.description.toLowerCase()
         .replace(/\d+/g, '') // Remove numbers
@@ -228,7 +237,7 @@ export async function GET(request: Request) {
 
     const recurringPayments = Object.entries(descriptionGroups)
       .filter(([, transactions]) => transactions.length >= 2) // At least 2 transactions
-      .map(([pattern, transactions]) => ({
+      .map(([, transactions]) => ({
         pattern: transactions[0].description.split(' ').slice(0, 3).join(' '), // First 3 words
         count: transactions.length,
         totalAmount: transactions.reduce((sum, t) => sum + t.amount, 0),

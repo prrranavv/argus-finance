@@ -23,7 +23,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { FileText, Calendar, Hash, ChevronDown, ChevronRight, Filter, Trash2, Loader2 } from "lucide-react";
+import { FileText, Calendar, Filter, Trash2, Loader2 } from "lucide-react";
 import { DeleteStatementButton } from "@/components/delete-statement-button";
 
 interface TransactionData {
@@ -72,10 +72,10 @@ export function UploadedStatementsModal() {
     try {
       const response = await fetch('/api/statements');
       const data = await response.json();
-      setStatements(data.map((s: any) => ({
+      setStatements(data.map((s: StatementData) => ({
         ...s,
         uploadedAt: new Date(s.uploadedAt),
-        transactions: s.transactions.map((t: any) => ({
+        transactions: s.transactions.map((t: TransactionData) => ({
           ...t,
           date: new Date(t.date),
           createdAt: new Date(t.createdAt),

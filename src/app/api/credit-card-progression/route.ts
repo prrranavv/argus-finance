@@ -13,7 +13,7 @@ export async function GET() {
     const creditCardTransactions = await prisma.transaction.findMany({
       where: {
         accountType: 'Credit Card'
-      } as any,
+      },
       orderBy: {
         date: 'asc'
       }
@@ -29,7 +29,7 @@ export async function GET() {
 
     creditCardTransactions.forEach(transaction => {
       const monthKey = getMonthKey(new Date(transaction.date));
-      const cardName = (transaction as any).bankName;
+      const cardName = transaction.bankName;
       
       if (!cardSpending[cardName]) {
         cardSpending[cardName] = {};
@@ -41,7 +41,7 @@ export async function GET() {
       }
       
       // Add absolute amount for credit card spending
-      cardSpending[cardName][monthKey] += Math.abs((transaction as any).amount || 0);
+      cardSpending[cardName][monthKey] += Math.abs(transaction.amount || 0);
       allMonths.add(monthKey);
     });
 
@@ -53,7 +53,7 @@ export async function GET() {
     });
 
     const result = sortedMonths.map(month => {
-      const monthData: any = { week: month };
+      const monthData: Record<string, number | string> = { week: month };
       
       // Calculate total for all cards
       let total = 0;

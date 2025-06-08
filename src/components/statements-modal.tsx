@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Upload, File, X, CheckCircle, AlertCircle, FileText, ChevronDown, ChevronRight, Calendar, Hash, Filter, Trash2, Loader2 } from "lucide-react";
+import { Upload, File, X, CheckCircle, AlertCircle, ChevronDown, ChevronRight, Calendar, Hash, Filter, Loader2 } from "lucide-react";
 import { DeleteStatementButton } from "@/components/delete-statement-button";
 
 interface UploadedFile {
@@ -214,10 +214,10 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
     try {
       const response = await fetch('/api/statements');
       const data = await response.json();
-      setStatements(data.map((s: any) => ({
+      setStatements(data.map((s: StatementData) => ({
         ...s,
         uploadedAt: new Date(s.uploadedAt),
-        transactions: s.transactions.map((t: any) => ({
+        transactions: s.transactions.map((t: TransactionData) => ({
           ...t,
           date: new Date(t.date),
           createdAt: new Date(t.createdAt),

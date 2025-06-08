@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { formatCurrencyInLakhs, formatPercentage, maskNumber } from '@/lib/utils';
+import { formatCurrencyInLakhs } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface MetricData {

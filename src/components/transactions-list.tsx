@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { formatCurrencyInLakhs } from "@/lib/utils";
 import VirtualizedTransactionItem from './virtualized-transaction-item';
 import { TransactionSkeleton } from './transaction-skeleton';
@@ -24,33 +24,33 @@ interface Transaction {
   updatedAt: Date;
 }
 
-interface TransactionMetrics {
-  totalExpenses: {
-    current: number;
-    previous: number;
-    change: number;
-    previousAmount: number;
-  };
-  avgDailySpending: {
-    current: number;
-    previous: number;
-    change: number;
-    previousAmount: number;
-  };
-  avgTransaction: {
-    current: number;
-    previous: number;
-    change: number;
-    previousAmount: number;
-  };
-  totalTransactions: {
-    current: number;
-    previous: number;
-    change: number;
-    previousAmount: number;
-  };
-  comparisonPeriod: string;
-}
+// interface TransactionMetrics {
+//   totalExpenses: {
+//     current: number;
+//     previous: number;
+//     change: number;
+//     previousAmount: number;
+//   };
+//   avgDailySpending: {
+//     current: number;
+//     previous: number;
+//     change: number;
+//     previousAmount: number;
+//   };
+//   avgTransaction: {
+//     current: number;
+//     previous: number;
+//     change: number;
+//     previousAmount: number;
+//   };
+//   totalTransactions: {
+//     current: number;
+//     previous: number;
+//     change: number;
+//     previousAmount: number;
+//   };
+//   comparisonPeriod: string;
+// }
 
 interface TransactionsListProps {
   transactions: Transaction[];
@@ -81,102 +81,102 @@ export function TransactionsList({
   onLoadMore,
   hasMore = true
 }: TransactionsListProps) {
-  const [editingCategory, setEditingCategory] = useState<string | null>(null);
-  const [newCategory, setNewCategory] = useState("");
+  // const [editingCategory, setEditingCategory] = useState<string | null>(null);
+  // const [newCategory, setNewCategory] = useState("");
   const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>(transactions);
-  const [timeFilteredMetrics, setTimeFilteredMetrics] = useState<TransactionMetrics | null>(null);
+  // const [timeFilteredMetrics, setTimeFilteredMetrics] = useState<TransactionMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Calculate metrics for the current time filter
-  const calculateTimeFilteredMetrics = useMemo(() => {
-    if (timeRangeFilter === "all") {
-      return null;
-    }
+  // const calculateTimeFilteredMetrics = useMemo(() => {
+  //   if (timeRangeFilter === "all") {
+  //     return null;
+  //   }
 
-    let currentPeriodTransactions: Transaction[] = [];
-    let previousPeriodTransactions: Transaction[] = [];
+  //   let currentPeriodTransactions: Transaction[] = [];
+  //   let previousPeriodTransactions: Transaction[] = [];
     
-    const now = new Date();
-    let currentStart = new Date();
-    let currentEnd = new Date();
-    let previousStart = new Date();
-    let previousEnd = new Date();
+  //   const now = new Date();
+  //   let currentStart = new Date();
+  //   let currentEnd = new Date();
+  //   let previousStart = new Date();
+  //   let previousEnd = new Date();
 
-    // Handle predefined periods
-    let days = 0;
-    switch (timeRangeFilter) {
-      case "7days": days = 7; break;
-      case "30days": days = 30; break;
-      case "60days": days = 60; break;
-    }
+  //   // Handle predefined periods
+  //   let days = 0;
+  //   switch (timeRangeFilter) {
+  //     case "7days": days = 7; break;
+  //     case "30days": days = 30; break;
+  //     case "60days": days = 60; break;
+  //   }
     
-    currentEnd = now;
-    currentStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    previousEnd = new Date(currentStart.getTime() - 1);
-    previousStart = new Date(previousEnd.getTime() - days * 24 * 60 * 60 * 1000);
+  //   currentEnd = now;
+  //   currentStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  //   previousEnd = new Date(currentStart.getTime() - 1);
+  //   previousStart = new Date(previousEnd.getTime() - days * 24 * 60 * 60 * 1000);
 
-    // Filter transactions for current and previous periods
-    currentPeriodTransactions = transactions.filter(t => {
-      const date = new Date(t.date);
-      return date >= currentStart && date <= currentEnd;
-    });
+  //   // Filter transactions for current and previous periods
+  //   currentPeriodTransactions = transactions.filter(t => {
+  //     const date = new Date(t.date);
+  //     return date >= currentStart && date <= currentEnd;
+  //   });
 
-    previousPeriodTransactions = transactions.filter(t => {
-      const date = new Date(t.date);
-      return date >= previousStart && date <= previousEnd;
-    });
+  //   previousPeriodTransactions = transactions.filter(t => {
+  //     const date = new Date(t.date);
+  //     return date >= previousStart && date <= previousEnd;
+  //   });
 
-    // Calculate metrics
-    const currentExpenses = currentPeriodTransactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+  //   // Calculate metrics
+  //   const currentExpenses = currentPeriodTransactions
+  //     .filter(t => t.type === 'expense')
+  //     .reduce((sum, t) => sum + t.amount, 0);
     
-    const previousExpenses = previousPeriodTransactions
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + t.amount, 0);
+  //   const previousExpenses = previousPeriodTransactions
+  //     .filter(t => t.type === 'expense')
+  //     .reduce((sum, t) => sum + t.amount, 0);
 
-    const currentDays = Math.ceil((currentEnd.getTime() - currentStart.getTime()) / (24 * 60 * 60 * 1000));
-    const avgDailyCurrent = currentExpenses / Math.max(currentDays, 1);
-    const avgDailyPrevious = previousExpenses / Math.max(currentDays, 1);
+  //   const currentDays = Math.ceil((currentEnd.getTime() - currentStart.getTime()) / (24 * 60 * 60 * 1000));
+  //   const avgDailyCurrent = currentExpenses / Math.max(currentDays, 1);
+  //   const avgDailyPrevious = previousExpenses / Math.max(currentDays, 1);
 
-    const currentTransactionCount = currentPeriodTransactions.filter(t => t.type === 'expense').length;
-    const previousTransactionCount = previousPeriodTransactions.filter(t => t.type === 'expense').length;
+  //   const currentTransactionCount = currentPeriodTransactions.filter(t => t.type === 'expense').length;
+  //   const previousTransactionCount = previousPeriodTransactions.filter(t => t.type === 'expense').length;
     
-    const avgTransactionCurrent = currentTransactionCount > 0 ? currentExpenses / currentTransactionCount : 0;
-    const avgTransactionPrevious = previousTransactionCount > 0 ? previousExpenses / previousTransactionCount : 0;
+  //   const avgTransactionCurrent = currentTransactionCount > 0 ? currentExpenses / currentTransactionCount : 0;
+  //   const avgTransactionPrevious = previousTransactionCount > 0 ? previousExpenses / previousTransactionCount : 0;
 
-    return {
-      totalExpenses: {
-        current: currentExpenses,
-        previous: previousExpenses,
-        change: previousExpenses > 0 ? ((currentExpenses - previousExpenses) / previousExpenses) * 100 : 0,
-        previousAmount: previousExpenses
-      },
-      avgDailySpending: {
-        current: avgDailyCurrent,
-        previous: avgDailyPrevious,
-        change: avgDailyPrevious > 0 ? ((avgDailyCurrent - avgDailyPrevious) / avgDailyPrevious) * 100 : 0,
-        previousAmount: avgDailyPrevious
-      },
-      avgTransaction: {
-        current: avgTransactionCurrent,
-        previous: avgTransactionPrevious,
-        change: avgTransactionPrevious > 0 ? ((avgTransactionCurrent - avgTransactionPrevious) / avgTransactionPrevious) * 100 : 0,
-        previousAmount: avgTransactionPrevious
-      },
-      totalTransactions: {
-        current: currentTransactionCount,
-        previous: previousTransactionCount,
-        change: previousTransactionCount > 0 ? ((currentTransactionCount - previousTransactionCount) / previousTransactionCount) * 100 : 0,
-        previousAmount: previousTransactionCount
-      },
-      comparisonPeriod: "previous period"
-    };
-  }, [transactions, timeRangeFilter]);
+  //   return {
+  //     totalExpenses: {
+  //       current: currentExpenses,
+  //       previous: previousExpenses,
+  //       change: previousExpenses > 0 ? ((currentExpenses - previousExpenses) / previousExpenses) * 100 : 0,
+  //       previousAmount: previousExpenses
+  //     },
+  //     avgDailySpending: {
+  //       current: avgDailyCurrent,
+  //       previous: avgDailyPrevious,
+  //       change: avgDailyPrevious > 0 ? ((avgDailyCurrent - avgDailyPrevious) / avgDailyPrevious) * 100 : 0,
+  //       previousAmount: avgDailyPrevious
+  //     },
+  //     avgTransaction: {
+  //       current: avgTransactionCurrent,
+  //       previous: avgTransactionPrevious,
+  //       change: avgTransactionPrevious > 0 ? ((avgTransactionCurrent - avgTransactionPrevious) / avgTransactionPrevious) * 100 : 0,
+  //       previousAmount: avgTransactionPrevious
+  //     },
+  //     totalTransactions: {
+  //       current: currentTransactionCount,
+  //       previous: previousTransactionCount,
+  //       change: previousTransactionCount > 0 ? ((currentTransactionCount - previousTransactionCount) / previousTransactionCount) * 100 : 0,
+  //       previousAmount: previousTransactionCount
+  //     },
+  //     comparisonPeriod: "previous period"
+  //   };
+  // }, [transactions, timeRangeFilter]);
 
-  useEffect(() => {
-    setTimeFilteredMetrics(calculateTimeFilteredMetrics);
-  }, [calculateTimeFilteredMetrics]);
+  // useEffect(() => {
+  //   setTimeFilteredMetrics(calculateTimeFilteredMetrics);
+  // }, [calculateTimeFilteredMetrics]);
 
   // Filter and search logic with debouncing simulation
   const filteredAndSearchedTransactions = useMemo(() => {
@@ -244,43 +244,43 @@ export function TransactionsList({
     return filteredTransactions.slice(0, totalItemsToShow);
   }, [filteredTransactions, currentPage, itemsPerPage]);
 
-  const formatPercentageChange = (change: number, previousAmount: number) => {
-    if (change === 0) return "No change";
-    const direction = change > 0 ? "higher" : "lower";
-    const absChange = Math.abs(change);
-    return `${absChange.toFixed(1)}% ${direction} from ${formatCurrencyInLakhs(previousAmount, isPrivacyMode)}`;
-  };
+  // const formatPercentageChange = (change: number, previousAmount: number) => {
+  //   if (change === 0) return "No change";
+  //   const direction = change > 0 ? "higher" : "lower";
+  //   const absChange = Math.abs(change);
+  //   return `${absChange.toFixed(1)}% ${direction} from ${formatCurrencyInLakhs(previousAmount, isPrivacyMode)}`;
+  // };
 
-  const handleCategoryEdit = useCallback((transactionId: string, currentCategory: string | null) => {
-    setEditingCategory(transactionId);
-    setNewCategory(currentCategory || "");
-  }, []);
+  // const handleCategoryEdit = useCallback((transactionId: string, currentCategory: string | null) => {
+  //   setEditingCategory(transactionId);
+  //   setNewCategory(currentCategory || "");
+  // }, []);
 
-  const handleCategorySave = useCallback(async (transactionId: string) => {
-    // Here you would typically call an API to update the category
-    // For now, we'll just update the local state
-    console.log('Saving category:', transactionId, newCategory);
-    setEditingCategory(null);
-    setNewCategory("");
-  }, [newCategory]);
+  // const handleCategorySave = useCallback(async (transactionId: string) => {
+  //   // Here you would typically call an API to update the category
+  //   // For now, we'll just update the local state
+  //   console.log('Saving category:', transactionId, newCategory);
+  //   setEditingCategory(null);
+  //   setNewCategory("");
+  // }, [newCategory]);
 
-  const handleCategoryCancel = useCallback(() => {
-    setEditingCategory(null);
-    setNewCategory("");
-  }, []);
+  // const handleCategoryCancel = useCallback(() => {
+  //   setEditingCategory(null);
+  //   setNewCategory("");
+  // }, []);
 
-  const handleNewCategoryChange = useCallback((value: string) => {
-    setNewCategory(value);
-  }, []);
+  // const handleNewCategoryChange = useCallback((value: string) => {
+  //   setNewCategory(value);
+  // }, []);
 
-  const getTimeRangeLabel = () => {
-    switch (timeRangeFilter) {
-      case "7days": return "Last 7 days";
-      case "30days": return "Last 30 days";
-      case "60days": return "Last 60 days";
-      default: return "All time";
-    }
-  };
+  // const getTimeRangeLabel = () => {
+  //   switch (timeRangeFilter) {
+  //     case "7days": return "Last 7 days";
+  //     case "30days": return "Last 30 days";
+  //     case "60days": return "Last 60 days";
+  //     default: return "All time";
+  //   }
+  // };
 
   if (transactions.length === 0) {
     return (
@@ -320,12 +320,6 @@ export function TransactionsList({
                  key={transaction.id}
                  transaction={transaction}
                  isPrivacyMode={isPrivacyMode}
-                 editingCategory={editingCategory}
-                 newCategory={newCategory}
-                 onCategoryEdit={handleCategoryEdit}
-                 onCategorySave={handleCategorySave}
-                 onCategoryCancel={handleCategoryCancel}
-                 onNewCategoryChange={handleNewCategoryChange}
                  style={{ padding: 0 }} // Remove extra padding since we're not using virtualization
                />
              ))}

@@ -1,9 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Repeat, Calendar, DollarSign, BarChart3, Building2, ShoppingBag } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrendingUp, TrendingDown, Calendar, DollarSign, BarChart3 } from "lucide-react";
 import { formatCurrencyInLakhs, formatPercentage, maskNumber } from "@/lib/utils";
 
 interface TransactionMetrics {
@@ -114,7 +113,7 @@ export function TransactionMetrics({
     fetchMetrics();
   }, [searchQuery, accountTypeFilter, bankFilter, timeRangeFilter]);
 
-  const formatPercentageChangeWithAmount = (change: number, previousAmount: number) => {
+  const formatPercentageChangeWithAmount = (change: number) => {
     const isPositive = change >= 0;
     const Icon = isPositive ? TrendingUp : TrendingDown;
     const colorClass = isPositive ? 'text-green-600' : 'text-red-600';
@@ -140,7 +139,7 @@ export function TransactionMetrics({
     );
   };
 
-  const formatCountChangeWithAmount = (change: number, previousCount: number) => {
+  const formatCountChangeWithAmount = (change: number) => {
     const isPositive = change >= 0;
     const Icon = isPositive ? TrendingUp : TrendingDown;
     const colorClass = isPositive ? 'text-green-600' : 'text-red-600';
@@ -166,12 +165,7 @@ export function TransactionMetrics({
     );
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric'
-    });
-  };
+
 
   if (loading) {
     return (
@@ -214,7 +208,7 @@ export function TransactionMetrics({
               {formatCurrencyInLakhs(metrics.metrics.totalExpenses.current, isPrivacyMode)}
             </div>
             <div className="mt-2">
-              {formatPercentageChangeWithAmount(metrics.metrics.totalExpenses.change, metrics.metrics.totalExpenses.previous)}
+              {formatPercentageChangeWithAmount(metrics.metrics.totalExpenses.change)}
             </div>
           </CardContent>
         </Card>
@@ -230,7 +224,7 @@ export function TransactionMetrics({
               {formatCurrencyInLakhs(metrics.metrics.dailyAvgSpending.current, isPrivacyMode)}
             </div>
             <div className="mt-2">
-              {formatPercentageChangeWithAmount(metrics.metrics.dailyAvgSpending.change, metrics.metrics.dailyAvgSpending.previous)}
+              {formatPercentageChangeWithAmount(metrics.metrics.dailyAvgSpending.change)}
             </div>
           </CardContent>
         </Card>
@@ -246,7 +240,7 @@ export function TransactionMetrics({
               {formatCurrencyInLakhs(metrics.metrics.avgTransaction.current, isPrivacyMode)}
             </div>
             <div className="mt-2">
-              {formatPercentageChangeWithAmount(metrics.metrics.avgTransaction.change, metrics.metrics.avgTransaction.previous)}
+              {formatPercentageChangeWithAmount(metrics.metrics.avgTransaction.change)}
             </div>
           </CardContent>
         </Card>
@@ -262,7 +256,7 @@ export function TransactionMetrics({
               {maskNumber(metrics.metrics.totalTransactions.current, isPrivacyMode)}
             </div>
             <div className="mt-2">
-              {formatCountChangeWithAmount(metrics.metrics.totalTransactions.change, metrics.metrics.totalTransactions.previous)}
+              {formatCountChangeWithAmount(metrics.metrics.totalTransactions.change)}
             </div>
           </CardContent>
         </Card>

@@ -5,7 +5,7 @@ import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RefreshCw, Users, DollarSign, Receipt, ShoppingCart, Home, Car, Utensils, Coffee, Gamepad2, Gift, TrendingUp, TrendingDown, Filter, Search, X, ChevronDown } from 'lucide-react';
+import { RefreshCw, Users, Receipt, ShoppingCart, Home, Car, Utensils, Coffee, Gamepad2, Gift, TrendingUp, TrendingDown, Search, X, ChevronDown } from 'lucide-react';
 
 import { format, parseISO } from 'date-fns';
 import Image from 'next/image';
@@ -424,7 +424,19 @@ export default function SplitvisePage() {
   const getGroupMembers = (group: SplitwiseGroup) => {
     if (!currentUser) return [];
     
-    const memberInfo: Array<{member: any, amount: number, owesYou: boolean, memberName: string}> = [];
+    interface MemberInfo {
+      member: {
+        id: number;
+        first_name: string;
+        last_name: string;
+        picture?: { medium?: string };
+      };
+      amount: number;
+      owesYou: boolean;
+      memberName: string;
+    }
+    
+    const memberInfo: Array<MemberInfo> = [];
     
     // Check simplified debts for relationships involving current user
     group.simplified_debts.forEach(debt => {
@@ -755,7 +767,6 @@ export default function SplitvisePage() {
       <Header 
         isPrivacyMode={isPrivacyMode}
         onPrivacyToggle={() => setIsPrivacyMode(!isPrivacyMode)}
-        subtitle="Splitwise Integration"
       />
 
       {error && (
@@ -819,7 +830,7 @@ export default function SplitvisePage() {
               <CardContent>
                 <div className="space-y-1">
                   {top3BorrowedExpenses.length > 0 ? (
-                    top3BorrowedExpenses.map((expense, idx) => (
+                    top3BorrowedExpenses.map((expense) => (
                       <div key={expense.id} className="flex justify-between text-xs">
                         <span className="truncate flex-1 mr-2">{expense.description}</span>
                         <span className="text-red-600 font-medium">
@@ -843,7 +854,7 @@ export default function SplitvisePage() {
               <CardContent>
                 <div className="space-y-1">
                   {myLast3Expenses.length > 0 ? (
-                    myLast3Expenses.map((expense, idx) => (
+                    myLast3Expenses.map((expense) => (
                       <div key={expense.id} className="flex justify-between text-xs">
                         <span className="truncate flex-1 mr-2">{expense.description}</span>
                         <span className="text-gray-600 font-medium">
@@ -991,7 +1002,7 @@ export default function SplitvisePage() {
                       const isPositive = outstandingBalance >= 0;
                       const GroupIconComponent = getGroupIcon(group.name);
                       const groupAvatar = getGroupAvatar(group);
-                      const groupMembers = getGroupMembers(group);
+                      // const groupMembers = getGroupMembers(group);
                       
                       return (
                         <Card 
@@ -1191,7 +1202,7 @@ export default function SplitvisePage() {
                     {!searchQuery && !selectedFriend && !selectedGroup && (
                       <div className="text-center">
                         <p className="text-sm text-gray-500">
-                          Showing all expenses from the last 30 days. Use "Load More" to see older expenses.
+                          Showing all expenses from the last 30 days. Use &quot;Load More&quot; to see older expenses.
                         </p>
                       </div>
                     )}

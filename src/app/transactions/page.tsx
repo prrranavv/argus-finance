@@ -360,14 +360,14 @@ export default function TransactionsPage() {
 
   const hasActiveFilters = debouncedSearchQuery || accountTypeFilter !== "all" || bankFilter !== "all" || timeRangeFilter !== "30days";
 
-  const getTimeRangeLabel = () => {
-    switch (timeRangeFilter) {
-      case "7days": return "Last 7 days";
-      case "30days": return "Last 30 days";
-      case "60days": return "Last 60 days";
-      default: return "All time";
-    }
-  };
+  // const getTimeRangeLabel = () => {
+  //   switch (timeRangeFilter) {
+  //     case "7days": return "Last 7 days";
+  //     case "30days": return "Last 30 days";
+  //     case "60days": return "Last 60 days";
+  //     default: return "All time";
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -384,7 +384,6 @@ export default function TransactionsPage() {
       <Header 
         isPrivacyMode={isPrivacyMode}
         onPrivacyToggle={handlePrivacyToggle}
-        subtitle={`AI-powered insights from your financial data • ${getTimeRangeLabel()}`}
       />
       
       <div className="mb-8">

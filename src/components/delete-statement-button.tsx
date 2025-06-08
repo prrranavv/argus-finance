@@ -75,7 +75,7 @@ export function DeleteStatementButton({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Statement</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete <strong>"{fileName}"</strong>?
+            Are you sure you want to delete <strong>&quot;{fileName}&quot;</strong>?
             <br /><br />
             This will permanently remove:
             <ul className="list-disc list-inside mt-2 space-y-1">

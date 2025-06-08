@@ -66,12 +66,22 @@ export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false, fi
     }
   };
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  interface TooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      dataKey: string;
+      value: number;
+      color: string;
+    }>;
+    label?: string;
+  }
+
+  const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-background/95 backdrop-blur-sm border border-border rounded-lg p-3 shadow-xl">
           <p className="text-sm font-medium text-foreground mb-2">{`Month: ${label}`}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry, index: number) => (
             <div key={index} className="flex items-center gap-2 mb-1">
               <div 
                 className="w-3 h-3 rounded-full" 

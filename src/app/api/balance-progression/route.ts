@@ -9,7 +9,7 @@ export async function GET() {
     const bankTransactions = await prisma.transaction.findMany({
       where: {
         accountType: 'Bank Account'
-      } as any,
+      },
       orderBy: {
         date: 'asc'
       }
@@ -24,7 +24,7 @@ export async function GET() {
     
     bankTransactions.forEach(transaction => {
       const monthKey = getMonthKey(new Date(transaction.date));
-      const bankName = (transaction as any).bankName;
+      const bankName = transaction.bankName;
       
       if (!bankBalances[bankName]) {
         bankBalances[bankName] = {};
@@ -36,9 +36,9 @@ export async function GET() {
       if (!currentEntry || 
           new Date(transaction.date) > currentEntry.date ||
           (new Date(transaction.date).getTime() === currentEntry.date.getTime() && 
-           (transaction as any).closingBalance > (currentEntry.balance || 0))) {
+           transaction.closingBalance !== null && transaction.closingBalance > (currentEntry.balance || 0))) {
         bankBalances[bankName][monthKey] = {
-          balance: (transaction as any).closingBalance,
+          balance: transaction.closingBalance,
           date: new Date(transaction.date)
         };
       }
@@ -53,7 +53,7 @@ export async function GET() {
 
     // Create progression data for chart
     const balanceProgression = sortedMonths.map(monthKey => {
-      const monthData: any = {
+      const monthData: Record<string, number | string | null> = {
         month: monthKey
       };
 

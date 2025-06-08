@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const selectedCard = searchParams.get('card') || 'Total';
 
     // Fetch credit card transactions
-    let whereClause: any = {
+    const whereClause: Record<string, string> = {
       accountType: 'Credit Card'
     };
 
