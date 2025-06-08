@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     // Generate file hash for content-based deduplication
     const fileHash = await generateFileHash(file);
-
+    
     // Check for duplicate files by name and size
     const { data: existingStatement, error: findError } = await supabase
       .from('statements')
@@ -156,21 +156,21 @@ export async function POST(request: NextRequest) {
       // Save only unique transactions to database
       const transactionInserts = uniqueTransactions.map(transaction => ({
         date: new Date(transaction.date).toISOString().split('T')[0],
-        description: transaction.description,
-        amount: transaction.amount,
+              description: transaction.description,
+              amount: transaction.amount,
         closing_balance: transaction.closingBalance,
         opening_balance: transaction.openingBalance || null,
         running_balance: transaction.runningBalance || null,
-        category: transaction.category,
-        type: transaction.type,
-        source: file.type.includes('pdf') ? 'bank' : 'csv',
+              category: transaction.category,
+              type: transaction.type,
+              source: file.type.includes('pdf') ? 'bank' : 'csv',
         account_type: transaction.accountType,
         bank_name: transaction.bankName,
         credit_limit: transaction.creditLimit || null,
         due_date: transaction.dueDate || null,
         reward_points: transaction.rewardPoints || null,
         merchant_category: transaction.merchantCategory || null,
-        mode: transaction.mode || null,
+              mode: transaction.mode || null,
         statement_id: statement.id
       }));
 

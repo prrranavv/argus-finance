@@ -347,7 +347,7 @@ export default function SplitvisePage() {
   const groupedExpenses = useMemo(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+    const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
@@ -386,14 +386,14 @@ export default function SplitvisePage() {
       return expenseDate >= today;
     });
 
-    const last3DaysExpenses = sortedExpenses.filter(expense => {
+    const yesterdayExpenses = sortedExpenses.filter(expense => {
       const expenseDate = parseISO(expense.date);
-      return expenseDate >= threeDaysAgo && expenseDate < today;
+      return expenseDate >= yesterday && expenseDate < today;
     });
 
     const last7DaysExpenses = sortedExpenses.filter(expense => {
       const expenseDate = parseISO(expense.date);
-      return expenseDate >= sevenDaysAgo && expenseDate < threeDaysAgo;
+      return expenseDate >= sevenDaysAgo && expenseDate < yesterday;
     });
 
     const last30DaysExpenses = sortedExpenses.filter(expense => {
@@ -408,7 +408,7 @@ export default function SplitvisePage() {
 
     return {
       today: todayExpenses,
-      last3Days: last3DaysExpenses,
+      yesterday: yesterdayExpenses,
       last7Days: last7DaysExpenses,
       last30Days: last30DaysExpenses,
       older: olderExpenses
@@ -1219,12 +1219,12 @@ export default function SplitvisePage() {
                       </div>
                     )}
 
-                    {/* Last 3 Days Section */}
-                    {groupedExpenses.last3Days.length > 0 && (
+                    {/* Yesterday Section */}
+                    {groupedExpenses.yesterday.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Last 3 days</h3>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Yesterday</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                          {groupedExpenses.last3Days.map((expense) => (
+                          {groupedExpenses.yesterday.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
                           ))}
                         </div>
