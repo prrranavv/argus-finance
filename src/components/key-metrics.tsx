@@ -21,9 +21,10 @@ interface KeyMetricsData {
 
 interface KeyMetricsProps {
   isPrivacyMode?: boolean;
+  filterYear?: number;
 }
 
-export function KeyMetrics({ isPrivacyMode = false }: KeyMetricsProps) {
+export function KeyMetrics({ isPrivacyMode = false, filterYear }: KeyMetricsProps) {
   const [data, setData] = useState<KeyMetricsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,8 @@ export function KeyMetrics({ isPrivacyMode = false }: KeyMetricsProps) {
   useEffect(() => {
     const fetchMetrics = async () => {
       try {
-        const response = await fetch('/api/key-metrics');
+        const url = filterYear ? `/api/key-metrics?year=${filterYear}` : '/api/key-metrics';
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch metrics');
         }
@@ -45,7 +47,7 @@ export function KeyMetrics({ isPrivacyMode = false }: KeyMetricsProps) {
     };
 
     fetchMetrics();
-  }, []);
+  }, [filterYear]);
 
   const formatChange = (change: number) => {
     if (isPrivacyMode) {

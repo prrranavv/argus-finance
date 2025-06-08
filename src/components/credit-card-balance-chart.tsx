@@ -17,9 +17,10 @@ interface CreditCardBalanceData {
 interface CreditCardBalanceChartProps {
   selectedCard: string;
   isPrivacyMode?: boolean;
+  filterYear?: number;
 }
 
-export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false }: CreditCardBalanceChartProps) {
+export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false, filterYear }: CreditCardBalanceChartProps) {
   const [data, setData] = useState<CreditCardBalanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,12 +28,17 @@ export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false }: 
   useEffect(() => {
     const fetchCreditCardData = async () => {
       try {
-        const response = await fetch('/api/credit-card-progression');
+        const url = filterYear ? `/api/credit-card-progression?year=${filterYear}` : '/api/credit-card-progression';
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch credit card data');
         }
         const creditCardData = await response.json();
-        setData(creditCardData);
+        // Filter to only show 2025 data
+        const filtered2025Data = creditCardData.filter((item: CreditCardBalanceData) => {
+          return item.week.includes('2025');
+        });
+        setData(filtered2025Data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -41,7 +47,7 @@ export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false }: 
     };
 
     fetchCreditCardData();
-  }, []);
+  }, [filterYear]);
 
   const formatCurrency = (value: number) => {
     if (isPrivacyMode) {
@@ -202,7 +208,7 @@ export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false }: 
   };
 
   return (
-    <Card>
+    <Card className="flex flex-col h-full animate-in fade-in duration-500">
       <CardHeader>
         <CardTitle>Credit Card Outstanding</CardTitle>
         <CardDescription>
@@ -212,9 +218,9 @@ export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false }: 
           }
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" key={selectedCard}>
             {renderChart()}
           </ResponsiveContainer>
         </div>

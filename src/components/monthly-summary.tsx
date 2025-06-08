@@ -16,9 +16,10 @@ interface MonthlySummaryData {
 interface MonthlySummaryProps {
   selectedBank: string;
   isPrivacyMode?: boolean;
+  filterYear?: number;
 }
 
-export function MonthlySummary({ selectedBank, isPrivacyMode = false }: MonthlySummaryProps) {
+export function MonthlySummary({ selectedBank, isPrivacyMode = false, filterYear }: MonthlySummaryProps) {
   const [data, setData] = useState<MonthlySummaryData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,12 +28,19 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false }: MonthlyS
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/monthly-summary?bank=${selectedBank}`);
+        const url = filterYear 
+          ? `/api/monthly-summary?bank=${selectedBank}&year=${filterYear}`
+          : `/api/monthly-summary?bank=${selectedBank}`;
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch monthly summary');
         }
         const summaryData = await response.json();
-        setData(summaryData);
+        // Filter to only show 2025 data
+        const filtered2025Data = summaryData.filter((row: MonthlySummaryData) => {
+          return row.month.includes('2025');
+        });
+        setData(filtered2025Data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -41,7 +49,7 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false }: MonthlyS
     };
 
     fetchData();
-  }, [selectedBank]);
+  }, [selectedBank, filterYear]);
 
   if (loading) {
     return (
@@ -88,7 +96,7 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false }: MonthlyS
   }
 
   return (
-    <Card>
+    <Card className="flex flex-col h-full animate-in fade-in duration-500">
       <CardHeader>
         <CardTitle>Monthly Summary</CardTitle>
         <CardDescription>
@@ -98,15 +106,13 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false }: MonthlyS
           }
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <div className="overflow-x-auto">
-          <Table>
+          <Table key={selectedBank}>
             <TableHeader>
               <TableRow>
                 <TableHead>Month</TableHead>
                 <TableHead className="text-right">Account Balance</TableHead>
-                <TableHead className="text-right">Credited</TableHead>
-                <TableHead className="text-right">Debited</TableHead>
                 <TableHead className="text-right">Total Credit Bill</TableHead>
               </TableRow>
             </TableHeader>
@@ -116,12 +122,6 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false }: MonthlyS
                   <TableCell className="font-medium">{row.month}</TableCell>
                   <TableCell className="text-right">
                     {row.accountBalance !== null ? formatCurrencyInLakhs(row.accountBalance, isPrivacyMode) : '-'}
-                  </TableCell>
-                  <TableCell className="text-right text-green-600">
-                    {formatCurrencyInLakhs(row.credited, isPrivacyMode)}
-                  </TableCell>
-                  <TableCell className="text-right text-red-600">
-                    {formatCurrencyInLakhs(row.debited, isPrivacyMode)}
                   </TableCell>
                   <TableCell className="text-right">
                     {formatCurrencyInLakhs(row.totalCreditBill, isPrivacyMode)}

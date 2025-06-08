@@ -15,9 +15,10 @@ interface BalanceData {
 interface AccountBalanceChartProps {
   selectedBank: string;
   isPrivacyMode?: boolean;
+  filterYear?: number;
 }
 
-export function AccountBalanceChart({ selectedBank, isPrivacyMode = false }: AccountBalanceChartProps) {
+export function AccountBalanceChart({ selectedBank, isPrivacyMode = false, filterYear }: AccountBalanceChartProps) {
   const [data, setData] = useState<BalanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,12 +26,17 @@ export function AccountBalanceChart({ selectedBank, isPrivacyMode = false }: Acc
   useEffect(() => {
     const fetchBalanceData = async () => {
       try {
-        const response = await fetch('/api/balance-progression');
+        const url = filterYear ? `/api/balance-progression?year=${filterYear}` : '/api/balance-progression';
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch balance data');
         }
         const balanceData = await response.json();
-        setData(balanceData);
+        // Filter to only show 2025 data
+        const filtered2025Data = balanceData.filter((item: BalanceData) => {
+          return item.week.includes('2025');
+        });
+        setData(filtered2025Data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -39,7 +45,7 @@ export function AccountBalanceChart({ selectedBank, isPrivacyMode = false }: Acc
     };
 
     fetchBalanceData();
-  }, []);
+  }, [filterYear]);
 
   const formatCurrency = (value: number) => {
     if (isPrivacyMode) {
@@ -159,7 +165,7 @@ export function AccountBalanceChart({ selectedBank, isPrivacyMode = false }: Acc
   const bankConfig = getBankConfig(selectedBank);
 
   return (
-    <Card>
+    <Card className="flex flex-col h-full animate-in fade-in duration-500">
       <CardHeader>
         <CardTitle>Account Balance Progression</CardTitle>
         <CardDescription>
@@ -169,9 +175,9 @@ export function AccountBalanceChart({ selectedBank, isPrivacyMode = false }: Acc
           }
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1">
         <div className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" key={selectedBank}>
             <AreaChart
               data={data}
               margin={{

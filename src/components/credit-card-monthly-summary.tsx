@@ -13,9 +13,10 @@ interface CreditCardSummaryData {
 interface CreditCardMonthlySummaryProps {
   selectedCard: string;
   isPrivacyMode?: boolean;
+  filterYear?: number;
 }
 
-export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false }: CreditCardMonthlySummaryProps) {
+export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false, filterYear }: CreditCardMonthlySummaryProps) {
   const [data, setData] = useState<CreditCardSummaryData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,12 +24,19 @@ export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false }
   useEffect(() => {
     const fetchCreditCardSummary = async () => {
       try {
-        const response = await fetch(`/api/credit-card-summary?card=${encodeURIComponent(selectedCard)}`);
+        const url = filterYear 
+          ? `/api/credit-card-summary?card=${encodeURIComponent(selectedCard)}&year=${filterYear}`
+          : `/api/credit-card-summary?card=${encodeURIComponent(selectedCard)}`;
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch credit card summary');
         }
         const summaryData = await response.json();
-        setData(summaryData);
+        // Filter to only show 2025 data
+        const filtered2025Data = summaryData.filter((item: CreditCardSummaryData) => {
+          return item.month.includes('2025');
+        });
+        setData(filtered2025Data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -37,7 +45,7 @@ export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false }
     };
 
     fetchCreditCardSummary();
-  }, [selectedCard]);
+  }, [selectedCard, filterYear]);
 
   const formatCurrency = (amount: number) => {
     if (isPrivacyMode) {
@@ -105,7 +113,7 @@ export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false }
   }
 
   return (
-    <Card>
+    <Card className="flex flex-col h-full animate-in fade-in duration-500">
       <CardHeader>
         <CardTitle>Credit Card Monthly Summary</CardTitle>
         <CardDescription>
@@ -115,8 +123,8 @@ export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false }
           }
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Table>
+      <CardContent className="flex-1 flex flex-col">
+        <Table className="flex-1" key={selectedCard}>
           <TableHeader>
             <TableRow>
               <TableHead>Month</TableHead>

@@ -5,8 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Header } from "@/components/header";
 import Link from "next/link";
-import { ArrowLeft, Eye, EyeOff, Search, Filter, List, Grid3X3 } from "lucide-react";
+import { ArrowLeft, Search, Filter, List, Grid3X3 } from "lucide-react";
 import { TransactionsList } from "@/components/transactions-list";
 import { TransactionMetrics } from "@/components/transaction-metrics";
 import { formatCurrencyInLakhs } from "@/lib/utils";
@@ -233,6 +234,21 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true);
   const [isPrivacyMode, setIsPrivacyMode] = useState(true);
 
+  // Load privacy preference from localStorage on mount
+  useEffect(() => {
+    const savedPrivacyMode = localStorage.getItem('privacyMode');
+    if (savedPrivacyMode !== null) {
+      setIsPrivacyMode(JSON.parse(savedPrivacyMode));
+    }
+  }, []);
+
+  // Save privacy preference to localStorage when changed
+  const handlePrivacyToggle = () => {
+    const newPrivacyMode = !isPrivacyMode;
+    setIsPrivacyMode(newPrivacyMode);
+    localStorage.setItem('privacyMode', JSON.stringify(newPrivacyMode));
+  };
+
   // Search states - separate input value from debounced search query
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
@@ -241,7 +257,7 @@ export default function TransactionsPage() {
   const [accountTypeFilter, setAccountTypeFilter] = useState("all");
   const [bankFilter, setBankFilter] = useState("all");
   const [timeRangeFilter, setTimeRangeFilter] = useState("30days");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
 
   // Debounce search input with 1 second delay
   useEffect(() => {
@@ -317,37 +333,13 @@ export default function TransactionsPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-10 max-w-7xl">
+      <Header 
+        isPrivacyMode={isPrivacyMode}
+        onPrivacyToggle={handlePrivacyToggle}
+        subtitle={`AI-powered insights from your financial data • ${getTimeRangeLabel()}`}
+      />
+      
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Button>
-          </Link>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsPrivacyMode(!isPrivacyMode)}
-            className="flex items-center space-x-2"
-          >
-            {isPrivacyMode ? (
-              <>
-                <EyeOff className="h-4 w-4" />
-                <span>Show Numbers</span>
-              </>
-            ) : (
-              <>
-                <Eye className="h-4 w-4" />
-                <span>Hide Numbers</span>
-              </>
-            )}
-          </Button>
-        </div>
-        <h1 className="text-4xl font-bold tracking-tight">Transaction Intelligence</h1>
-        <p className="text-muted-foreground mt-2">
-          AI-powered insights from your financial data • {getTimeRangeLabel()}
-        </p>
         
         {/* Filters Row */}
         <div className="flex flex-wrap gap-3 items-center mt-6">
@@ -457,16 +449,20 @@ export default function TransactionsPage() {
             </CardContent>
           </Card>
         ) : (
-          <TransactionsGrid 
-            transactions={transactions} 
-            isPrivacyMode={isPrivacyMode}
-            searchQuery={debouncedSearchQuery}
-            searchInput={searchInput}
-            accountTypeFilter={accountTypeFilter}
-            bankFilter={bankFilter}
-            timeRangeFilter={timeRangeFilter}
-            onSearchChange={setSearchInput}
-          />
+          <Card>
+            <CardContent className="pt-6">
+              <TransactionsGrid 
+                transactions={transactions} 
+                isPrivacyMode={isPrivacyMode}
+                searchQuery={debouncedSearchQuery}
+                searchInput={searchInput}
+                accountTypeFilter={accountTypeFilter}
+                bankFilter={bankFilter}
+                timeRangeFilter={timeRangeFilter}
+                onSearchChange={setSearchInput}
+              />
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

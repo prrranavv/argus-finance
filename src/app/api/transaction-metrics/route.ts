@@ -155,9 +155,9 @@ export async function GET(request: Request) {
         date: t.date
       }));
 
-    // Get last 3 months of Quizizz salary data (not including current period)
-    const fourMonthsAgo = new Date();
-    fourMonthsAgo.setMonth(fourMonthsAgo.getMonth() - 4);
+    // Get last 3 months of Quizizz salary data (May, April, March 2025)
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
     const allQuizizzTransactions = await prisma.transaction.findMany({
       where: {
@@ -166,8 +166,7 @@ export async function GET(request: Request) {
           contains: 'quizizz'
         },
         date: {
-          gte: fourMonthsAgo,
-          lt: periodStartDate // Exclude current period
+          gte: threeMonthsAgo
         }
       },
       orderBy: {
