@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 
-async function getMonthlyBalances() {
+async function getMonthlyBalances(request: Request) {
   // Use the existing monthly summary API logic to get accurate balance data
-  const response = await fetch('http://localhost:3000/api/monthly-summary?bank=Total');
+  const baseUrl = new URL(request.url).origin;
+  const response = await fetch(`${baseUrl}/api/monthly-summary?bank=Total`);
   const monthlyData = await response.json();
   
   return monthlyData;
@@ -12,10 +13,10 @@ function getMonthName(monthString: string): string {
   return monthString; // Already formatted like "June 2025"
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Get monthly balance data from the existing API
-    const monthlyBalances = await getMonthlyBalances();
+    const monthlyBalances = await getMonthlyBalances(request);
     
     if (monthlyBalances.length < 2) {
       return NextResponse.json({ error: 'Insufficient data for comparison' }, { status: 400 });

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { StatementsModal } from "@/components/statements-modal";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, FileText, BarChart3 } from "lucide-react";
+import { Eye, EyeOff, FileText, BarChart3, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
@@ -153,6 +153,18 @@ export function Header({ isPrivacyMode, onPrivacyToggle, subtitle }: HeaderProps
               >
                 <BarChart3 className="h-4 w-4" />
                 <span>Transactions</span>
+              </Button>
+            </Link>
+
+            {/* Splitwise Button */}
+            <Link href="/splitwise">
+              <Button 
+                variant={pathname === "/splitwise" ? "default" : "outline"} 
+                size="sm" 
+                className="flex items-center space-x-2"
+              >
+                <Users className="h-4 w-4" />
+                <span>Splitwise</span>
               </Button>
             </Link>
 
