@@ -49,7 +49,30 @@ export default function Home() {
               />
             </div>
             <div>
-              <h1 className="text-4xl font-bold tracking-tight">Argus</h1>
+              <div className="flex items-center space-x-3">
+                <h1 className="text-4xl font-bold tracking-tight">Argus</h1>
+                <div className="relative">
+                  {/* Core 3D indicator */}
+                  <div className="w-4 h-4 rounded-full relative transform hover:scale-110 transition-transform duration-300">
+                    {/* Base shadow for depth */}
+                    <div className="absolute inset-0 rounded-full bg-green-600 blur-sm opacity-60"></div>
+                    {/* Main body with gradient */}
+                    <div className="relative w-full h-full rounded-full bg-gradient-to-br from-green-400 via-green-500 to-green-600 shadow-lg animate-pulse">
+                      {/* Highlight for 3D effect */}
+                      <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-green-200 to-green-300 opacity-80"></div>
+                      {/* Inner glow */}
+                      <div className="absolute inset-0.5 rounded-full bg-green-400 opacity-50 animate-pulse" style={{animationDelay: '0.3s'}}></div>
+                    </div>
+                  </div>
+                  
+                  {/* Outer ping rings */}
+                  <div className="absolute inset-0 w-4 h-4 rounded-full border-2 border-green-400 animate-ping opacity-60"></div>
+                  <div className="absolute inset-0 w-4 h-4 rounded-full border border-green-300 animate-ping opacity-40" style={{animationDelay: '0.7s'}}></div>
+                  
+                  {/* Subtle outer glow */}
+                  <div className="absolute -inset-1 rounded-full bg-green-400 opacity-20 blur-md animate-pulse" style={{animationDelay: '1s'}}></div>
+                </div>
+              </div>
               <p className="text-muted-foreground mt-2">AI-powered financial intelligence that protects your privacy</p>
             </div>
           </div>
