@@ -1,1 +1,1 @@
-{"functions":{"src/app/api/**/*.ts":{"runtime":"@vercel/node"}},"crons":[]}
+{"functions":{"src/app/api/**/*.ts":{"runtime":"nodejs20.x"}},"crons":[]}
