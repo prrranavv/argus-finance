@@ -61,13 +61,13 @@ export function KeyMetrics({ isPrivacyMode = false, filterYear }: KeyMetricsProp
   const getChangeIcon = (change: number) => {
     if (change > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;
     if (change < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;
-    return <Minus className="h-4 w-4 text-gray-500" />;
+    return <Minus className="h-4 w-4 text-muted-foreground" />;
   };
 
   const getChangeColor = (change: number) => {
     if (change > 0) return 'text-green-600';
     if (change < 0) return 'text-red-600';
-    return 'text-gray-600';
+    return 'text-muted-foreground';
   };
 
   if (loading) {
@@ -77,9 +77,9 @@ export function KeyMetrics({ isPrivacyMode = false, filterYear }: KeyMetricsProp
           <Card key={i}>
             <CardContent className="p-6">
               <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div className="h-4 bg-muted rounded mb-2"></div>
+        <div className="h-8 bg-muted rounded mb-2"></div>
+        <div className="h-4 bg-muted rounded w-1/2"></div>
               </div>
             </CardContent>
           </Card>

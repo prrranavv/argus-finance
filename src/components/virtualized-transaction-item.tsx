@@ -76,13 +76,13 @@ const VirtualizedTransactionItem = memo(function VirtualizedTransactionItem({
 
   return (
     <div style={style}>
-      <div className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl hover:border-gray-200 transition-colors">
+      <div className="flex items-center justify-between p-4 bg-card border border-border rounded-xl hover:border-border/80 transition-colors">
         {/* Left Section - Transaction Info */}
         <div className="flex items-center space-x-3 flex-1">
           {/* Bank Logo */}
           <div className="flex-shrink-0">
             {getBankLogo(transaction.bank_name, transaction.account_type, transaction.source) ? (
-              <div className="w-12 h-8 rounded bg-gray-50 flex items-center justify-center overflow-hidden">
+              <div className="w-12 h-8 rounded bg-muted/50 flex items-center justify-center overflow-hidden">
                 <Image
                   src={getBankLogo(transaction.bank_name, transaction.account_type, transaction.source)}
                   alt={`${transaction.source || transaction.bank_name} logo`}
@@ -94,8 +94,8 @@ const VirtualizedTransactionItem = memo(function VirtualizedTransactionItem({
                 />
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-                <span className="text-xs font-medium text-gray-600">
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                <span className="text-xs font-medium text-muted-foreground">
                   {transaction.bank_name.charAt(0)}
                 </span>
               </div>
@@ -105,11 +105,11 @@ const VirtualizedTransactionItem = memo(function VirtualizedTransactionItem({
           {/* Transaction Details */}
           <div className="flex-1 min-w-0">
             <div className="mb-1">
-              <h4 className="font-medium text-gray-900 truncate">
+              <h4 className="font-medium text-foreground truncate">
                 {transaction.description}
               </h4>
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               <span>{formatDate(transaction.date)}</span>
             </div>
           </div>
@@ -126,7 +126,7 @@ const VirtualizedTransactionItem = memo(function VirtualizedTransactionItem({
             {formatCurrencyInLakhs(transaction.amount, isPrivacyMode)}
           </div>
           {transaction.closing_balance !== null && (
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-muted-foreground">
               Balance: {formatCurrencyInLakhs(transaction.closing_balance, isPrivacyMode)}
             </div>
           )}

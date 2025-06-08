@@ -154,7 +154,7 @@ function TransactionsGrid({
     <div className="space-y-4">
       {/* Search Input */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
           placeholder="Search transactions by merchant, bank, or amount..."
           value={searchInput}
@@ -174,7 +174,7 @@ function TransactionsGrid({
               {/* Bank Logo - Centered and Consistent */}
               <div className="flex justify-center mb-3">
                 {getBankLogo(transaction.bank_name, transaction.account_type, transaction.source) ? (
-                  <div className={`${transaction.account_type === 'Credit Card' ? 'w-20 h-12' : 'w-12 h-8'} rounded-lg bg-white shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden p-1`}>
+                  <div className={`${transaction.account_type === 'Credit Card' ? 'w-20 h-12' : 'w-12 h-8'} rounded-lg bg-card shadow-sm border border-border flex items-center justify-center overflow-hidden p-1`}>
                     <Image
                       src={getBankLogo(transaction.bank_name, transaction.account_type, transaction.source)}
                       alt={`${transaction.source || transaction.bank_name} logo`}
@@ -186,8 +186,8 @@ function TransactionsGrid({
                     />
                   </div>
                 ) : (
-                  <div className="w-16 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 shadow-sm border border-gray-200 flex items-center justify-center">
-                    <span className="text-lg font-bold text-gray-700">
+                  <div className="w-16 h-12 rounded-lg bg-gradient-to-br from-muted to-muted/80 shadow-sm border border-border flex items-center justify-center">
+                    <span className="text-lg font-bold text-foreground">
                       {transaction.bank_name.charAt(0)}
                     </span>
                   </div>
@@ -201,7 +201,7 @@ function TransactionsGrid({
               </div>
               
               {/* Transaction Description */}
-              <div className="text-sm font-medium text-gray-900 text-center truncate px-1">
+              <div className="text-sm font-medium text-foreground text-center truncate px-1">
                 {transaction.description}
               </div>
               
@@ -391,8 +391,8 @@ export default function TransactionsPage() {
         {/* Filters Row */}
         <div className="flex flex-wrap gap-3 items-center mt-6">
           <div className="flex items-center space-x-2">
-            <Filter className="w-4 h-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Filters:</span>
+            <Filter className="w-4 h-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Filters:</span>
           </div>
 
           {/* Account Type Filter */}

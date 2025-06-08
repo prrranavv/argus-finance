@@ -68,7 +68,7 @@ export function AuthModal({ isOpen, onAuthenticate }: AuthModalProps) {
                 quality={95}
               />
             </div>
-            <DialogTitle className="text-xl font-bold text-gray-800">
+            <DialogTitle className="text-xl font-bold text-foreground">
               Argus
             </DialogTitle>
           </div>

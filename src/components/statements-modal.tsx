@@ -427,9 +427,9 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
                   <>
                     {/* Filters */}
                     {(accountTypes.length > 0 || bankNames.length > 0) && (
-                      <div className="flex flex-wrap gap-3 items-center p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center space-x-2">
-                          <Filter className="w-4 h-4 text-gray-500" />
+                              <div className="flex flex-wrap gap-3 items-center p-3 bg-muted/50 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Filter className="w-4 h-4 text-muted-foreground" />
                           <span className="text-sm font-medium text-gray-700">Filters:</span>
                         </div>
                         
