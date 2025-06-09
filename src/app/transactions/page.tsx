@@ -295,15 +295,28 @@ export default function TransactionsPage() {
       try {
         // Fetch transactions
         const transactionsResponse = await fetch('/api/transactions');
+        
+        if (!transactionsResponse.ok) {
+          throw new Error(`HTTP error! status: ${transactionsResponse.status}`);
+        }
+        
         const transactionsData = await transactionsResponse.json();
-        setTransactions(transactionsData.map((t: TransactionData) => ({
-          ...t,
-          date: new Date(t.date),
-          created_at: new Date(t.created_at),
-          updated_at: new Date(t.updated_at)
-        })));
+        
+        // Check if transactionsData is an array
+        if (Array.isArray(transactionsData)) {
+          setTransactions(transactionsData.map((t: TransactionData) => ({
+            ...t,
+            date: new Date(t.date),
+            created_at: new Date(t.created_at),
+            updated_at: new Date(t.updated_at)
+          })));
+        } else {
+          console.error('API did not return an array:', transactionsData);
+          setTransactions([]);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
+        setTransactions([]);
       } finally {
         setLoading(false);
       }

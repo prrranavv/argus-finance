@@ -1,3 +1,5 @@
+![product asset](https://github.com/prrranavv/argus-finance/blob/main/public/cardImages/mainPageAsset.png)
+
 # 💰 Argus Finance - Your Personal Finance Command Center
 
 > **"Take control of your money with the power of AI and beautiful design"**
