@@ -56,6 +56,7 @@ So I built something better. **Argus Finance is privacy-first, AI-powered, and d
 
 ### **Current Features** ✅
 - 📤 **Drag & Drop Upload**: Any CSV, XLS, or PDF statement
+- 📧 **Gmail Integration**: Automatically extract transactions from bank emails
 - 🎨 **3D Card Management**: Visual card selection with real card renders
 - 📊 **Interactive Charts**: Spending trends, monthly summaries, balance progression
 - 🔍 **Smart Search**: Find transactions instantly with debounced search
@@ -99,14 +100,102 @@ npm run dev
 
 Open `localhost:3000` and upload your first statement. Watch the magic happen.
 
+## 📧 Gmail Integration Setup (Optional)
+
+Argus Finance can automatically extract transaction data from your Gmail messages (bank alerts, payment confirmations, etc.). To enable this feature:
+
+### 1. Google Cloud Console Setup
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Gmail API:
+   - Navigate to "APIs & Services" > "Library"
+   - Search for "Gmail API" and click "Enable"
+
+### 2. Configure OAuth Consent Screen (IMPORTANT!)
+1. Go to "APIs & Services" > "OAuth consent screen"
+2. Choose "External" user type (unless you have a Google Workspace)
+3. Fill in the required fields:
+   - **App name**: "Argus Finance" (or your app name)
+   - **User support email**: Your email address
+   - **Developer contact information**: Your email address
+4. Add scopes: Click "Add or Remove Scopes" and add:
+   - `https://www.googleapis.com/auth/gmail.readonly`
+5. Add test users: In the "Test users" section, add your Gmail address
+6. Save and continue through all steps
+
+### 3. Create OAuth 2.0 Credentials
+1. Go to "APIs & Services" > "Credentials"
+2. Click "Create credentials" > "OAuth 2.0 Client IDs"
+3. Set application type to "Web application"
+4. Add authorized redirect URI: `http://localhost:3000/api/gmail/auth`
+5. For production, add your domain: `https://yourdomain.com/api/gmail/auth`
+6. Save and copy the Client ID and Client Secret
+
+### 4. Get Access Tokens
+1. Add your credentials to `.env.local`:
+   ```bash
+   GOOGLE_CLIENT_ID=your_client_id_here
+   GOOGLE_CLIENT_SECRET=your_client_secret_here
+   GOOGLE_REDIRECT_URI=http://localhost:3000/api/gmail/auth
+   ```
+
+2. Start your development server:
+   ```bash
+   npm run dev
+   ```
+
+3. Visit `http://localhost:3000/api/gmail/auth` to get the authorization URL
+4. Follow the authorization flow and copy the returned tokens
+5. Add tokens to your `.env.local`:
+   ```bash
+   GMAIL_ACCESS_TOKEN=your_access_token
+   GMAIL_REFRESH_TOKEN=your_refresh_token
+   ```
+
+### 5. Using Gmail Integration
+- Open the Statements modal in the app
+- Click "Fetch transactions from Gmail"
+- The system will search your last 10 emails for transaction data
+- Extracted transactions will appear in the UI for review
+
+**Privacy Note**: The Gmail integration only reads emails from known bank senders and transaction-related subjects. Your email content is processed locally and only transaction data is extracted.
+
+### 🔧 Troubleshooting Gmail Setup
+
+**Getting "Error 403: access_denied"?**
+This happens when the OAuth consent screen isn't properly configured:
+
+1. **Configure OAuth Consent Screen**: Make sure you've completed step 2 above
+2. **Add Test User**: Add your Gmail address in the "Test users" section
+3. **App Status**: Your app will be in "Testing" mode - this is normal for personal use
+4. **Verification**: You don't need to verify your app for personal use
+
+**Common Issues:**
+- ❌ **Redirect URI mismatch**: Ensure it's exactly `http://localhost:3000/api/gmail/auth`
+- ❌ **Gmail API not enabled**: Check that Gmail API is enabled in your project
+- ❌ **Scope missing**: Make sure `gmail.readonly` scope is added to consent screen
+- ❌ **Not a test user**: Your email must be added as a test user
+
+**Still having issues?** Visit `/api/gmail/auth` in your browser to see detailed error messages and troubleshooting steps.
+
 ## 🚀 Deploy to Vercel
 
 ### Environment Variables Required:
 ```bash
+# OpenAI API for transaction intelligence
 OPENAI_API_KEY=your_openai_api_key_here
+
+# Supabase Database
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+
+# Gmail API for email transaction extraction (Optional)
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_REDIRECT_URI=http://localhost:3000/api/gmail/auth
+GMAIL_ACCESS_TOKEN=your_gmail_access_token
+GMAIL_REFRESH_TOKEN=your_gmail_refresh_token
 ```
 
 ### One-Click Deploy:

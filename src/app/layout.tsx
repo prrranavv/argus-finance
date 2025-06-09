@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthWrapper } from "@/components/auth-wrapper";
 import { ThemeProvider } from "next-themes";
 
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -30,6 +31,7 @@ export default function RootLayout({
             <main className="min-h-screen bg-background text-foreground">
               {children}
             </main>
+
           </AuthWrapper>
           <Toaster />
         </ThemeProvider>

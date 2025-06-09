@@ -66,6 +66,7 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
   const [accountTypeFilter, setAccountTypeFilter] = useState<string>("All");
   const [bankNameFilter, setBankNameFilter] = useState<string>("All");
 
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map((file) => ({
       file,
@@ -295,6 +296,8 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
     }
   }, [isOpen]);
 
+
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -309,6 +312,8 @@ export function StatementsModal({ isOpen, onOpenChange }: StatementsModalProps) 
           {/* Upload Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Import New Statements</h3>
+            
+
             
             <div
               {...getRootProps()}

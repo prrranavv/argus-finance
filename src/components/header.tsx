@@ -2,10 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { StatementsModal } from "@/components/statements-modal";
+import { GmailSyncModal } from "@/components/gmail-sync-modal";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, FileText, BarChart3, Users, Menu } from "lucide-react";
+import { Eye, EyeOff, FileText, BarChart3, Users, Menu, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
@@ -23,6 +24,7 @@ interface HeaderProps {
 
 export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
   const [showStatementsModal, setShowStatementsModal] = useState(false);
+  const [showGmailSyncModal, setShowGmailSyncModal] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
@@ -196,6 +198,17 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
                   <FileText className="h-4 w-4" />
                   <span>Statements</span>
                 </Button>
+
+                {/* Sync Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowGmailSyncModal(true)}
+                  className="flex items-center space-x-2"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span>Sync</span>
+                </Button>
               </div>
 
               {/* Divider */}
@@ -266,6 +279,17 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
                   title="Statements"
                 >
                   <FileText className="h-4 w-4" />
+                </Button>
+
+                {/* Sync Button - Icon only */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowGmailSyncModal(true)}
+                  className="px-2"
+                  title="Gmail Sync"
+                >
+                  <RefreshCw className="h-4 w-4" />
                 </Button>
               </div>
 
@@ -374,6 +398,19 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
                           <FileText className="h-5 w-5 mr-3" />
                           Statements
                         </Button>
+
+                        {/* Gmail Sync */}
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setShowGmailSyncModal(true);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full justify-start h-12 px-4 text-base font-medium"
+                        >
+                          <RefreshCw className="h-5 w-5 mr-3" />
+                          Gmail Sync
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -388,6 +425,12 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
       <StatementsModal 
         isOpen={showStatementsModal} 
         onOpenChange={setShowStatementsModal} 
+      />
+
+      {/* Gmail Sync Modal */}
+      <GmailSyncModal 
+        isOpen={showGmailSyncModal} 
+        onOpenChange={setShowGmailSyncModal} 
       />
     </div>
   );
