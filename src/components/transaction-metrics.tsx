@@ -169,14 +169,14 @@ export function TransactionMetrics({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 mb-8">
-        {[...Array(6)].map((_, i) => (
+      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+        {[...Array(4)].map((_, i) => (
           <Card key={i}>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-6">
               <div className="animate-pulse">
-                        <div className="h-4 bg-muted rounded mb-2"></div>
-        <div className="h-8 bg-muted rounded mb-2"></div>
-        <div className="h-4 bg-muted rounded w-1/2"></div>
+                        <div className="h-3 md:h-4 bg-muted rounded mb-2"></div>
+        <div className="h-6 md:h-8 bg-muted rounded mb-2"></div>
+        <div className="h-3 md:h-4 bg-muted rounded w-1/2"></div>
               </div>
             </CardContent>
           </Card>
@@ -196,18 +196,18 @@ export function TransactionMetrics({
   return (
     <div className="space-y-6">
       {/* First Row - 4 Equal Sized Metric Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Total Expenses */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-medium">Total Expenses</CardTitle>
+            <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-lg md:text-2xl font-bold text-red-600">
               {formatCurrencyInLakhs(metrics.metrics.totalExpenses.current, isPrivacyMode)}
             </div>
-            <div className="mt-2">
+            <div className="mt-1 md:mt-2">
               {formatPercentageChangeWithAmount(metrics.metrics.totalExpenses.change)}
             </div>
           </CardContent>
@@ -215,15 +215,15 @@ export function TransactionMetrics({
 
         {/* Daily Average Spending */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Daily Spending</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-medium">Avg Daily Spending</CardTitle>
+            <Calendar className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-lg md:text-2xl font-bold">
               {formatCurrencyInLakhs(metrics.metrics.dailyAvgSpending.current, isPrivacyMode)}
             </div>
-            <div className="mt-2">
+            <div className="mt-1 md:mt-2">
               {formatPercentageChangeWithAmount(metrics.metrics.dailyAvgSpending.change)}
             </div>
           </CardContent>
@@ -231,15 +231,15 @@ export function TransactionMetrics({
 
         {/* Average Transaction */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Transaction</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-medium">Avg Transaction</CardTitle>
+            <DollarSign className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-lg md:text-2xl font-bold">
               {formatCurrencyInLakhs(metrics.metrics.avgTransaction.current, isPrivacyMode)}
             </div>
-            <div className="mt-2">
+            <div className="mt-1 md:mt-2">
               {formatPercentageChangeWithAmount(metrics.metrics.avgTransaction.change)}
             </div>
           </CardContent>
@@ -247,15 +247,15 @@ export function TransactionMetrics({
 
         {/* Number of Transactions */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 md:pb-2">
+            <CardTitle className="text-xs md:text-sm font-medium">Total Transactions</CardTitle>
+            <BarChart3 className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-3 md:p-6 pt-0">
+            <div className="text-lg md:text-2xl font-bold">
               {maskNumber(metrics.metrics.totalTransactions.current, isPrivacyMode)}
             </div>
-            <div className="mt-2">
+            <div className="mt-1 md:mt-2">
               {formatCountChangeWithAmount(metrics.metrics.totalTransactions.change)}
             </div>
           </CardContent>

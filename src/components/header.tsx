@@ -5,9 +5,16 @@ import { StatementsModal } from "@/components/statements-modal";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, FileText, BarChart3, Users } from "lucide-react";
+import { Eye, EyeOff, FileText, BarChart3, Users, Menu } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface HeaderProps {
   isPrivacyMode: boolean;
@@ -19,6 +26,7 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [displayedText, setDisplayedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
   const mythText = "a giant in Greek mythology with a hundred eyes, known for his role as an all-seeing guardian.";
@@ -48,16 +56,16 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
 
   return (
     <div className="mb-8">
-      <div className="bg-card rounded-xl border border-border shadow-sm p-6">
-        <div className="flex items-center justify-between">
-          <div className="relative">
+      <div className="bg-card rounded-xl border border-border shadow-sm p-4 sm:p-6">
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
+          <div className="relative flex-shrink-0">
             <Link 
               href="/" 
-              className="flex items-center space-x-4 hover:opacity-80 transition-opacity"
+              className="flex items-center space-x-2 sm:space-x-4 hover:opacity-80 transition-opacity"
               onMouseEnter={() => setShowTooltip(true)}
               onMouseLeave={() => setShowTooltip(false)}
             >
-              <div className="w-16 h-16 relative">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 relative">
                 <Image
                   src="/cardImages/argusLogo.png"
                   alt="Argus Logo"
@@ -67,25 +75,25 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
                 />
               </div>
               <div>
-                <div className="flex items-center space-x-3">
-                  <h1 className="text-4xl font-bold tracking-tight text-foreground">Argus</h1>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">Argus</h1>
                   <div className="relative">
                     {/* Core 3D indicator */}
-                    <div className="w-4 h-4 rounded-full relative transform hover:scale-110 transition-transform duration-300">
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full relative transform hover:scale-110 transition-transform duration-300">
                       {/* Base shadow for depth */}
                       <div className="absolute inset-0 rounded-full bg-green-600 blur-sm opacity-60"></div>
                       {/* Main body with gradient */}
                       <div className="relative w-full h-full rounded-full bg-gradient-to-br from-green-400 via-green-500 to-green-600 shadow-lg animate-pulse">
                         {/* Highlight for 3D effect */}
-                        <div className="absolute top-0.5 left-0.5 w-1.5 h-1.5 rounded-full bg-gradient-to-br from-green-200 to-green-300 opacity-80"></div>
+                        <div className="absolute top-0.5 left-0.5 w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-gradient-to-br from-green-200 to-green-300 opacity-80"></div>
                         {/* Inner glow */}
                         <div className="absolute inset-0.5 rounded-full bg-green-400 opacity-50 animate-pulse" style={{animationDelay: '0.3s'}}></div>
                       </div>
                     </div>
                     
                     {/* Outer ping rings */}
-                    <div className="absolute inset-0 w-4 h-4 rounded-full border-2 border-green-400 animate-ping opacity-60"></div>
-                    <div className="absolute inset-0 w-4 h-4 rounded-full border border-green-300 animate-ping opacity-40" style={{animationDelay: '0.7s'}}></div>
+                    <div className="absolute inset-0 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-green-400 animate-ping opacity-60"></div>
+                    <div className="absolute inset-0 w-3 h-3 sm:w-4 sm:h-4 rounded-full border border-green-300 animate-ping opacity-40" style={{animationDelay: '0.7s'}}></div>
                     
                     {/* Subtle outer glow */}
                     <div className="absolute -inset-1 rounded-full bg-green-400 opacity-20 blur-md animate-pulse" style={{animationDelay: '1s'}}></div>
@@ -143,64 +151,235 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
           </div>
           
           {/* Navigation and Control Buttons */}
-          <div className="flex items-center space-x-3">
-            {/* Transactions Button */}
-            <Link href="/transactions">
-              <Button 
-                variant={pathname === "/transactions" ? "default" : "outline"} 
-                size="sm" 
-                className="flex items-center space-x-2"
+          <div className="flex items-center gap-1 sm:gap-3">
+            {/* Desktop Navigation - Hidden on mobile */}
+            <div className="hidden lg:flex items-center space-x-3">
+              {/* Section 1: Navigation */}
+              <div className="flex items-center space-x-3">
+                {/* Transactions Button */}
+                <Link href="/transactions">
+                  <Button 
+                    variant={pathname === "/transactions" ? "default" : "outline"} 
+                    size="sm" 
+                    className="flex items-center space-x-2"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    <span>Transactions</span>
+                  </Button>
+                </Link>
+
+                {/* Splitwise Button */}
+                <Link href="/splitwise">
+                  <Button 
+                    variant={pathname === "/splitwise" ? "default" : "outline"} 
+                    size="sm" 
+                    className="flex items-center space-x-2"
+                  >
+                    <Users className="h-4 w-4" />
+                    <span>Splitwise</span>
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Divider */}
+              <div className="h-6 w-px bg-border"></div>
+
+              {/* Section 2: Actions */}
+              <div className="flex items-center space-x-3">
+                {/* Statements Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowStatementsModal(true)}
+                  className="flex items-center space-x-2"
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Statements</span>
+                </Button>
+              </div>
+
+              {/* Divider */}
+              <div className="h-6 w-px bg-border"></div>
+
+              {/* Section 3: Settings */}
+              <div className="flex items-center space-x-3">
+                {/* Privacy Toggle */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onPrivacyToggle}
+                  className="px-3 relative"
+                  title={isPrivacyMode ? "Show money numbers" : "Hide money numbers"}
+                >
+                  <div className="flex items-center justify-between w-14">
+                    <span className="text-sm font-medium text-muted-foreground">₹</span>
+                    <Eye className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-30' : 'opacity-100 text-green-500'}`} />
+                    <EyeOff className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-100 text-red-500' : 'opacity-30'}`} />
+                  </div>
+                </Button>
+
+                {/* Theme Toggle */}
+                <ThemeToggle />
+              </div>
+            </div>
+
+            {/* Tablet Navigation - Show icons only for md to lg */}
+            <div className="hidden md:flex lg:hidden items-center space-x-1">
+              {/* Section 1: Navigation */}
+              <div className="flex items-center space-x-1">
+                {/* Transactions Button - Icon only */}
+                <Link href="/transactions">
+                  <Button 
+                    variant={pathname === "/transactions" ? "default" : "outline"} 
+                    size="sm" 
+                    className="px-2"
+                    title="Transactions"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                  </Button>
+                </Link>
+
+                {/* Splitwise Button - Icon only */}
+                <Link href="/splitwise">
+                  <Button 
+                    variant={pathname === "/splitwise" ? "default" : "outline"} 
+                    size="sm" 
+                    className="px-2"
+                    title="Splitwise"
+                  >
+                    <Users className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Divider */}
+              <div className="h-6 w-px bg-border mx-2"></div>
+
+              {/* Section 2: Actions */}
+              <div className="flex items-center space-x-1">
+                {/* Statements Button - Icon only */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowStatementsModal(true)}
+                  className="px-2"
+                  title="Statements"
+                >
+                  <FileText className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Divider */}
+              <div className="h-6 w-px bg-border mx-2"></div>
+
+              {/* Section 3: Settings */}
+              <div className="flex items-center space-x-1">
+                {/* Privacy Toggle - Icon only */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onPrivacyToggle}
+                  className="px-3 relative"
+                  title={isPrivacyMode ? "Show money numbers" : "Hide money numbers"}
+                >
+                  <div className="flex items-center justify-between w-14">
+                    <span className="text-sm font-medium text-muted-foreground">₹</span>
+                    <Eye className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-30' : 'opacity-100 text-green-500'}`} />
+                    <EyeOff className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-100 text-red-500' : 'opacity-30'}`} />
+                  </div>
+                </Button>
+
+                {/* Theme Toggle */}
+                <ThemeToggle />
+              </div>
+            </div>
+
+            {/* Mobile Navigation - Sheet menu for small screens */}
+            <div className="flex md:hidden items-center space-x-1">
+              {/* Privacy Toggle - Always visible on mobile */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onPrivacyToggle}
+                className="px-3 relative"
+                title={isPrivacyMode ? "Show money numbers" : "Hide money numbers"}
               >
-                <BarChart3 className="h-4 w-4" />
-                <span>Transactions</span>
+                <div className="flex items-center justify-between w-14">
+                  <span className="text-sm font-medium text-muted-foreground">₹</span>
+                  <Eye className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-30' : 'opacity-100 text-green-500'}`} />
+                  <EyeOff className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-100 text-red-500' : 'opacity-30'}`} />
+                </div>
               </Button>
-            </Link>
 
-            {/* Splitwise Button */}
-            <Link href="/splitwise">
-              <Button 
-                variant={pathname === "/splitwise" ? "default" : "outline"} 
-                size="sm" 
-                className="flex items-center space-x-2"
-              >
-                <Users className="h-4 w-4" />
-                <span>Splitwise</span>
-              </Button>
-            </Link>
+              {/* Dark Mode Toggle - Before hamburger menu */}
+              <ThemeToggle />
 
-            {/* Statements Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowStatementsModal(true)}
-              className="flex items-center space-x-2"
-            >
-              <FileText className="h-4 w-4" />
-              <span>Statements</span>
-            </Button>
+              <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="sm" className="px-2">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-72 p-0">
+                  <SheetHeader className="p-6 pb-4">
+                    <SheetTitle className="text-xl font-semibold">Navigation</SheetTitle>
+                  </SheetHeader>
+                  <div className="px-6 py-2">
+                    <div className="flex flex-col space-y-4">
+                      {/* Section 1: Main Navigation */}
+                      <div className="space-y-3">
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-2">
+                          Navigation
+                        </div>
+                        {/* Transactions */}
+                        <Link href="/transactions" onClick={() => setMobileMenuOpen(false)}>
+                          <Button 
+                            variant={pathname === "/transactions" ? "default" : "ghost"} 
+                            className="w-full justify-start h-12 px-4 text-base font-medium"
+                          >
+                            <BarChart3 className="h-5 w-5 mr-3" />
+                            Transactions
+                          </Button>
+                        </Link>
 
-            {/* Privacy Toggle */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onPrivacyToggle}
-              className="flex items-center space-x-2"
-            >
-              {isPrivacyMode ? (
-                <>
-                  <Eye className="h-4 w-4" />
-                  <span>Show Numbers</span>
-                </>
-              ) : (
-                <>
-                  <EyeOff className="h-4 w-4" />
-                  <span>Hide Numbers</span>
-                </>
-              )}
-            </Button>
+                        {/* Splitwise */}
+                        <Link href="/splitwise" onClick={() => setMobileMenuOpen(false)}>
+                          <Button 
+                            variant={pathname === "/splitwise" ? "default" : "ghost"} 
+                            className="w-full justify-start h-12 px-4 text-base font-medium"
+                          >
+                            <Users className="h-5 w-5 mr-3" />
+                            Splitwise
+                          </Button>
+                        </Link>
+                      </div>
 
-            {/* Dark Mode Toggle */}
-            <ThemeToggle />
+                      {/* Divider */}
+                      <div className="border-t border-border"></div>
+
+                      {/* Section 2: Actions */}
+                      <div className="space-y-3">
+                        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-2">
+                          Actions
+                        </div>
+                        {/* Statements */}
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setShowStatementsModal(true);
+                            setMobileMenuOpen(false);
+                          }}
+                          className="w-full justify-start h-12 px-4 text-base font-medium"
+                        >
+                          <FileText className="h-5 w-5 mr-3" />
+                          Statements
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
       </div>

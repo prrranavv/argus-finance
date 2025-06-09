@@ -164,17 +164,17 @@ function TransactionsGrid({
       </div>
 
       {/* Responsive Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 relative">
+      <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
         {gridTransactions.map((transaction) => (
           <Card 
             key={transaction.id} 
-            className="p-4 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.2] hover:z-10 relative group"
+            className="p-3 sm:p-4 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02] sm:hover:scale-[1.2] hover:z-10 relative group"
           >
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {/* Bank Logo - Centered and Consistent */}
-              <div className="flex justify-center mb-3">
+              <div className="flex justify-center mb-2 sm:mb-3">
                 {getBankLogo(transaction.bank_name, transaction.account_type, transaction.source) ? (
-                  <div className={`${transaction.account_type === 'Credit Card' ? 'w-20 h-12' : 'w-12 h-8'} rounded-lg bg-card shadow-sm border border-border flex items-center justify-center overflow-hidden p-1`}>
+                  <div className={`${transaction.account_type === 'Credit Card' ? 'w-16 h-10 sm:w-20 sm:h-12' : 'w-10 h-6 sm:w-12 sm:h-8'} rounded-lg bg-card shadow-sm border border-border flex items-center justify-center overflow-hidden p-1`}>
                     <Image
                       src={getBankLogo(transaction.bank_name, transaction.account_type, transaction.source)}
                       alt={`${transaction.source || transaction.bank_name} logo`}
@@ -186,8 +186,8 @@ function TransactionsGrid({
                     />
                   </div>
                 ) : (
-                  <div className="w-16 h-12 rounded-lg bg-gradient-to-br from-muted to-muted/80 shadow-sm border border-border flex items-center justify-center">
-                    <span className="text-lg font-bold text-foreground">
+                  <div className="w-12 h-8 sm:w-16 sm:h-12 rounded-lg bg-gradient-to-br from-muted to-muted/80 shadow-sm border border-border flex items-center justify-center">
+                    <span className="text-sm sm:text-lg font-bold text-foreground">
                       {transaction.bank_name.charAt(0)}
                     </span>
                   </div>
@@ -195,13 +195,13 @@ function TransactionsGrid({
               </div>
               
               {/* Amount */}
-              <div className={`text-lg font-bold text-center ${transaction.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
+              <div className={`text-base sm:text-lg font-bold text-center ${transaction.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
                 {transaction.type === 'expense' ? '-' : '+'}
                 {formatCurrencyInLakhs(transaction.amount, isPrivacyMode)}
               </div>
               
               {/* Transaction Description */}
-              <div className="text-sm font-medium text-foreground text-center truncate px-1">
+              <div className="text-xs sm:text-sm font-medium text-foreground text-center truncate px-1">
                 {transaction.description}
               </div>
               

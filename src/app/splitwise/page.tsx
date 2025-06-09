@@ -672,7 +672,7 @@ export default function SplitvisePage() {
 
   // Skeleton Components
   const KeyMetricsSkeleton = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-2 gap-3 md:gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
       {[...Array(4)].map((_, i) => (
         <Card key={i} className="animate-pulse">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -689,7 +689,7 @@ export default function SplitvisePage() {
   );
 
   const FriendsSkeleton = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+    <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {[...Array(8)].map((_, i) => (
         <Card key={i} className="animate-pulse">
           <CardContent className="p-4">
@@ -715,7 +715,7 @@ export default function SplitvisePage() {
   );
 
   const GroupsSkeleton = () => (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+    <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       {[...Array(6)].map((_, i) => (
         <Card key={i} className="animate-pulse">
           <CardContent className="p-4">
@@ -795,7 +795,7 @@ export default function SplitvisePage() {
         <KeyMetricsSkeleton />
       ) : (
         <div className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 gap-3 md:gap-6 md:grid-cols-2 lg:grid-cols-4">
             {/* Total Outstanding - Keep as is */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -935,7 +935,7 @@ export default function SplitvisePage() {
                 {loading ? (
                   <FriendsSkeleton />
                 ) : activeFriends.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     {activeFriends.map((friend) => {
                       const totalBalance = friend.balance.reduce((sum, bal) => sum + parseFloat(bal.amount), 0);
                       const isPositive = totalBalance > 0;
@@ -1011,7 +1011,7 @@ export default function SplitvisePage() {
                 {loading ? (
                   <GroupsSkeleton />
                 ) : activeGroups.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     {activeGroups.map((group) => {
                       const outstandingBalance = getGroupOutstandingBalance(group);
                       const isPositive = outstandingBalance >= 0;
@@ -1226,7 +1226,7 @@ export default function SplitvisePage() {
                     {groupedExpenses.today.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Today</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {groupedExpenses.today.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
                           ))}
@@ -1238,7 +1238,7 @@ export default function SplitvisePage() {
                     {groupedExpenses.yesterday.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Yesterday</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {groupedExpenses.yesterday.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
                           ))}
@@ -1250,7 +1250,7 @@ export default function SplitvisePage() {
                     {groupedExpenses.last7Days.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Last 7 days</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {groupedExpenses.last7Days.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
                           ))}
@@ -1262,7 +1262,7 @@ export default function SplitvisePage() {
                     {groupedExpenses.last30Days.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Last 30 days</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {groupedExpenses.last30Days.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
                           ))}
@@ -1274,7 +1274,7 @@ export default function SplitvisePage() {
                     {groupedExpenses.older.length > 0 && (
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Older</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                        <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {groupedExpenses.older.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
                           ))}

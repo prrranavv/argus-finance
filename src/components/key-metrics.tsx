@@ -72,14 +72,14 @@ export function KeyMetrics({ isPrivacyMode = false, filterYear }: KeyMetricsProp
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
         {[...Array(4)].map((_, i) => (
           <Card key={i}>
-            <CardContent className="p-6">
+            <CardContent className="p-3 md:p-6">
               <div className="animate-pulse">
-                        <div className="h-4 bg-muted rounded mb-2"></div>
-        <div className="h-8 bg-muted rounded mb-2"></div>
-        <div className="h-4 bg-muted rounded w-1/2"></div>
+                        <div className="h-3 md:h-4 bg-muted rounded mb-2"></div>
+        <div className="h-6 md:h-8 bg-muted rounded mb-2"></div>
+        <div className="h-3 md:h-4 bg-muted rounded w-1/2"></div>
               </div>
             </CardContent>
           </Card>
@@ -90,10 +90,10 @@ export function KeyMetrics({ isPrivacyMode = false, filterYear }: KeyMetricsProp
 
   if (error || !data) {
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <Card>
-          <CardContent className="p-6">
-            <div className="text-sm text-muted-foreground">Error loading metrics</div>
+          <CardContent className="p-3 md:p-6">
+            <div className="text-xs md:text-sm text-muted-foreground">Error loading metrics</div>
           </CardContent>
         </Card>
       </div>
@@ -101,18 +101,18 @@ export function KeyMetrics({ isPrivacyMode = false, filterYear }: KeyMetricsProp
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+    <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
       {/* Current Bank Balance */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-medium text-muted-foreground">CURRENT BANK BALANCE</div>
+        <CardContent className="p-3 md:p-6">
+          <div className="flex items-center justify-between mb-1 md:mb-2">
+            <div className="text-xs md:text-sm font-medium text-muted-foreground">CURRENT BANK BALANCE</div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-2xl font-bold text-green-600">
+          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+            <div className="text-lg md:text-2xl font-bold text-green-600">
               {formatCurrencyInLakhs(data.currentBalance.value, isPrivacyMode)}
             </div>
-            <div className={`flex items-center text-sm ${getChangeColor(data.currentBalance.change)}`}>
+            <div className={`flex items-center text-xs md:text-sm ${getChangeColor(data.currentBalance.change)}`}>
               {getChangeIcon(data.currentBalance.change)}
               <span className="ml-1">{formatChange(data.currentBalance.change)}</span>
             </div>
@@ -122,15 +122,15 @@ export function KeyMetrics({ isPrivacyMode = false, filterYear }: KeyMetricsProp
 
       {/* Credit Card Bills */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-medium text-muted-foreground">CREDIT CARD DUES</div>
+        <CardContent className="p-3 md:p-6">
+          <div className="flex items-center justify-between mb-1 md:mb-2">
+            <div className="text-xs md:text-sm font-medium text-muted-foreground">CREDIT CARD DUES</div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-2xl font-bold text-red-600">
+          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+            <div className="text-lg md:text-2xl font-bold text-red-600">
               {formatCurrencyInLakhs(data.creditCardBill.value, isPrivacyMode)}
             </div>
-            <div className={`flex items-center text-sm ${getChangeColor(-data.creditCardBill.change)}`}>
+            <div className={`flex items-center text-xs md:text-sm ${getChangeColor(-data.creditCardBill.change)}`}>
               {getChangeIcon(-data.creditCardBill.change)}
               <span className="ml-1">{formatChange(data.creditCardBill.change)}</span>
             </div>
@@ -140,15 +140,15 @@ export function KeyMetrics({ isPrivacyMode = false, filterYear }: KeyMetricsProp
 
       {/* Real Balance */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-medium text-muted-foreground">AVAILABLE CREDIT</div>
+        <CardContent className="p-3 md:p-6">
+          <div className="flex items-center justify-between mb-1 md:mb-2">
+            <div className="text-xs md:text-sm font-medium text-muted-foreground">AVAILABLE CREDIT</div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-2xl font-bold text-blue-600">
+          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+            <div className="text-lg md:text-2xl font-bold text-blue-600">
               {formatCurrencyInLakhs(data.realBalance.value, isPrivacyMode)}
             </div>
-            <div className={`flex items-center text-sm ${getChangeColor(data.realBalance.change)}`}>
+            <div className={`flex items-center text-xs md:text-sm ${getChangeColor(data.realBalance.change)}`}>
               {getChangeIcon(data.realBalance.change)}
               <span className="ml-1">{formatChange(data.realBalance.change)}</span>
             </div>
@@ -158,15 +158,15 @@ export function KeyMetrics({ isPrivacyMode = false, filterYear }: KeyMetricsProp
 
       {/* Reward Points */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-medium text-muted-foreground">REWARD POINTS</div>
+        <CardContent className="p-3 md:p-6">
+          <div className="flex items-center justify-between mb-1 md:mb-2">
+            <div className="text-xs md:text-sm font-medium text-muted-foreground">REWARD POINTS</div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-2xl font-bold text-purple-600">
+          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
+            <div className="text-lg md:text-2xl font-bold text-purple-600">
               {isPrivacyMode ? "••••" : data.rewardPoints.value.toLocaleString()}
             </div>
-            <div className={`flex items-center text-sm ${getChangeColor(data.rewardPoints.change)}`}>
+            <div className={`flex items-center text-xs md:text-sm ${getChangeColor(data.rewardPoints.change)}`}>
               {getChangeIcon(data.rewardPoints.change)}
               <span className="ml-1">{formatChange(data.rewardPoints.change)}</span>
             </div>

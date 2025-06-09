@@ -68,10 +68,10 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <Tabs value={selectedBank} onValueChange={setSelectedBank}>
-              <TabsList className="grid w-full grid-cols-3 h-32">
+              <TabsList className="grid w-full grid-cols-3 h-12 sm:h-20 md:h-32 gap-1 md:gap-0">
                 {banks.map(bank => (
-                  <TabsTrigger key={bank} value={bank} className="flex flex-col items-center space-y-3 p-4 h-full">
-                    <div className="w-20 h-12 relative">
+                  <TabsTrigger key={bank} value={bank} className="flex flex-col items-center space-y-1 sm:space-y-2 md:space-y-3 p-1 sm:p-2 md:p-4 h-full text-xs sm:text-sm">
+                    <div className="hidden sm:block w-16 h-10 sm:w-16 sm:h-10 md:w-20 md:h-12 relative">
                       <Image
                         src={bank === 'Total' ? '/cardImages/axisplushdfclogo.png' : `/cardImages/${bank.toLowerCase()}logo.png`}
                         alt={`${bank} logo`}
@@ -80,7 +80,7 @@ export default function Home() {
                         quality={95}
                       />
                     </div>
-                    <span className="text-sm font-medium">{bank}</span>
+                    <span className="font-medium leading-tight text-center">{bank}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -112,19 +112,19 @@ export default function Home() {
           </CardHeader>
           <CardContent>
             <Tabs value={selectedCreditCard} onValueChange={setSelectedCreditCard}>
-              <TabsList className="grid w-full grid-cols-5 h-32">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-5 h-12 sm:h-20 md:h-32 gap-1 md:gap-0">
                 {creditCards.map(card => (
-                  <TabsTrigger key={card} value={card} className="flex flex-col items-center space-y-3 p-4 h-full">
-                    <div className="w-20 h-12 relative">
+                  <TabsTrigger key={card} value={card} className="flex flex-col items-center space-y-1 sm:space-y-2 md:space-y-3 p-1 sm:p-2 md:p-4 h-full text-xs sm:text-sm">
+                    <div className="hidden sm:block w-16 h-10 sm:w-16 sm:h-10 md:w-20 md:h-12 relative">
                       <Image
                         src={getCardImage(card)}
                         alt={`${card} card`}
                         fill
-                        className="object-contain rounded-md"
+                        className="object-contain rounded-sm md:rounded-md"
                         quality={95}
                       />
                     </div>
-                    <span className="text-sm font-medium">{card === 'Total' ? 'All' : card.split(' ').pop()}</span>
+                    <span className="font-medium leading-tight text-center">{card === 'Total' ? 'All' : card.split(' ').pop()}</span>
                   </TabsTrigger>
                 ))}
               </TabsList>
