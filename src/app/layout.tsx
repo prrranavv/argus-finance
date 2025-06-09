@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/contexts/auth-context";
 import { AuthWrapper } from "@/components/auth-wrapper";
 import { ThemeProvider } from "next-themes";
 
@@ -27,13 +26,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AuthProvider>
-            <AuthWrapper>
-              <main className="min-h-screen bg-background text-foreground">
-                {children}
-              </main>
-            </AuthWrapper>
-          </AuthProvider>
+          <AuthWrapper>
+            <main className="min-h-screen bg-background text-foreground">
+              {children}
+            </main>
+          </AuthWrapper>
           <Toaster />
         </ThemeProvider>
       </body>
