@@ -1,4 +1,4 @@
-![product asset]([image-url](https://github.com/prrranavv/argus-finance/blob/main/public/cardImages/productasset.png))
+![product asset](https://github.com/prrranavv/argus-finance/blob/main/public/cardImages/productasset.png)
 
 # 💰 Argus Finance - Your Personal Finance Command Center
 
