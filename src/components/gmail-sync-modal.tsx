@@ -69,12 +69,21 @@ interface Transaction {
   processed_at: string;
 }
 
+interface SyncResults {
+  emails: EmailData[];
+  transactions: Transaction[];
+  emailSaveResults: { savedEmails: number; message: string } | null;
+  transactionSaveResults: { savedTransactions: number; message: string } | null;
+  syncStats: { totalFound: number; newEmails: number; existingEmails: number } | null;
+}
+
 interface GmailSyncModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
+  syncResults?: SyncResults | null;
 }
 
-export function GmailSyncModal({ isOpen, onOpenChange }: GmailSyncModalProps) {
+export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncModalProps) {
   const [fetchingEmails, setFetchingEmails] = useState(false);
   const [cleaningEmails, setCleaningEmails] = useState(false);
   const [analyzingAll, setAnalyzingAll] = useState(false);
@@ -88,6 +97,30 @@ export function GmailSyncModal({ isOpen, onOpenChange }: GmailSyncModalProps) {
   const [emailSaveResults, setEmailSaveResults] = useState<{ savedEmails: number; message: string } | null>(null);
   const [transactionSaveResults, setTransactionSaveResults] = useState<{ savedTransactions: number; message: string } | null>(null);
   const [syncStats, setSyncStats] = useState<{ totalFound: number; newEmails: number; existingEmails: number } | null>(null);
+
+  // Load sync results from header if provided
+  useEffect(() => {
+    if (syncResults && isOpen) {
+      setGmailEmails(syncResults.emails);
+      setProcessedTransactions(syncResults.transactions);
+      setEmailSaveResults(syncResults.emailSaveResults);
+      setTransactionSaveResults(syncResults.transactionSaveResults);
+      setSyncStats(syncResults.syncStats);
+      
+      // Create analysis results from transactions
+      const analysisResults: Record<string, { success: boolean; transaction: Transaction | null; message: string; error?: string; email_info?: any }> = {};
+      syncResults.emails.forEach(email => {
+        const transaction = syncResults.transactions.find(t => t.gmail_message_id === email.id);
+        analysisResults[email.id] = {
+          success: !!transaction,
+          transaction: transaction || null,
+          message: transaction ? 'Transaction extracted successfully' : 'No transaction found',
+          email_info: null
+        };
+      });
+      setEmailAnalysisResults(analysisResults);
+    }
+  }, [syncResults, isOpen]);
 
   const fetchGmailEmails = async () => {
     setFetchingEmails(true);
@@ -370,6 +403,119 @@ export function GmailSyncModal({ isOpen, onOpenChange }: GmailSyncModalProps) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // For sync results modal (when syncResults is provided)
+  if (syncResults) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <span>Gmail Sync Results</span>
+            </DialogTitle>
+            <DialogDescription>
+              Summary of your Gmail sync and processed emails
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Summary Statistics */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Summary</h3>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                  <div className="text-lg font-bold text-gray-700">
+                    {syncResults.syncStats?.totalFound || syncResults.emails?.length || 0}
+                  </div>
+                  <div className="text-xs text-gray-500">Total Emails</div>
+                </div>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
+                  <div className="text-lg font-bold text-blue-700">
+                    {syncResults.syncStats?.newEmails || 0}
+                  </div>
+                  <div className="text-xs text-blue-500">New Emails</div>
+                </div>
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-center">
+                  <div className="text-lg font-bold text-green-700">
+                    {syncResults.syncStats?.existingEmails || 0}
+                  </div>
+                  <div className="text-xs text-green-500">Existing Emails</div>
+                </div>
+                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
+                  <div className="text-lg font-bold text-purple-700">
+                    {syncResults.transactions?.length || 0}
+                  </div>
+                  <div className="text-xs text-purple-500">Transactions Added</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Email Content (Collapsed by default) */}
+            {syncResults.emails && syncResults.emails.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Processed Emails ({syncResults.emails.length})</h3>
+                  <Badge variant="secondary">{syncResults.emails.length} emails</Badge>
+                </div>
+                
+                <div className="grid gap-3 max-h-96 overflow-y-auto">
+                  {syncResults.emails.map((email) => {
+                    const isExpanded = expandedEmails.has(email.id);
+                    return (
+                      <div key={email.id} className="border rounded-lg p-3 space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 space-y-1">
+                            <h4 className="font-medium text-sm line-clamp-1">
+                              {email.subject}
+                            </h4>
+                            <div className="flex items-center space-x-3 text-xs text-muted-foreground">
+                              <div className="flex items-center space-x-1">
+                                <User className="h-3 w-3" />
+                                <span className="truncate max-w-[150px]">{email.from}</span>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <Calendar className="h-3 w-3" />
+                                <span>{new Date(email.date).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="p-1 h-auto"
+                            onClick={() => toggleEmailExpansion(email.id)}
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        
+                        {isExpanded && (
+                          <div className="border-t pt-2 mt-2">
+                            <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded border max-h-48 overflow-y-auto">
+                              <pre className="whitespace-pre-wrap font-mono text-xs">
+                                {email.cleanedBody || email.fullBody || email.body || 'No content available'}
+                              </pre>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Original modal for manual sync
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -439,264 +585,6 @@ export function GmailSyncModal({ isOpen, onOpenChange }: GmailSyncModalProps) {
               </Button>
             )}
           </div>
-
-          {/* Fetched Emails */}
-          {gmailEmails.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Fetched Emails ({gmailEmails.length})</h3>
-                <Badge variant="secondary">{gmailEmails.length} emails</Badge>
-              </div>
-              <div className="grid gap-4 max-h-96 overflow-y-auto">
-                {gmailEmails.map((email) => {
-                  const isSubjectExpanded = expandedSubjects.has(email.id);
-                  const isEmailExpanded = expandedEmails.has(email.id);
-                  const hasLongSubject = email.subject.length > 80;
-                  const analysisResult = emailAnalysisResults[email.id];
-                  const isProcessing = processingEmails.has(email.id);
-
-                  return (
-                    <div key={email.id} className={`border rounded-lg p-4 space-y-3 ${
-                      analysisResult?.success && analysisResult.transaction 
-                        ? 'bg-green-50 border-green-200' 
-                        : ''
-                    }`}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-start space-x-2">
-                            <div className="flex-1">
-                              <h4 className={`font-medium text-sm ${!isSubjectExpanded && hasLongSubject ? 'line-clamp-2' : ''}`}>
-                                {email.subject}
-                              </h4>
-                              {hasLongSubject && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="p-0 h-auto text-xs text-muted-foreground hover:text-foreground"
-                                  onClick={() => toggleSubjectExpansion(email.id)}
-                                >
-                                  {isSubjectExpanded ? (
-                                    <>
-                                      <ChevronUp className="h-3 w-3 mr-1" />
-                                      Show less
-                                    </>
-                                  ) : (
-                                    <>
-                                      <ChevronDown className="h-3 w-3 mr-1" />
-                                      Show full subject
-                                    </>
-                                  )}
-                                </Button>
-                              )}
-                            </div>
-                            {analysisResult && (
-                              <div className="flex items-center space-x-1">
-                                {analysisResult.success && analysisResult.transaction ? (
-                                  <CheckCircle className="h-4 w-4 text-green-600" />
-                                ) : analysisResult.error ? (
-                                  <XCircle className="h-4 w-4 text-red-600" />
-                                ) : (
-                                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                                )}
-                              </div>
-                            )}
-                            {isProcessing && (
-                              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-3 text-xs text-muted-foreground">
-                            <div className="flex items-center space-x-1">
-                              <User className="h-3 w-3" />
-                              <span className="truncate max-w-[200px]">{email.from}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Calendar className="h-3 w-3" />
-                              <span>{new Date(email.date).toLocaleDateString()}</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Hash className="h-3 w-3" />
-                              <span>{formatFileSize(email.messageSize)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Attachments */}
-                      {email.attachments.length > 0 && (
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2">
-                            <Paperclip className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-xs text-muted-foreground">
-                              {email.attachments.length} attachment{email.attachments.length > 1 ? 's' : ''}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {email.attachments.map((attachment, idx) => (
-                              <a
-                                key={idx}
-                                href={`/api/gmail/download-attachment?messageId=${email.id}&attachmentId=${attachment.attachmentId}&filename=${encodeURIComponent(attachment.filename)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center space-x-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 px-2 py-1 rounded border border-blue-200 transition-colors"
-                              >
-                                <Download className="h-3 w-3" />
-                                <span>{attachment.filename}</span>
-                                <span className="text-blue-500">({formatFileSize(attachment.size)})</span>
-                              </a>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Email Content */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground">
-                            {email.cleaned ? 'Cleaned Email Content' : 'Email Content'}
-                            {email.cleaned && <span className="ml-1 text-green-600">✨</span>}
-                            {email.cleaningError && <span className="ml-1 text-red-600">⚠️</span>}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="p-0 h-auto text-xs text-muted-foreground hover:text-foreground"
-                            onClick={() => toggleEmailExpansion(email.id)}
-                          >
-                            {isEmailExpanded ? (
-                              <>
-                                <EyeOff className="h-3 w-3 mr-1" />
-                                Show less
-                              </>
-                            ) : (
-                              <>
-                                <Eye className="h-3 w-3 mr-1" />
-                                Show full content
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                        <div className={`text-xs text-muted-foreground bg-muted/50 p-3 rounded border ${isEmailExpanded ? 'max-h-96' : 'max-h-20'} overflow-y-auto`}>
-                          {isEmailExpanded ? (
-                            <pre className="whitespace-pre-wrap font-mono text-xs">
-                              {email.cleanedBody || email.fullBody || email.body || 'No content available'}
-                            </pre>
-                          ) : (
-                            <div>
-                              {(email.cleanedBody || email.body || '').substring(0, 200)}...
-                            </div>
-                          )}
-                        </div>
-                        {email.cleaningError && (
-                          <div className="text-xs text-red-600 bg-red-50 p-2 rounded border border-red-200">
-                            Cleaning error: {email.cleaningError}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* AI Analysis Result */}
-                      {analysisResult && (
-                        <div className={`p-3 rounded-lg border ${
-                          analysisResult.success && analysisResult.transaction
-                            ? 'bg-green-50 border-green-200'
-                            : analysisResult.error
-                            ? 'bg-red-50 border-red-200'
-                            : 'bg-yellow-50 border-yellow-200'
-                        }`}>
-                          <div className="text-xs font-medium">
-                            AI Analysis Result:
-                          </div>
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {analysisResult.message}
-                          </div>
-                          {analysisResult.error && (
-                            <div className="text-xs text-red-600 mt-1">
-                              Error: {analysisResult.error}
-                            </div>
-                          )}
-                          {analysisResult.transaction && (
-                            <div className="mt-2 p-2 bg-white rounded border">
-                              <div className="text-xs font-medium">
-                                {analysisResult.transaction.description}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                Amount: ₹{analysisResult.transaction.amount} | 
-                                Type: {analysisResult.transaction.type} | 
-                                Date: {analysisResult.transaction.date}
-                              </div>
-                              {analysisResult.transaction.merchant && (
-                                <div className="text-xs text-muted-foreground">
-                                  Merchant: {analysisResult.transaction.merchant}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Sync Statistics */}
-          {syncStats && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Smart Sync Statistics</h3>
-                <Badge variant="outline">Current Month</Badge>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4">
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
-                  <div className="text-lg font-bold text-gray-700">{syncStats.totalFound}</div>
-                  <div className="text-xs text-gray-500">Total Found</div>
-                </div>
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                  <div className="text-lg font-bold text-blue-700">{syncStats.newEmails}</div>
-                  <div className="text-xs text-blue-500">New Emails</div>
-                </div>
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-center">
-                  <div className="text-lg font-bold text-green-700">{syncStats.existingEmails}</div>
-                  <div className="text-xs text-green-500">Already Synced</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Save Results */}
-          {(emailSaveResults || transactionSaveResults) && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Database Save Results</h3>
-                <Badge variant="default" className="bg-green-600">
-                  ✅ Saved Successfully
-                </Badge>
-              </div>
-              
-              {emailSaveResults && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="text-sm font-medium text-blue-800">
-                    {emailSaveResults.message}
-                  </div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    📧 {emailSaveResults.savedEmails} emails processed
-                  </div>
-                </div>
-              )}
-              
-              {transactionSaveResults && (
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="text-sm font-medium text-green-800">
-                    {transactionSaveResults.message}
-                  </div>
-                  <div className="text-xs text-green-600 mt-1">
-                    💰 {transactionSaveResults.savedTransactions} transactions processed
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Processed Transactions Summary */}
           {processedTransactions.length > 0 && (

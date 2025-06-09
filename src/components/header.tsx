@@ -3,12 +3,15 @@
 import { Button } from "@/components/ui/button";
 import { StatementsModal } from "@/components/statements-modal";
 import { GmailSyncModal } from "@/components/gmail-sync-modal";
+import { GmailSyncProgressBar } from "@/components/gmail-sync-progress-bar";
+import { useGmailSync } from "@/hooks/use-gmail-sync";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, FileText, BarChart3, Users, Menu, RefreshCw } from "lucide-react";
+import { Eye, EyeOff, FileText, BarChart3, Users, Menu, RefreshCw, CheckCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 import {
   Sheet,
   SheetContent,
@@ -29,7 +32,82 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
   const [displayedText, setDisplayedText] = useState("");
   const [isTypingComplete, setIsTypingComplete] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const pathname = usePathname();
+
+  // Gmail sync functionality
+  const { isRunning, currentStep, steps, results, error, runSync, reset } = useGmailSync();
+
+  // Handle sync button click
+  const handleSyncClick = () => {
+    if (results && !isRunning) {
+      // Show results modal if sync is complete
+      setShowGmailSyncModal(true);
+    } else if (!isRunning) {
+      // Test toast before starting sync
+      console.log('🧪 Testing toast system...');
+      toast.info("Starting Gmail sync...", {
+        description: "Checking for new emails",
+        duration: 3000,
+      });
+      
+      // Start sync process
+      runSync();
+    }
+  };
+
+  // Show toast 500ms after sync completes
+  useEffect(() => {
+    if (results) {
+      console.log('🎉 Sync completed, showing toast in 500ms!');
+      
+      const toastTimer = setTimeout(() => {
+        const newEmails = results.syncStats?.newEmails || results.emails?.length || 0;
+        const newTransactions = results.transactions?.length || 0;
+        const totalFound = results.syncStats?.totalFound || 0;
+        
+        // Show toast with dismiss button
+        if (newEmails === 0 && totalFound > 0) {
+          toast.success("Gmail sync completed!", {
+            description: `${totalFound} emails found, all already synced`,
+            duration: 5000,
+            action: {
+              label: "Dismiss",
+              onClick: () => toast.dismiss(),
+            },
+          });
+        } else if (newEmails === 0) {
+          toast.success("Gmail sync completed!", {
+            description: `No new emails found`,
+            duration: 5000,
+            action: {
+              label: "Dismiss",
+              onClick: () => toast.dismiss(),
+            },
+          });
+        } else {
+          toast.success("Gmail sync completed!", {
+            description: `${newEmails} emails processed, ${newTransactions} transactions added`,
+            duration: 5000,
+            action: {
+              label: "Dismiss",
+              onClick: () => toast.dismiss(),
+            },
+          });
+        }
+      }, 500);
+
+      // Auto-hide progress bar after showing toast
+      const hideTimer = setTimeout(() => {
+        reset();
+      }, 8000);
+      
+      return () => {
+        clearTimeout(toastTimer);
+        clearTimeout(hideTimer);
+      };
+    }
+  }, [results, reset]);
 
   const mythText = "a giant in Greek mythology with a hundred eyes, known for his role as an all-seeing guardian.";
 
@@ -201,13 +279,24 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
 
                 {/* Sync Button */}
                 <Button
-                  variant="outline"
+                  variant={results ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setShowGmailSyncModal(true)}
-                  className="flex items-center space-x-2"
+                  onClick={handleSyncClick}
+                  disabled={isRunning}
+                  className={`flex items-center space-x-2 transition-all duration-200 ${
+                    results 
+                      ? 'bg-green-100 border-green-300 text-green-800 hover:bg-green-200' 
+                      : 'hover:bg-accent'
+                  }`}
                 >
-                  <RefreshCw className="h-4 w-4" />
-                  <span>Sync</span>
+                  {isRunning ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
+                  <span>
+                    {isRunning ? 'Syncing...' : results ? 'Synced' : 'Sync'}
+                  </span>
                 </Button>
               </div>
 
@@ -283,13 +372,22 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
 
                 {/* Sync Button - Icon only */}
                 <Button
-                  variant="outline"
+                  variant={results ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setShowGmailSyncModal(true)}
-                  className="px-2"
-                  title="Gmail Sync"
+                  onClick={handleSyncClick}
+                  disabled={isRunning}
+                  className={`px-2 transition-all duration-200 ${
+                    results 
+                      ? 'bg-green-100 border-green-300 text-green-800 hover:bg-green-200' 
+                      : 'hover:bg-accent'
+                  }`}
+                  title={isRunning ? 'Syncing...' : results ? 'Synced' : 'Gmail Sync'}
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  {isRunning ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
 
@@ -401,15 +499,24 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
 
                         {/* Gmail Sync */}
                         <Button
-                          variant="ghost"
+                          variant={results ? "default" : "ghost"}
                           onClick={() => {
-                            setShowGmailSyncModal(true);
+                            handleSyncClick();
                             setMobileMenuOpen(false);
                           }}
-                          className="w-full justify-start h-12 px-4 text-base font-medium"
+                          disabled={isRunning}
+                          className={`w-full justify-start h-12 px-4 text-base font-medium transition-all duration-200 ${
+                            results 
+                              ? 'bg-green-100 border-green-300 text-green-800 hover:bg-green-200' 
+                              : 'hover:bg-accent'
+                          }`}
                         >
-                          <RefreshCw className="h-5 w-5 mr-3" />
-                          Gmail Sync
+                          {isRunning ? (
+                            <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                          ) : (
+                            <RefreshCw className="h-5 w-5 mr-3" />
+                          )}
+                          {isRunning ? 'Syncing...' : results ? 'Synced' : 'Gmail Sync'}
                         </Button>
                       </div>
                     </div>
@@ -431,6 +538,20 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
       <GmailSyncModal 
         isOpen={showGmailSyncModal} 
         onOpenChange={setShowGmailSyncModal} 
+        syncResults={results}
+      />
+
+      {/* Gmail Sync Progress Bar */}
+      <GmailSyncProgressBar
+        isVisible={isRunning || (steps.length > 0 && !steps.every(step => step.status === 'completed'))}
+        currentStep={currentStep}
+        steps={steps}
+        onComplete={() => {
+          console.log('🎉 Gmail sync completed!');
+        }}
+        onError={(error) => {
+          console.error('❌ Gmail sync failed:', error);
+        }}
       />
     </div>
   );
