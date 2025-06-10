@@ -69,6 +69,7 @@ interface TransactionMetricsProps {
   accountTypeFilter?: string;
   bankFilter?: string;
   timeRangeFilter?: string;
+  dataSource?: "statement" | "email";
 }
 
 export function TransactionMetrics({ 
@@ -76,7 +77,8 @@ export function TransactionMetrics({
   searchQuery,
   accountTypeFilter,
   bankFilter,
-  timeRangeFilter
+  timeRangeFilter,
+  dataSource = "statement"
 }: TransactionMetricsProps) {
   const [metrics, setMetrics] = useState<TransactionMetrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,6 +100,9 @@ export function TransactionMetrics({
         if (timeRangeFilter && timeRangeFilter !== 'all') {
           params.append('timeRange', timeRangeFilter);
         }
+        if (dataSource) {
+          params.append('dataSource', dataSource);
+        }
 
         const url = `/api/transaction-metrics${params.toString() ? `?${params.toString()}` : ''}`;
         const response = await fetch(url);
@@ -111,7 +116,7 @@ export function TransactionMetrics({
     };
 
     fetchMetrics();
-  }, [searchQuery, accountTypeFilter, bankFilter, timeRangeFilter]);
+  }, [searchQuery, accountTypeFilter, bankFilter, timeRangeFilter, dataSource]);
 
   const formatPercentageChangeWithAmount = (change: number) => {
     const isPositive = change >= 0;

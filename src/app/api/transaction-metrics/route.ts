@@ -9,6 +9,7 @@ export async function GET(request: Request) {
     const accountType = searchParams.get('accountType');
     const bank = searchParams.get('bank');
     const timeRange = searchParams.get('timeRange') || '30days';
+    const dataSource = searchParams.get('dataSource') || 'statement';
 
     // Calculate date ranges based on timeRange
     let daysBack = 30;
@@ -37,8 +38,9 @@ export async function GET(request: Request) {
 
     // Build where clause for filtering
     const buildSupabaseQuery = (dateStart: Date, dateEnd?: Date) => {
+      const tableName = dataSource === 'email' ? 'email_transactions' : 'transactions';
       let query = supabase
-        .from('transactions')
+        .from(tableName)
         .select('*');
 
       // Add date filter
@@ -50,7 +52,13 @@ export async function GET(request: Request) {
 
       // Add account type filter
       if (accountType && accountType !== 'all') {
-        query = query.eq('account_type', accountType); // 'Bank Account' or 'Credit Card'
+        if (dataSource === 'email') {
+          // For email transactions, account_type is stored differently
+          const emailAccountType = accountType === 'Bank Account' ? 'bank_account' : 'credit_card';
+          query = query.eq('account_type', emailAccountType);
+        } else {
+          query = query.eq('account_type', accountType); // 'Bank Account' or 'Credit Card'
+        }
       }
 
       return query;
@@ -99,20 +107,22 @@ export async function GET(request: Request) {
     const previousTransactions = applyClientFilters(allPreviousTransactions || []);
 
     // Calculate current period metrics
+    const expenseType = dataSource === 'email' ? 'debit' : 'expense';
+    
     const totalTransactions = recentTransactions.length;
     const totalExpenses = recentTransactions
-      .filter((t: any) => t.type === 'expense')
+      .filter((t: any) => t.type === expenseType)
       .reduce((sum: any, t: any) => sum + t.amount, 0);
     const dailyAvgSpending = totalExpenses / daysBack;
-    const avgTransactionAmount = totalTransactions > 0 ? totalExpenses / recentTransactions.filter(t => t.type === 'expense').length : 0;
+    const avgTransactionAmount = totalTransactions > 0 ? totalExpenses / recentTransactions.filter(t => t.type === expenseType).length : 0;
 
     // Calculate previous period metrics for comparison
     const prevTotalTransactions = previousTransactions.length;
     const prevTotalExpenses = previousTransactions
-      .filter(t => t.type === 'expense')
+      .filter(t => t.type === expenseType)
       .reduce((sum, t) => sum + t.amount, 0);
     const prevDailyAvgSpending = prevTotalExpenses / daysBack;
-    const prevAvgTransactionAmount = prevTotalTransactions > 0 ? prevTotalExpenses / previousTransactions.filter(t => t.type === 'expense').length : 0;
+    const prevAvgTransactionAmount = prevTotalTransactions > 0 ? prevTotalExpenses / previousTransactions.filter(t => t.type === expenseType).length : 0;
 
     // Calculate percentage changes
     const expenseChange = prevTotalExpenses > 0 ? ((totalExpenses - prevTotalExpenses) / prevTotalExpenses) * 100 : 0;
@@ -122,7 +132,7 @@ export async function GET(request: Request) {
 
     // Find top 3 expenses in last 30 days
     const topExpenses = recentTransactions
-      .filter(t => t.type === 'expense')
+      .filter(t => t.type === expenseType)
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 3)
       .map(t => ({
@@ -135,10 +145,13 @@ export async function GET(request: Request) {
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
+    const salaryTableName = dataSource === 'email' ? 'email_transactions' : 'transactions';
+    const salaryTypeValue = dataSource === 'email' ? 'credit' : 'income';
+    
     const { data: allQuizizzTransactions, error: quizizzError } = await supabase
-      .from('transactions')
+      .from(salaryTableName)
       .select('*')
-      .eq('type', 'income')
+      .eq('type', salaryTypeValue)
       .ilike('description', '%quizizz%')
       .gte('date', threeMonthsAgo.toISOString())
       .order('date', { ascending: false });
@@ -178,7 +191,7 @@ export async function GET(request: Request) {
 
     // Category breakdown (top 5)
     const categoryBreakdown = recentTransactions
-      .filter(t => t.type === 'expense' && t.category)
+      .filter(t => t.type === expenseType && t.category)
       .reduce((acc: Record<string, number>, t) => {
         acc[t.category!] = (acc[t.category!] || 0) + t.amount;
         return acc;

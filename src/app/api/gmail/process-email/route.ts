@@ -38,8 +38,8 @@ Return a JSON object with the following structure:
 
 {
   "email_info": {
-    "account_type": "credit_card" | "bank_account" | null,
-    "bank_name": "string (HDFC, Axis, HDFC Diners, Axis Flipkart, etc.)",
+    "account_type": "Credit Card" | "Bank Account" | null,
+    "bank_name": "string (specific bank/card name)",
     "is_relevant": true | false
   },
   "transaction": {
@@ -47,8 +47,8 @@ Return a JSON object with the following structure:
     "type": "credit" | "debit",
     "description": "string (cleaned merchant/transaction description)",
     "date": "YYYY-MM-DD",
-    "account_type": "credit_card" | "bank_account",
-    "bank_name": "string (same as above)",
+    "account_type": "Credit Card" | "Bank Account",
+    "bank_name": "string (specific bank/card name)",
     "category": "string (food, shopping, bills, travel, etc.)",
     "balance": number,
     "reward_points": number,
@@ -76,11 +76,76 @@ Guidelines:
    - For person names, keep full name but remove transaction IDs
 4. If no transaction exists, set transaction to null
 5. If any field is not applicable or not present, omit it from the response
-6. Use standard bank names: HDFC, Axis, ICICI, SBI, etc.
-7. For credit cards: HDFC Diners, Axis Flipkart, HDFC Regalia, etc.
+6. **CRITICAL - Bank/Card Name Detection Rules (MUST match existing statement data exactly):**
+   
+   **For Bank Accounts (UPI/Bank Transfer transactions):**
+   - "HDFC" (for HDFC Bank savings/current accounts)
+   - "Axis" (for Axis Bank savings/current accounts)
+   - "ICICI" (for ICICI Bank accounts)
+   - "SBI" (for State Bank accounts)
+   
+   **For Credit Cards - Priority Detection Method:**
+   
+   **1. Card Ending Pattern Detection (HIGHEST PRIORITY):**
+   - If email mentions "credit card ending 6005" or "card ending 6005" → "HDFC Diners"
+   - If email mentions "credit card ending 4252" or "card ending 4252" → "HDFC Swiggy"
+   - If email mentions specific card endings, use those to determine the exact card type
+   
+   **2. Merchant Pattern Analysis (if card ending not available):**
+   
+   **HDFC Swiggy Card** → "HDFC Swiggy":
+   - Swiggy transactions (all types: food, instamart, etc.)
+   - Food delivery: Zomato, Blinkit, Instamart, Dunzo
+   - Grocery delivery: BigBasket, Grofers
+   - Quick commerce: Any food/grocery delivery service
+   
+   **HDFC Diners Card** → "HDFC Diners":
+   - Travel: Airlines (Indigo, SpiceJet, Air India), hotels, Airbnb, Redbus
+   - Dining: Restaurants, cafes, fine dining
+   - Entertainment: Movies (PVR, INOX), events, experiences
+   - Premium services: Spas, luxury brands
+   - Fuel: Petrol pumps
+   - General shopping and services
+   
+   **Axis Magnus Card** → "Axis Magnus":
+   - Travel: International travel, premium airlines
+   - Online services: Netflix, Spotify, Prime, subscriptions
+   - E-commerce: Amazon, Flipkart (but check sender)
+   - Gaming: Steam, PlayStation, Xbox
+   - Tech: Google services, Apple services
+   
+   **Flipkart Axis Card** → "Flipkart Axis":
+   - Specifically Flipkart transactions
+   - E-commerce: Myntra, other Flipkart group companies
+   - If email mentions Flipkart Axis explicitly
+   
+   **Generic HDFC/Axis** → "HDFC" or "Axis":
+   - When transaction type doesn't clearly match above patterns
+   - Mixed usage that doesn't fit specific card profiles
+   
+   **Detection Method:**
+   1. **FIRST**: Check for card ending patterns in email content (6005=Diners, 4252=Swiggy)
+   2. **SECOND**: Analyze transaction merchant to determine most likely card
+   3. **THIRD**: Consider transaction category and amount patterns
+   4. **DEFAULT**: Use bank name if unclear
+   
+7. **Account Type Rules:**
+   - Use "Credit Card" for all credit card transactions
+   - Use "Bank Account" for savings/current account transactions (UPI, NEFT, IMPS)
 8. Amount should always be positive number, use type field to indicate debit/credit
 9. Infer account_type from email sender and content context
 10. Set is_relevant to true if any financial/transaction content is found, otherwise false
+
+**Examples of bank name detection:**
+- Email mentions "credit card ending 6005" → "HDFC Diners" (regardless of merchant)
+- Email mentions "credit card ending 4252" → "HDFC Swiggy" (regardless of merchant)
+- Zomato transaction (no card ending mentioned) → "HDFC Diners" (merchant pattern)
+- Swiggy transaction from HDFC → "HDFC Swiggy"
+- Airline booking from HDFC → "HDFC Diners"
+- Restaurant payment from HDFC → "HDFC Diners"
+- Netflix subscription from Axis → "Axis Magnus"
+- UPI transfer from HDFC → "HDFC" (Bank Account)
+- Flipkart purchase → "Flipkart Axis" (if clear) or "Axis Magnus"
 `;
 
     const completion = await openai.chat.completions.create({
@@ -88,7 +153,7 @@ Guidelines:
       messages: [
         {
           role: "system",
-          content: "You are a financial email and transaction extraction expert. Extract structured data from banking/financial emails. Be precise, only extract information that's clearly present, never hallucinate data. Return valid JSON."
+          content: "You are a financial email and transaction extraction expert. Extract structured data from banking/financial emails. Be precise, only extract information that's clearly present, never hallucinate data. For credit card transactions, analyze the merchant type and transaction patterns to determine the specific credit card (HDFC Swiggy for food delivery, HDFC Diners for travel/dining, Axis Magnus for tech/entertainment, etc.). Return valid JSON."
         },
         {
           role: "user",

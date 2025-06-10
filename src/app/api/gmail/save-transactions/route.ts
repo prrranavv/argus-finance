@@ -36,10 +36,16 @@ export async function POST(request: NextRequest) {
         
         const email_id = emailRecord.id;
         
+        // Transform account_type from title case to snake_case for database
+        const accountTypeMapping: Record<string, string> = {
+          'Credit Card': 'credit_card',
+          'Bank Account': 'bank_account'
+        };
+
         const transactionData = {
           email_id: email_id,
           gmail_message_id: transaction.gmail_message_id,
-          account_type: transaction.account_type || 'bank_account',
+          account_type: accountTypeMapping[transaction.account_type] || 'bank_account',
           bank_name: transaction.bank_name || 'Unknown',
           type: transaction.type,
           description: transaction.description,

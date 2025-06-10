@@ -23,6 +23,12 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`🔍 Processing email ${email.id} from ${email.from}`);
         
+        // Transform account_type from title case to snake_case for database
+        const accountTypeMapping: Record<string, string> = {
+          'Credit Card': 'credit_card',
+          'Bank Account': 'bank_account'
+        };
+
         // Prepare email data (without analysis for now)
         const emailData = {
           gmail_message_id: email.id,
@@ -31,9 +37,9 @@ export async function POST(request: NextRequest) {
           received_date: new Date(email.date).toISOString(),
           attachment_urls: email.attachments || [],
           content: email.cleanedBody || email.fullBody || email.body,
-          account_type: null, // Will be updated when transactions are analyzed
-          bank_name: null,   // Will be updated when transactions are analyzed
-          is_relevant: false // Will be updated when transactions are analyzed
+          account_type: email.account_type ? accountTypeMapping[email.account_type] || null : null, // Transform if present
+          bank_name: email.bank_name || null,   // Will be updated when transactions are analyzed
+          is_relevant: email.is_relevant || false // Will be updated when transactions are analyzed
         };
 
         // Check if email already exists
