@@ -66,12 +66,12 @@ export function GmailSyncProgressBar({
   };
 
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-80 bg-white/95 backdrop-blur-sm border rounded-lg shadow-lg p-4 animate-in slide-in-from-top-2">
+    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-80 bg-background/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-4 animate-in slide-in-from-top-2">
       <div className="space-y-3">
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground font-medium">Gmail Sync</span>
+            <span className="text-foreground font-medium">Gmail Sync</span>
             <span className="text-muted-foreground font-mono text-xs">
               {Math.round(progress)}%
             </span>
@@ -80,7 +80,7 @@ export function GmailSyncProgressBar({
           <Progress 
             value={progress} 
             className={`h-2 transition-all duration-300 ${
-              hasError ? 'bg-red-100' : 'bg-blue-100'
+              hasError ? '[&>div]:bg-red-500' : '[&>div]:bg-blue-500'
             }`}
           />
           
@@ -93,7 +93,7 @@ export function GmailSyncProgressBar({
 
           {/* Error Message */}
           {hasError && (
-            <div className="text-xs text-red-600">
+            <div className="text-xs text-red-500">
               {steps.find(step => step.status === 'error')?.message || 'Sync failed'}
             </div>
           )}

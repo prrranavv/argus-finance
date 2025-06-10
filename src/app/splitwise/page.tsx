@@ -624,14 +624,14 @@ export default function SplitvisePage() {
             
             {/* Expense Title */}
             <div className="text-center">
-              <h3 className="font-semibold text-gray-900 text-sm truncate" title={expense.description}>
+              <h3 className="font-semibold text-foreground text-sm truncate" title={expense.description}>
                 {expense.description}
               </h3>
             </div>
             
             {/* Who paid and total amount */}
             <div className="text-center">
-              <p className="text-xs text-gray-600">
+              <p className="text-xs text-muted-foreground">
                 {(() => {
                   const firstName = expense.created_by.first_name && expense.created_by.first_name.toLowerCase() !== 'null' ? expense.created_by.first_name : '';
                   const lastName = expense.created_by.last_name && expense.created_by.last_name.toLowerCase() !== 'null' ? expense.created_by.last_name : '';
@@ -644,15 +644,15 @@ export default function SplitvisePage() {
             {/* My share */}
             <div className="text-center">
               {myShare?.type === 'not_involved' ? (
-                <p className="text-xs text-gray-400">Not involved</p>
+                <p className="text-xs text-muted-foreground">Not involved</p>
               ) : myShare?.type === 'settled' ? (
-                <p className="text-xs text-gray-400">Settled</p>
+                <p className="text-xs text-muted-foreground">Settled</p>
               ) : myShare?.type === 'lent' && myShare.amount ? (
-                <p className="text-xs text-green-600 font-medium">
+                <p className="text-xs text-green-600 dark:text-green-400 font-medium">
                   You lent {formatAmount(myShare.amount.toString())}
                 </p>
               ) : myShare?.type === 'borrowed' && myShare.amount ? (
-                <p className="text-xs text-red-600 font-medium">
+                <p className="text-xs text-red-600 dark:text-red-400 font-medium">
                   You borrowed {formatAmount(myShare.amount.toString())}
                 </p>
               ) : null}
@@ -660,7 +660,7 @@ export default function SplitvisePage() {
             
             {/* Date */}
             <div className="text-center">
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-muted-foreground">
                 {format(expenseDate, 'MMM d, yyyy')}
               </p>
             </div>
@@ -807,7 +807,7 @@ export default function SplitvisePage() {
                 )}
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${totalOutstanding >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`text-2xl font-bold ${totalOutstanding >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {formatAmount(Math.abs(totalOutstanding).toString())}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -827,7 +827,7 @@ export default function SplitvisePage() {
                 )}
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${last7DaysData.current >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <div className={`text-2xl font-bold ${last7DaysData.current >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                   {formatAmount(Math.abs(last7DaysData.current).toString())}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -848,7 +848,7 @@ export default function SplitvisePage() {
                     top3BorrowedExpenses.map((expense) => (
                       <div key={expense.id} className="flex justify-between text-xs">
                         <span className="truncate flex-1 mr-2">{expense.description}</span>
-                        <span className="text-red-600 font-medium">
+                        <span className="text-red-600 dark:text-red-400 font-medium">
                           -{formatAmount(expense.myBorrowedAmount.toString())}
                         </span>
                       </div>
@@ -872,7 +872,7 @@ export default function SplitvisePage() {
                     myLast3Expenses.map((expense) => (
                       <div key={expense.id} className="flex justify-between text-xs">
                         <span className="truncate flex-1 mr-2">{expense.description}</span>
-                        <span className="text-gray-600 font-medium">
+                        <span className="text-foreground font-medium">
                           {formatAmount(expense.cost)}
                         </span>
                       </div>
@@ -978,17 +978,17 @@ export default function SplitvisePage() {
                               
                               {/* Friend Name */}
                               <div className="text-center">
-                                <h3 className="font-medium text-gray-900 text-sm">
+                                <h3 className="font-medium text-foreground text-sm">
                                   {[friend.first_name, friend.last_name].filter(name => name && name.toLowerCase() !== 'null').join(' ') || 'No Name'}
                                 </h3>
                               </div>
                               
                               {/* Status */}
                               <div className="text-center">
-                                <p className={`text-xs font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                <p className={`text-xs font-medium ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                   {isPositive ? 'owes you' : 'you owe'}
                                 </p>
-                                <div className={`text-lg font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                <div className={`text-lg font-bold ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                   {formatAmount(Math.abs(totalBalance).toString())}
                                 </div>
                               </div>
@@ -1001,7 +1001,7 @@ export default function SplitvisePage() {
                 ) : (
                   <Card>
                     <CardContent className="p-8 text-center">
-                      <p className="text-gray-500">No friends with outstanding balances</p>
+                      <p className="text-muted-foreground">No friends with outstanding balances</p>
                     </CardContent>
                   </Card>
                 )}
@@ -1074,17 +1074,17 @@ export default function SplitvisePage() {
                               
                               {/* Group Name */}
                               <div className="text-center">
-                                <h3 className="font-medium text-gray-900 text-sm truncate" title={group.name}>
+                                <h3 className="font-medium text-foreground text-sm truncate" title={group.name}>
                                   {group.name}
                                 </h3>
                               </div>
                               
                               {/* Total Outstanding */}
                               <div className="text-center pt-2">
-                                <p className={`text-xs ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                <p className={`text-xs ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                   {isPositive ? 'you are owed' : 'you owe'}
                                 </p>
-                                <div className={`text-lg font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                                <div className={`text-lg font-bold ${isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                   {formatAmount(Math.abs(outstandingBalance).toString())}
                                 </div>
                               </div>
@@ -1099,7 +1099,7 @@ export default function SplitvisePage() {
                 ) : (
                   <Card>
                     <CardContent className="p-8 text-center">
-                      <p className="text-gray-500">No groups with outstanding balances</p>
+                      <p className="text-muted-foreground">No groups with outstanding balances</p>
                     </CardContent>
                   </Card>
                 )}
@@ -1115,21 +1115,21 @@ export default function SplitvisePage() {
                       {/* Search Bar */}
                       <div className="flex-1 relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Search className="h-4 w-4 text-gray-400" />
+                          <Search className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <input
                           type="text"
                           placeholder="Search expenses, members, amounts, or dates..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="block w-full pl-10 pr-3 py-2 border border-border rounded-lg text-sm placeholder-muted-foreground bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                         {searchQuery && (
                           <button
                             onClick={() => setSearchQuery('')}
                             className="absolute inset-y-0 right-0 pr-3 flex items-center"
                           >
-                            <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                            <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
                           </button>
                         )}
                       </div>
@@ -1155,7 +1155,7 @@ export default function SplitvisePage() {
                               setSelectedFriend(null);
                             }
                           }}
-                          className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[200px]"
+                          className="appearance-none bg-background border border-border rounded-lg px-4 py-2 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-[200px]"
                         >
                           <option value="">All Friends & Groups</option>
                           <optgroup label="Friends">
@@ -1174,7 +1174,7 @@ export default function SplitvisePage() {
                           </optgroup>
                         </select>
                         <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                          <ChevronDown className="h-4 w-4 text-gray-400" />
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
                         </div>
                       </div>
 
@@ -1190,7 +1190,7 @@ export default function SplitvisePage() {
                           <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${showOnlyInvolved ? 'bg-blue-600' : 'bg-gray-200'}`}>
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${showOnlyInvolved ? 'translate-x-6' : 'translate-x-1'}`} />
                           </div>
-                          <span className="ml-2 text-sm font-medium text-gray-700">Only involved</span>
+                          <span className="ml-2 text-sm font-medium text-foreground">Only involved</span>
                         </label>
                       </div>
 
@@ -1216,7 +1216,7 @@ export default function SplitvisePage() {
                     {/* Info about date range */}
                     {!searchQuery && !selectedFriend && !selectedGroup && (
                       <div className="text-center">
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           Showing all expenses from the last 30 days. Use &quot;Load More&quot; to see older expenses.
                         </p>
                       </div>
@@ -1225,7 +1225,7 @@ export default function SplitvisePage() {
                     {/* Today Section */}
                     {groupedExpenses.today.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Today</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Today</h3>
                         <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {groupedExpenses.today.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
@@ -1237,7 +1237,7 @@ export default function SplitvisePage() {
                     {/* Yesterday Section */}
                     {groupedExpenses.yesterday.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Yesterday</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Yesterday</h3>
                         <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {groupedExpenses.yesterday.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
@@ -1249,7 +1249,7 @@ export default function SplitvisePage() {
                     {/* Last 7 Days Section */}
                     {groupedExpenses.last7Days.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Last 7 days</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Last 7 days</h3>
                         <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {groupedExpenses.last7Days.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
@@ -1261,7 +1261,7 @@ export default function SplitvisePage() {
                     {/* Last 30 Days Section */}
                     {groupedExpenses.last30Days.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Last 30 days</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Last 30 days</h3>
                         <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {groupedExpenses.last30Days.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
@@ -1273,7 +1273,7 @@ export default function SplitvisePage() {
                     {/* Older Section */}
                     {groupedExpenses.older.length > 0 && (
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Older</h3>
+                        <h3 className="text-lg font-semibold text-foreground mb-4">Older</h3>
                         <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                           {groupedExpenses.older.map((expense) => (
                             <ExpenseCard key={expense.id} expense={expense} />
@@ -1308,7 +1308,7 @@ export default function SplitvisePage() {
                     {Object.values(groupedExpenses).every(group => group.length === 0) && (
                       <Card>
                         <CardContent className="p-8 text-center">
-                          <p className="text-gray-500">No expenses found</p>
+                          <p className="text-muted-foreground">No expenses found</p>
                         </CardContent>
                       </Card>
                     )}

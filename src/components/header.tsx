@@ -11,7 +11,6 @@ import Link from "next/link";
 import { Eye, EyeOff, FileText, BarChart3, Users, Menu, RefreshCw, CheckCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { toast } from "sonner";
 import {
   Sheet,
   SheetContent,
@@ -41,73 +40,13 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
   // Handle sync button click
   const handleSyncClick = () => {
     if (results && !isRunning) {
-      // Show results modal if sync is complete
+      // Always show results modal if sync is complete - this keeps the button in synced state
       setShowGmailSyncModal(true);
     } else if (!isRunning) {
-      // Test toast before starting sync
-      console.log('🧪 Testing toast system...');
-      toast.info("Starting Gmail sync...", {
-        description: "Checking for new emails",
-        duration: 3000,
-      });
-      
-      // Start sync process
+      // Start sync process without showing toast
       runSync();
     }
   };
-
-  // Show toast 500ms after sync completes
-  useEffect(() => {
-    if (results) {
-      console.log('🎉 Sync completed, showing toast in 500ms!');
-      
-      const toastTimer = setTimeout(() => {
-        const newEmails = results.syncStats?.newEmails || results.emails?.length || 0;
-        const newTransactions = results.transactions?.length || 0;
-        const totalFound = results.syncStats?.totalFound || 0;
-        
-        // Show toast with dismiss button
-        if (newEmails === 0 && totalFound > 0) {
-          toast.success("Gmail sync completed!", {
-            description: `${totalFound} emails found, all already synced`,
-            duration: 5000,
-            action: {
-              label: "Dismiss",
-              onClick: () => toast.dismiss(),
-            },
-          });
-        } else if (newEmails === 0) {
-          toast.success("Gmail sync completed!", {
-            description: `No new emails found`,
-            duration: 5000,
-            action: {
-              label: "Dismiss",
-              onClick: () => toast.dismiss(),
-            },
-          });
-        } else {
-          toast.success("Gmail sync completed!", {
-            description: `${newEmails} emails processed, ${newTransactions} transactions added`,
-            duration: 5000,
-            action: {
-              label: "Dismiss",
-              onClick: () => toast.dismiss(),
-            },
-          });
-        }
-      }, 500);
-
-      // Auto-hide progress bar after showing toast
-      const hideTimer = setTimeout(() => {
-        reset();
-      }, 8000);
-      
-      return () => {
-        clearTimeout(toastTimer);
-        clearTimeout(hideTimer);
-      };
-    }
-  }, [results, reset]);
 
   const mythText = "a giant in Greek mythology with a hundred eyes, known for his role as an all-seeing guardian.";
 
@@ -310,14 +249,14 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
                   variant="outline"
                   size="sm"
                   onClick={onPrivacyToggle}
-                  className="px-3 relative"
+                  className="px-2"
                   title={isPrivacyMode ? "Show money numbers" : "Hide money numbers"}
                 >
-                  <div className="flex items-center justify-between w-14">
-                    <span className="text-sm font-medium text-muted-foreground">₹</span>
-                    <Eye className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-30' : 'opacity-100 text-green-500'}`} />
-                    <EyeOff className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-100 text-red-500' : 'opacity-30'}`} />
-                  </div>
+                  {isPrivacyMode ? (
+                    <Eye className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-red-500" />
+                  )}
                 </Button>
 
                 {/* Theme Toggle */}
@@ -401,14 +340,14 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
                   variant="outline"
                   size="sm"
                   onClick={onPrivacyToggle}
-                  className="px-3 relative"
+                  className="px-2"
                   title={isPrivacyMode ? "Show money numbers" : "Hide money numbers"}
                 >
-                  <div className="flex items-center justify-between w-14">
-                    <span className="text-sm font-medium text-muted-foreground">₹</span>
-                    <Eye className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-30' : 'opacity-100 text-green-500'}`} />
-                    <EyeOff className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-100 text-red-500' : 'opacity-30'}`} />
-                  </div>
+                  {isPrivacyMode ? (
+                    <Eye className="h-4 w-4 text-green-500" />
+                  ) : (
+                    <EyeOff className="h-4 w-4 text-red-500" />
+                  )}
                 </Button>
 
                 {/* Theme Toggle */}
@@ -423,14 +362,14 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
                 variant="outline"
                 size="sm"
                 onClick={onPrivacyToggle}
-                className="px-3 relative"
+                className="px-2"
                 title={isPrivacyMode ? "Show money numbers" : "Hide money numbers"}
               >
-                <div className="flex items-center justify-between w-14">
-                  <span className="text-sm font-medium text-muted-foreground">₹</span>
-                  <Eye className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-30' : 'opacity-100 text-green-500'}`} />
-                  <EyeOff className={`h-4 w-4 transition-opacity ${isPrivacyMode ? 'opacity-100 text-red-500' : 'opacity-30'}`} />
-                </div>
+                {isPrivacyMode ? (
+                  <Eye className="h-4 w-4 text-green-500" />
+                ) : (
+                  <EyeOff className="h-4 w-4 text-red-500" />
+                )}
               </Button>
 
               {/* Dark Mode Toggle - Before hamburger menu */}

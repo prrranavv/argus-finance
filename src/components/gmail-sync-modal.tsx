@@ -410,7 +410,7 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+              <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
               <span>Gmail Sync Results</span>
             </DialogTitle>
             <DialogDescription>
@@ -424,29 +424,29 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
               <h3 className="text-lg font-semibold">Summary</h3>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-center">
-                  <div className="text-lg font-bold text-gray-700">
+                <div className="p-3 bg-muted/30 border border-border rounded-lg text-center">
+                  <div className="text-lg font-bold text-foreground">
                     {syncResults.syncStats?.totalFound || syncResults.emails?.length || 0}
                   </div>
-                  <div className="text-xs text-gray-500">Total Emails</div>
+                  <div className="text-xs text-muted-foreground">Total Emails</div>
                 </div>
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-center">
-                  <div className="text-lg font-bold text-blue-700">
+                <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-center">
+                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
                     {syncResults.syncStats?.newEmails || 0}
                   </div>
-                  <div className="text-xs text-blue-500">New Emails</div>
+                  <div className="text-xs text-blue-600/70 dark:text-blue-400/70">New Emails</div>
                 </div>
-                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-center">
-                  <div className="text-lg font-bold text-green-700">
+                <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg text-center">
+                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
                     {syncResults.syncStats?.existingEmails || 0}
                   </div>
-                  <div className="text-xs text-green-500">Existing Emails</div>
+                  <div className="text-xs text-green-600/70 dark:text-green-400/70">Existing Emails</div>
                 </div>
-                <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg text-center">
-                  <div className="text-lg font-bold text-purple-700">
+                <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg text-center">
+                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
                     {syncResults.transactions?.length || 0}
                   </div>
-                  <div className="text-xs text-purple-500">Transactions Added</div>
+                  <div className="text-xs text-purple-600/70 dark:text-purple-400/70">Transactions Added</div>
                 </div>
               </div>
             </div>
@@ -463,7 +463,7 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
                   {syncResults.emails.map((email) => {
                     const isExpanded = expandedEmails.has(email.id);
                     return (
-                      <div key={email.id} className="border rounded-lg p-3 space-y-2">
+                      <div key={email.id} className="border border-border rounded-lg p-3 space-y-2">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 space-y-1">
                             <h4 className="font-medium text-sm line-clamp-1">
@@ -495,8 +495,8 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
                         </div>
                         
                         {isExpanded && (
-                          <div className="border-t pt-2 mt-2">
-                            <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded border max-h-48 overflow-y-auto">
+                          <div className="border-t border-border pt-2 mt-2">
+                            <div className="text-xs text-muted-foreground bg-muted/50 p-3 rounded border border-border max-h-48 overflow-y-auto">
                               <pre className="whitespace-pre-wrap font-mono text-xs">
                                 {email.cleanedBody || email.fullBody || email.body || 'No content available'}
                               </pre>

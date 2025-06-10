@@ -16,11 +16,8 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="sm" className="px-3 relative">
-        <div className="flex items-center justify-between w-10">
-          <Sun className="h-4 w-4 opacity-50" />
-          <Moon className="h-4 w-4 opacity-50" />
-        </div>
+      <Button variant="outline" size="sm" className="px-2">
+        <Sun className="h-4 w-4 opacity-50" />
       </Button>
     );
   }
@@ -32,13 +29,14 @@ export function ThemeToggle() {
       variant="outline"
       size="sm"
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className="px-3 relative"
+      className="px-2"
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
     >
-      <div className="flex items-center justify-between w-10">
-        <Sun className={`h-4 w-4 transition-opacity ${isDark ? 'opacity-30' : 'opacity-100 text-yellow-500'}`} />
-        <Moon className={`h-4 w-4 transition-opacity ${isDark ? 'opacity-100 text-blue-400' : 'opacity-30'}`} />
-      </div>
+      {isDark ? (
+        <Sun className="h-4 w-4 text-yellow-500" />
+      ) : (
+        <Moon className="h-4 w-4 text-blue-400" />
+      )}
     </Button>
   );
 } 
