@@ -10,7 +10,6 @@ interface MonthlySummaryData {
   accountBalance: number | null;
   credited: number;
   debited: number;
-  totalCreditBill: number;
 }
 
 interface MonthlySummaryProps {
@@ -36,11 +35,32 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false, filterYear
           throw new Error('Failed to fetch monthly summary');
         }
         const summaryData = await response.json();
-        // Filter to only show 2025 data
-        const filtered2025Data = summaryData.filter((row: MonthlySummaryData) => {
-          return row.month.includes('2025');
+        console.log('Monthly summary data:', summaryData);
+        
+        // Sort months in descending order (most recent first)
+        const sortedData = [...summaryData].sort((a, b) => {
+          // Parse month names for proper chronological sorting
+          const parseMonth = (monthStr: string) => {
+            const parts = monthStr.split(' ');
+            const month = parts[0];
+            const year = parseInt(parts[1]);
+            const monthIndex = [
+              'January', 'February', 'March', 'April', 'May', 'June',
+              'July', 'August', 'September', 'October', 'November', 'December'
+            ].indexOf(month);
+            return { year, monthIndex };
+          };
+          
+          const monthA = parseMonth(a.month);
+          const monthB = parseMonth(b.month);
+          
+          if (monthA.year !== monthB.year) {
+            return monthB.year - monthA.year; // Descending by year
+          }
+          return monthB.monthIndex - monthA.monthIndex; // Descending by month
         });
-        setData(filtered2025Data);
+        
+        setData(sortedData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -113,7 +133,6 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false, filterYear
               <TableRow>
                 <TableHead>Month</TableHead>
                 <TableHead className="text-right">Account Balance</TableHead>
-                <TableHead className="text-right">Total Credit Bill</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -122,9 +141,6 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false, filterYear
                   <TableCell className="font-medium">{row.month}</TableCell>
                   <TableCell className="text-right">
                     {row.accountBalance !== null ? formatCurrencyInLakhs(row.accountBalance, isPrivacyMode) : '-'}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {formatCurrencyInLakhs(row.totalCreditBill, isPrivacyMode)}
                   </TableCell>
                 </TableRow>
               ))}

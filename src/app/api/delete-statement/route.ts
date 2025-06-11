@@ -29,21 +29,34 @@ export async function DELETE(request: NextRequest) {
 
     // Get transaction count before deleting
     const { data: transactions } = await supabase
-      .from('transactions')
+      .from('all_transactions')
       .select('id')
-      .eq('statement_id', statementId);
+      .eq('statement_id', statementId)
+      .eq('source', 'statement');
 
     const transactionCount = transactions?.length || 0;
 
-    // Delete all associated transactions first (due to foreign key constraint)
+    // Delete all associated transactions from all_transactions
     const { error: deleteTransError } = await supabase
-      .from('transactions')
+      .from('all_transactions')
       .delete()
-      .eq('statement_id', statementId);
+      .eq('statement_id', statementId)
+      .eq('source', 'statement');
 
     if (deleteTransError) {
       console.error('Error deleting transactions:', deleteTransError);
       return NextResponse.json({ error: 'Failed to delete transactions' }, { status: 500 });
+    }
+
+    // Delete associated balances if any
+    const { error: deleteBalancesError } = await supabase
+      .from('balances')
+      .delete()
+      .eq('statement_id', statementId);
+
+    if (deleteBalancesError) {
+      console.error('Error deleting balances:', deleteBalancesError);
+      return NextResponse.json({ error: 'Failed to delete balances' }, { status: 500 });
     }
 
     // Then delete the statement

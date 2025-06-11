@@ -8,15 +8,28 @@ export async function POST(request: NextRequest) {
 
     if (action === 'all') {
       // Get counts before deletion
-      const { data: transactions } = await supabase.from('transactions').select('id');
+      const { data: transactions } = await supabase.from('all_transactions').select('id');
       const { data: statements } = await supabase.from('statements').select('id');
+      const { data: balances } = await supabase.from('balances').select('id');
       
       const transactionCount = transactions?.length || 0;
       const statementCount = statements?.length || 0;
+      const balanceCount = balances?.length || 0;
 
-      // Delete all transactions and statements
+      // Delete all balances first (may depend on other tables)
+      const { error: balancesError } = await supabase
+        .from('balances')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000');
+
+      if (balancesError) {
+        console.error('Error deleting balances:', balancesError);
+        return NextResponse.json({ error: 'Failed to delete balances' }, { status: 500 });
+      }
+      
+      // Delete all transactions
       const { error: transError } = await supabase
-        .from('transactions')
+        .from('all_transactions')
         .delete()
         .neq('id', '00000000-0000-0000-0000-000000000000');
 
@@ -25,6 +38,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to delete transactions' }, { status: 500 });
       }
 
+      // Delete all statements
       const { error: statementsError } = await supabase
         .from('statements')
         .delete()
@@ -37,14 +51,15 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: `Deleted all data: ${transactionCount} transactions and ${statementCount} statements`,
+        message: `Deleted all data: ${transactionCount} transactions, ${balanceCount} balances, and ${statementCount} statements`,
         transactionsDeleted: transactionCount,
+        balancesDeleted: balanceCount,
         statementsDeleted: statementCount
       });
     } else {
       // Just clear duplicates (existing functionality)
       const { data: transactions, error } = await supabase
-        .from('transactions')
+        .from('all_transactions')
         .select('*')
         .order('date', { ascending: true })
         .order('description', { ascending: true })
@@ -61,7 +76,8 @@ export async function POST(request: NextRequest) {
       const seen = new Set();
 
       for (const transaction of transactions || []) {
-        const key = `${new Date(transaction.date).toISOString()}-${transaction.description}-${transaction.amount}-${transaction.type}`;
+        // Include source in the key to prevent detecting cross-source "duplicates"
+        const key = `${transaction.source}-${new Date(transaction.date).toISOString()}-${transaction.description}-${transaction.amount}-${transaction.type}`;
         
         if (seen.has(key)) {
           duplicates.push(transaction.id);
@@ -80,7 +96,7 @@ export async function POST(request: NextRequest) {
 
       // Delete duplicate transactions (keeping the first occurrence of each)
       const { error: deleteError } = await supabase
-        .from('transactions')
+        .from('all_transactions')
         .delete()
         .in('id', duplicates);
 

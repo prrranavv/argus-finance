@@ -14,13 +14,14 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to fetch statements' }, { status: 500 });
     }
 
-    // Then get transactions for each statement
+    // Then get transactions for each statement from all_transactions table
     const statementsWithTransactions = await Promise.all(
       (statements || []).map(async (statement) => {
         const { data: transactions, error: transError } = await supabase
-          .from('transactions')
+          .from('all_transactions')
           .select('*')
-          .eq('statement_id', statement.id);
+          .eq('statement_id', statement.id)
+          .eq('source', 'statement');
 
         if (transError) {
           console.error('Error fetching transactions for statement:', transError);

@@ -9,183 +9,141 @@ export async function GET(request: Request) {
     const accountType = searchParams.get('accountType');
     const bank = searchParams.get('bank');
     const timeRange = searchParams.get('timeRange') || '30days';
-    const dataSource = searchParams.get('dataSource') || 'statement';
+    const dataSource = searchParams.get('dataSource'); // Now an optional filter: 'statement' or 'email'
 
     // Calculate date ranges based on timeRange
     let daysBack = 30;
-    switch (timeRange) {
-      case '7days':
-        daysBack = 7;
-        break;
-      case '30days':
-        daysBack = 30;
-        break;
-      case '60days':
-        daysBack = 60;
-        break;
-      default:
-        daysBack = 30;
-        break;
-    }
+    if (timeRange === '7days') daysBack = 7;
+    if (timeRange === '60days') daysBack = 60;
 
-    // Get date for current period
+    const periodEndDate = new Date();
     const periodStartDate = new Date();
-    periodStartDate.setDate(periodStartDate.getDate() - daysBack);
+    periodStartDate.setDate(periodEndDate.getDate() - daysBack);
     
-    // Get date for previous period (for comparison)
-    const previousPeriodStartDate = new Date();
-    previousPeriodStartDate.setDate(previousPeriodStartDate.getDate() - (daysBack * 2));
+    const previousPeriodEndDate = new Date(periodStartDate);
+    const previousPeriodStartDate = new Date(previousPeriodEndDate);
+    previousPeriodStartDate.setDate(previousPeriodEndDate.getDate() - daysBack);
 
-    // Build where clause for filtering
-    const buildSupabaseQuery = (dateStart: Date, dateEnd?: Date) => {
-      const tableName = dataSource === 'email' ? 'email_transactions' : 'transactions';
+    // Build a reusable query function
+    const buildSupabaseQuery = (startDate: Date, endDate: Date) => {
       let query = supabase
-        .from(tableName)
-        .select('*');
+        .from('all_transactions')
+        .select('*')
+        .gte('date', startDate.toISOString())
+        .lt('date', endDate.toISOString());
 
-      // Add date filter
-      if (dateEnd) {
-        query = query.gte('date', dateStart.toISOString()).lt('date', dateEnd.toISOString());
-      } else {
-        query = query.gte('date', dateStart.toISOString());
+      if (dataSource) {
+        query = query.eq('source', dataSource);
       }
-
-      // Add account type filter
       if (accountType && accountType !== 'all') {
-        if (dataSource === 'email') {
-          // For email transactions, account_type is stored differently
-          const emailAccountType = accountType === 'Bank Account' ? 'bank_account' : 'credit_card';
-          query = query.eq('account_type', emailAccountType);
-        } else {
-          query = query.eq('account_type', accountType); // 'Bank Account' or 'Credit Card'
-        }
+        query = query.eq('account_type', accountType);
       }
-
+      // Bank and search filters are applied later on the returned data
       return query;
     };
 
-    // Fetch transactions for current period
-    const recentQuery = buildSupabaseQuery(periodStartDate);
-    const { data: allRecentTransactions, error: recentError } = await recentQuery;
+    // Fetch transactions for current and previous periods in parallel
+    const [
+      { data: allRecentTransactions, error: recentError },
+      { data: allPreviousTransactions, error: prevError }
+    ] = await Promise.all([
+      buildSupabaseQuery(periodStartDate, periodEndDate),
+      buildSupabaseQuery(previousPeriodStartDate, previousPeriodEndDate)
+    ]);
 
-    if (recentError) {
-      console.error('Error fetching recent transactions:', recentError);
+    if (recentError || prevError) {
+      console.error('Error fetching transactions:', recentError || prevError);
       return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
     }
 
-    // Fetch transactions for previous period for comparison
-    const previousQuery = buildSupabaseQuery(previousPeriodStartDate, periodStartDate);
-    const { data: allPreviousTransactions, error: prevError } = await previousQuery;
-
-    if (prevError) {
-      console.error('Error fetching previous transactions:', prevError);
-      return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
-    }
-
-    // Apply client-side filtering for complex search and bank filters
+    // Apply client-side filtering for search and bank (as it was before)
     const applyClientFilters = (transactions: any[]) => {
+      if (!transactions) return [];
       return transactions.filter((transaction: any) => {
-        // Search filter
-        if (search) {
-          const searchMatch = transaction.description?.toLowerCase().includes(search.toLowerCase()) ||
-                            transaction.bank_name?.toLowerCase().includes(search.toLowerCase());
-          if (!searchMatch) return false;
+        const searchLower = search?.toLowerCase();
+        const bankLower = bank?.toLowerCase();
+
+        if (search && !(
+          transaction.description?.toLowerCase().includes(searchLower) ||
+          transaction.bank_name?.toLowerCase().includes(searchLower)
+        )) {
+          return false;
         }
 
-        // Bank filter
-        if (bank && bank !== 'all') {
-          const bankMatch = transaction.bank_name?.toLowerCase().includes(bank.toLowerCase()) ||
-                           transaction.source?.toLowerCase().includes(bank.toLowerCase());
-          if (!bankMatch) return false;
+        if (bank && bank !== 'all' && !transaction.bank_name?.toLowerCase().includes(bankLower)) {
+          return false;
         }
-
         return true;
       });
     };
 
-    const recentTransactions = applyClientFilters(allRecentTransactions || []);
-    const previousTransactions = applyClientFilters(allPreviousTransactions || []);
+    const recentTransactions = applyClientFilters(allRecentTransactions);
+    const previousTransactions = applyClientFilters(allPreviousTransactions);
 
-    // Calculate current period metrics
-    const expenseType = dataSource === 'email' ? 'debit' : 'expense';
+    // Standardized expense type
+    const expenseType = 'expense';
     
-    const totalTransactions = recentTransactions.length;
-    const totalExpenses = recentTransactions
-      .filter((t: any) => t.type === expenseType)
-      .reduce((sum: any, t: any) => sum + t.amount, 0);
-    const dailyAvgSpending = totalExpenses / daysBack;
-    const avgTransactionAmount = totalTransactions > 0 ? totalExpenses / recentTransactions.filter(t => t.type === expenseType).length : 0;
+    // Helper to calculate metrics for a given set of transactions
+    const calculateMetrics = (transactions: any[]) => {
+      const filteredExpenses = transactions.filter(t => t.type === expenseType);
+      const totalExpenses = filteredExpenses.reduce((sum, t) => sum + t.amount, 0);
+      return {
+        totalTransactions: transactions.length,
+        totalExpenses,
+        expenseTransactionsCount: filteredExpenses.length,
+      };
+    };
+    
+    const currentMetrics = calculateMetrics(recentTransactions);
+    const previousMetrics = calculateMetrics(previousTransactions);
 
-    // Calculate previous period metrics for comparison
-    const prevTotalTransactions = previousTransactions.length;
-    const prevTotalExpenses = previousTransactions
-      .filter(t => t.type === expenseType)
-      .reduce((sum, t) => sum + t.amount, 0);
-    const prevDailyAvgSpending = prevTotalExpenses / daysBack;
-    const prevAvgTransactionAmount = prevTotalTransactions > 0 ? prevTotalExpenses / previousTransactions.filter(t => t.type === expenseType).length : 0;
+    const dailyAvgSpending = currentMetrics.totalExpenses / daysBack;
+    const avgTransactionAmount = currentMetrics.expenseTransactionsCount > 0 ? currentMetrics.totalExpenses / currentMetrics.expenseTransactionsCount : 0;
+    
+    const prevDailyAvgSpending = previousMetrics.totalExpenses / daysBack;
+    const prevAvgTransactionAmount = previousMetrics.expenseTransactionsCount > 0 ? previousMetrics.totalExpenses / previousMetrics.expenseTransactionsCount : 0;
 
     // Calculate percentage changes
-    const expenseChange = prevTotalExpenses > 0 ? ((totalExpenses - prevTotalExpenses) / prevTotalExpenses) * 100 : 0;
-    const transactionCountChange = prevTotalTransactions > 0 ? ((totalTransactions - prevTotalTransactions) / prevTotalTransactions) * 100 : 0;
+    const expenseChange = previousMetrics.totalExpenses > 0 ? ((currentMetrics.totalExpenses - previousMetrics.totalExpenses) / previousMetrics.totalExpenses) * 100 : 0;
+    const transactionCountChange = previousMetrics.totalTransactions > 0 ? ((currentMetrics.totalTransactions - previousMetrics.totalTransactions) / previousMetrics.totalTransactions) * 100 : 0;
     const dailySpendingChange = prevDailyAvgSpending > 0 ? ((dailyAvgSpending - prevDailyAvgSpending) / prevDailyAvgSpending) * 100 : 0;
     const avgTransactionChange = prevAvgTransactionAmount > 0 ? ((avgTransactionAmount - prevAvgTransactionAmount) / prevAvgTransactionAmount) * 100 : 0;
+    
+    // --- The rest of the insight calculations (top expenses, salary, etc.) remain largely the same, but will now operate on unified data ---
 
-    // Find top 3 expenses in last 30 days
+    // Find top 3 expenses in the current period
     const topExpenses = recentTransactions
       .filter(t => t.type === expenseType)
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 3)
-      .map(t => ({
-        merchant: t.description,
-        amount: t.amount,
-        date: t.date
-      }));
+      .map(t => ({ merchant: t.description, amount: t.amount, date: t.date }));
 
-    // Get last 3 months of Quizizz salary data (May, April, March 2025)
+    // Get last 3 months of salary data (from all_transactions)
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-
-    const salaryTableName = dataSource === 'email' ? 'email_transactions' : 'transactions';
-    const salaryTypeValue = dataSource === 'email' ? 'credit' : 'income';
     
     const { data: allQuizizzTransactions, error: quizizzError } = await supabase
-      .from(salaryTableName)
+      .from('all_transactions')
       .select('*')
-      .eq('type', salaryTypeValue)
+      .eq('type', 'income')
       .ilike('description', '%quizizz%')
       .gte('date', threeMonthsAgo.toISOString())
       .order('date', { ascending: false });
 
-    if (quizizzError) {
-      console.error('Error fetching Quizizz transactions:', quizizzError);
-    }
+    if (quizizzError) console.error('Error fetching Quizizz transactions:', quizizzError);
 
     // Group by month and sum up salaries
-    interface TransactionData {
-      id: string;
-      date: Date;
-      amount: number;
-      description: string;
-      type: string;
-      category?: string | null;
-    }
-    
-    const salaryByMonth = (allQuizizzTransactions || []).reduce((acc: Record<string, {total: number, transactions: TransactionData[]}>, t) => {
+    const salaryByMonth = (allQuizizzTransactions || []).reduce((acc: Record<string, {total: number, date: string}>, t) => {
       const monthKey = new Date(t.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       if (!acc[monthKey]) {
-        acc[monthKey] = { total: 0, transactions: [] };
+        acc[monthKey] = { total: 0, date: t.date };
       }
       acc[monthKey].total += t.amount;
-      acc[monthKey].transactions.push(t);
       return acc;
     }, {});
 
     const last3MonthsSalary = Object.entries(salaryByMonth)
-      .map(([month, data]) => ({
-        month,
-        amount: data.total,
-        date: data.transactions[0].date // Use the date of the first transaction in that month
-      }))
+      .map(([month, data]) => ({ month, amount: data.total, date: data.date }))
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 3);
 
@@ -203,75 +161,47 @@ export async function GET(request: Request) {
       .map(([category, amount]) => ({
         category,
         amount,
-        percentage: totalExpenses > 0 ? (amount / totalExpenses) * 100 : 0
+        percentage: currentMetrics.totalExpenses > 0 ? (amount / currentMetrics.totalExpenses) * 100 : 0
       }));
 
-    // Detect recurring payments (transactions with similar descriptions)
-    const descriptionGroups = recentTransactions.reduce((acc: Record<string, TransactionData[]>, t) => {
-      // Normalize description for pattern matching
-      const normalizedDesc = t.description.toLowerCase()
-        .replace(/\d+/g, '') // Remove numbers
-        .replace(/[^\w\s]/g, '') // Remove special characters
-        .trim();
-      
-      if (normalizedDesc.length > 3) { // Ignore very short descriptions
+    // Detect recurring payments
+    const descriptionGroups = recentTransactions.reduce((acc: Record<string, any[]>, t) => {
+      const normalizedDesc = t.description.toLowerCase().replace(/\d+/g, '').replace(/[^\w\s]/g, '').trim();
+      if (normalizedDesc.length > 3) {
         acc[normalizedDesc] = acc[normalizedDesc] || [];
         acc[normalizedDesc].push(t);
       }
       return acc;
     }, {});
-
+    
     const recurringPayments = Object.entries(descriptionGroups)
-      .filter(([, transactions]) => transactions.length >= 2) // At least 2 transactions
-      .map(([, transactions]) => ({
-        pattern: transactions[0].description.split(' ').slice(0, 3).join(' '), // First 3 words
-        count: transactions.length,
-        totalAmount: transactions.reduce((sum, t) => sum + t.amount, 0),
-        avgAmount: transactions.reduce((sum, t) => sum + t.amount, 0) / transactions.length,
-        lastDate: new Date(Math.max(...transactions.map(t => new Date(t.date).getTime()))),
-        category: transactions[0].category,
-        type: transactions[0].type
+      .filter(([, txs]) => txs.length >= 2)
+      .map(([, txs]) => ({
+        pattern: txs[0].description.split(' ').slice(0, 3).join(' '),
+        count: txs.length,
+        totalAmount: txs.reduce((sum, t) => sum + t.amount, 0),
+        avgAmount: txs.reduce((sum, t) => sum + t.amount, 0) / txs.length,
+        lastDate: new Date(Math.max(...txs.map(t => new Date(t.date).getTime()))),
+        category: txs[0].category,
+        type: txs[0].type
       }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
     return NextResponse.json({
-      period: {
-        start: periodStartDate,
-        end: new Date(),
-        days: daysBack
-      },
+      period: { start: periodStartDate, end: periodEndDate, days: daysBack },
       metrics: {
-        totalExpenses: {
-          current: totalExpenses,
-          previous: prevTotalExpenses,
-          change: expenseChange
-        },
-        dailyAvgSpending: {
-          current: dailyAvgSpending,
-          previous: prevDailyAvgSpending,
-          change: dailySpendingChange
-        },
-        avgTransaction: {
-          current: avgTransactionAmount,
-          previous: prevAvgTransactionAmount,
-          change: avgTransactionChange
-        },
-        totalTransactions: {
-          current: totalTransactions,
-          previous: prevTotalTransactions,
-          change: transactionCountChange
-        }
+        totalExpenses: { current: currentMetrics.totalExpenses, previous: previousMetrics.totalExpenses, change: expenseChange },
+        dailyAvgSpending: { current: dailyAvgSpending, previous: prevDailyAvgSpending, change: dailySpendingChange },
+        avgTransaction: { current: avgTransactionAmount, previous: prevAvgTransactionAmount, change: avgTransactionChange },
+        totalTransactions: { current: currentMetrics.totalTransactions, previous: previousMetrics.totalTransactions, change: transactionCountChange }
       },
       topExpenses,
       last3MonthsSalary,
-      breakdown: {
-        topCategories
-      },
-      insights: {
-        recurringPayments
-      }
+      breakdown: { topCategories },
+      insights: { recurringPayments }
     });
+
   } catch (error) {
     console.error('Error fetching transaction metrics:', error);
     return NextResponse.json(

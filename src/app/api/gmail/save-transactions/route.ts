@@ -36,41 +36,46 @@ export async function POST(request: NextRequest) {
         
         const email_id = emailRecord.id;
         
-        // Transform account_type from title case to snake_case for database
-        const accountTypeMapping: Record<string, string> = {
-          'Credit Card': 'credit_card',
-          'Bank Account': 'bank_account'
-        };
+        // Convert transaction type from debit/credit to expense/income
+        const transactionType = transaction.type === 'debit' ? 'expense' : 'income';
+        
+        // Convert account_type format if needed
+        let accountType = transaction.account_type;
+        if (accountType === 'credit_card') {
+          accountType = 'Credit Card';
+        } else if (accountType === 'bank_account') {
+          accountType = 'Bank Account';
+        }
 
+        // Create unified transaction data structure
         const transactionData = {
-          email_id: email_id,
-          gmail_message_id: transaction.gmail_message_id,
-          account_type: accountTypeMapping[transaction.account_type] || 'bank_account',
-          bank_name: transaction.bank_name || 'Unknown',
-          type: transaction.type,
+          date: new Date(transaction.date).toISOString(),
           description: transaction.description,
           amount: parseFloat(transaction.amount) || 0,
           category: transaction.category || null,
-          balance: transaction.balance ? parseFloat(transaction.balance) : null,
-          date: new Date(transaction.date).toISOString(),
-          reward_points: transaction.reward_points ? parseFloat(transaction.reward_points) : null,
-          mode: transaction.mode || null,
+          type: transactionType,
+          account_type: accountType,
+          bank_name: transaction.bank_name || 'Unknown',
+          source: 'email',
+          email_id: email_id,
+          gmail_message_id: transaction.gmail_message_id,
           reference_number: transaction.reference_number || null
         };
 
-        // Check if transaction already exists
+        // Check if transaction already exists in all_transactions
         const { data: existingTransaction } = await client
-          .from('email_transactions')
+          .from('all_transactions')
           .select('id')
           .eq('gmail_message_id', transaction.gmail_message_id)
+          .eq('source', 'email')
           .single();
 
         if (existingTransaction) {
           // Update existing transaction
           const { error: updateTxError } = await client
-            .from('email_transactions')
+            .from('all_transactions')
             .update(transactionData)
-            .eq('gmail_message_id', transaction.gmail_message_id);
+            .eq('id', existingTransaction.id);
 
           if (updateTxError) {
             console.error('Transaction update error:', updateTxError);
@@ -82,7 +87,7 @@ export async function POST(request: NextRequest) {
         } else {
           // Insert new transaction
           const { error: insertTxError } = await client
-            .from('email_transactions')
+            .from('all_transactions')
             .insert(transactionData);
 
           if (insertTxError) {

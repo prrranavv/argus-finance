@@ -5,12 +5,11 @@ import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RefreshCw, Users, Receipt, ShoppingCart, Home, Car, Utensils, Coffee, Gamepad2, Gift, TrendingUp, TrendingDown, Search, X, ChevronDown } from 'lucide-react';
+import { RefreshCw, Users, Receipt, ShoppingCart, Home, Car, Utensils, Coffee, Gamepad2, Gift, TrendingUp, TrendingDown, Search, X, ChevronDown, Coins, Calendar } from 'lucide-react';
 
 import { format, parseISO } from 'date-fns';
 import Image from 'next/image';
 import { formatCurrencyInLakhs } from '@/lib/utils';
-import { SplitwiseBalanceChart } from '@/components/splitwise-balance-chart';
 
 interface SplitwiseGroup {
   id: number;
@@ -59,6 +58,13 @@ interface SplitwiseExpense {
   currency_code: string;
   date: string;
   created_at: string;
+  payment: boolean;
+  creation_method: string | null;
+  repayments: {
+    from: number;
+    to: number;
+    amount: string;
+  }[];
   category: {
     id: number;
     name: string;
@@ -270,10 +276,18 @@ export default function SplitvisePage() {
     }
   };
 
-  const formatAmount = (amount: string) => {
+  const formatAmount = (amount: string, useAbsolute = true) => {
     if (isPrivacyMode) return '••••••';
     const num = parseFloat(amount);
-    return `₹${Math.abs(num).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const value = useAbsolute ? Math.abs(num) : num;
+    
+    if (Math.abs(value) >= 100000) {
+      return `₹${(value / 100000).toFixed(2)}L`;
+    }
+    if (Math.abs(value) >= 1000) {
+      return `₹${(value / 1000).toFixed(1)}K`;
+    }
+    return `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   // Helper function to get group outstanding balance (moved here to avoid initialization order issues)
@@ -546,13 +560,15 @@ export default function SplitvisePage() {
     const now = new Date();
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const last14Days = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+
+    const nonPaymentExpenses = expenses.filter(expense => !expense.payment);
     
-    const last7DaysExpenses = expenses.filter(expense => {
+    const last7DaysExpenses = nonPaymentExpenses.filter(expense => {
       const expenseDate = parseISO(expense.date);
       return expenseDate >= last7Days && expenseDate <= now;
     });
     
-    const previous7DaysExpenses = expenses.filter(expense => {
+    const previous7DaysExpenses = nonPaymentExpenses.filter(expense => {
       const expenseDate = parseISO(expense.date);
       return expenseDate >= last14Days && expenseDate < last7Days;
     });
@@ -584,6 +600,7 @@ export default function SplitvisePage() {
     if (!currentUser) return [];
     
     return expenses
+      .filter(expense => !expense.payment)
       .map(expense => ({
         ...expense,
         myBorrowedAmount: (() => {
@@ -601,7 +618,7 @@ export default function SplitvisePage() {
     if (!currentUser) return [];
     
     return expenses
-      .filter(expense => expense.created_by.id === currentUser.id)
+      .filter(expense => !expense.payment && expense.created_by.id === currentUser.id)
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, 3);
   };
@@ -614,76 +631,112 @@ export default function SplitvisePage() {
   const ExpenseCard = ({ expense }: { expense: SplitwiseExpense }) => {
     const myShare = getMyShareDetails(expense);
     const expenseDate = parseISO(expense.date);
-    const CategoryIcon = getCategoryIcon(expense.category.name);
-    
-    // Get thumbnail color based on category
-    const getThumbnailGradient = (categoryName: string) => {
-      const name = categoryName.toLowerCase();
-      if (name.includes('food') || name.includes('restaurant')) return 'from-orange-400 to-red-500';
-      if (name.includes('grocery') || name.includes('shopping')) return 'from-green-400 to-emerald-500';
-      if (name.includes('rent') || name.includes('house') || name.includes('home')) return 'from-blue-400 to-indigo-500';
-      if (name.includes('transport') || name.includes('car') || name.includes('gas')) return 'from-purple-400 to-violet-500';
-      if (name.includes('coffee') || name.includes('drink')) return 'from-amber-400 to-orange-500';
-      if (name.includes('entertainment') || name.includes('movie')) return 'from-pink-400 to-rose-500';
-      if (name.includes('gift')) return 'from-red-400 to-pink-500';
-      return 'from-gray-400 to-gray-500';
+    const isPayment = expense.payment;
+
+    const CategoryIcon = isPayment ? Coins : getCategoryIcon(expense.category.name);
+
+    // Date formatting utility
+    const formatDateWithSuffix = (date: Date) => {
+      const day = date.getDate();
+      const month = date.toLocaleString("en-US", { month: "long" });
+      const year = date.getFullYear();
+
+      let suffix = "th";
+      if (day === 1 || day === 21 || day === 31) suffix = "st";
+      else if (day === 2 || day === 22) suffix = "nd";
+      else if (day === 3 || day === 23) suffix = "rd";
+
+      return `${month} ${day}${suffix}, ${year}`;
     };
     
-    return (
-      <Card className="cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.05] relative group">
-        <CardContent className="p-4">
-          <div className="space-y-3">
-            {/* Thumbnail */}
-            <div className="flex justify-center mb-3">
-              <div className={`h-12 w-12 bg-gradient-to-br ${getThumbnailGradient(expense.category.name)} rounded-lg flex items-center justify-center shadow-lg`}>
-                <CategoryIcon className="h-6 w-6 text-white drop-shadow-sm" />
-              </div>
-            </div>
-            
-            {/* Expense Title */}
-            <div className="text-center">
-              <h3 className="font-semibold text-foreground text-sm truncate" title={expense.description}>
-                {expense.description}
-              </h3>
-            </div>
-            
-            {/* Who paid and total amount */}
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">
-                {(() => {
-                  const firstName = expense.created_by.first_name && expense.created_by.first_name.toLowerCase() !== 'null' ? expense.created_by.first_name : '';
-                  const lastName = expense.created_by.last_name && expense.created_by.last_name.toLowerCase() !== 'null' ? expense.created_by.last_name : '';
-                  const fullName = [firstName, lastName].filter(Boolean).join(' ');
-                  return fullName || 'Someone';
-                })()} paid {formatAmount(expense.cost)}.
-              </p>
-            </div>
-            
-            {/* My share */}
-            <div className="text-center">
-              {myShare?.type === 'not_involved' ? (
-                <p className="text-xs text-muted-foreground">Not involved</p>
-              ) : myShare?.type === 'settled' ? (
-                <p className="text-xs text-muted-foreground">Settled</p>
-              ) : myShare?.type === 'lent' && myShare.amount ? (
-                <p className="text-xs text-green-600 dark:text-green-400 font-medium">
-                  You lent {formatAmount(myShare.amount.toString())}
-                </p>
-              ) : myShare?.type === 'borrowed' && myShare.amount ? (
-                <p className="text-xs text-red-600 dark:text-red-400 font-medium">
-                  You borrowed {formatAmount(myShare.amount.toString())}
-                </p>
-              ) : null}
-            </div>
-            
-            {/* Date */}
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground">
-                {format(expenseDate, 'MMM d, yyyy')}
-              </p>
-            </div>
+    // Payment Card Logic
+    if (isPayment) {
+      const payment = expense.repayments[0];
+      if (!payment || !currentUser) return null;
+
+      const payerId = payment.to;
+      const recipientId = payment.from;
+      const amount = parseFloat(payment.amount);
+      const iAmPayer = currentUser.id === payerId;
+      const iAmRecipient = currentUser.id === recipientId;
+
+      if (!iAmPayer && !iAmRecipient) return null; 
+
+      const otherPersonId = iAmPayer ? recipientId : payerId;
+      const otherPerson = friends.find(f => f.id === otherPersonId);
+      const otherPersonName = otherPerson ? `${otherPerson.first_name || ''} ${otherPerson.last_name || ''}`.trim() : 'Someone';
+
+      return (
+        <Card className="p-3 sm:p-4 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02] relative flex flex-col justify-between h-full">
+          <div className="absolute top-2 right-2 text-muted-foreground" title="Payment">
+            <Coins className="h-4 w-4" />
           </div>
-        </CardContent>
+          <div className="flex flex-col flex-grow">
+            <p className={`text-sm font-medium mb-2`}>
+              {iAmRecipient ? 'You received' : 'You paid'}
+            </p>
+            <div className={`text-2xl font-bold mb-1 ${iAmRecipient ? 'text-green-600' : 'text-red-500'}`}>
+              {isPrivacyMode ? '••••••' : formatAmount(amount.toString())}
+            </div>
+            <p className="text-sm font-medium text-foreground truncate" title={iAmRecipient ? `From ${otherPersonName}` : `To ${otherPersonName}`}>
+              {isPrivacyMode ? '••••••••••••••••' : (iAmRecipient ? `From ${otherPersonName}` : `To ${otherPersonName}`)}
+            </p>
+          </div>
+          <div className="mt-4 pt-2 border-t border-muted/50 flex items-center text-xs text-muted-foreground">
+            <Calendar className="h-3 w-3 mr-1.5" />
+            <span>{formatDateWithSuffix(expenseDate)}</span>
+          </div>
+        </Card>
+      );
+    }
+    
+    // Regular Expense Card Logic
+    if (myShare?.type === 'not_involved') return null;
+
+    return (
+      <Card className="p-3 sm:p-4 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02] relative flex flex-col justify-between h-full">
+        <div className="absolute top-2 right-2 text-muted-foreground" title={expense.category.name}>
+          <CategoryIcon className="h-4 w-4" />
+        </div>
+        <div className="flex flex-col flex-grow">
+           <p className={`text-sm font-medium mb-2`}>
+            {myShare?.type === 'lent' ? 'You lent' : 'You owe'}
+          </p>
+
+          <div className={`text-2xl font-bold mb-1 ${myShare?.type === 'lent' ? 'text-green-600' : 'text-red-500'}`}>
+            {isPrivacyMode ? '••••••' : formatAmount(myShare?.amount?.toString() ?? '0')}
+          </div>
+
+          <p className="text-sm font-medium text-foreground truncate" title={expense.description}>
+            {isPrivacyMode ? '••••••••••••••••' : expense.description}
+          </p>
+
+          <p className="text-xs text-muted-foreground mt-1">
+            {isPrivacyMode ? '•••••• paid ••••••' : (() => {
+                if(myShare?.type === 'lent') {
+                  const owers = expense.users.filter(u => parseFloat(u.owed_share) > 0 && u.user_id !== currentUser?.id);
+                  if (owers.length === 0) return `You paid ${formatAmount(myShare.paidShare?.toString() ?? '0')}`;
+                  const owerNames = owers.map(o => {
+                    const user = friends.find(f => f.id === o.user_id) || o.user;
+                    return user?.first_name || 'Someone';
+                  });
+                  return `${owerNames.join(' & ')} owes`;
+                }
+                
+                const payers = expense.users.filter(u => parseFloat(u.paid_share) > 0);
+                if (payers.length === 0) return `Total: ${formatAmount(expense.cost)}`;
+                const payerNames = payers.map(p => {
+                    const user = friends.find(f => f.id === p.user_id) || p.user;
+                    return user?.first_name || 'Someone';
+                }).join(' & ');
+                return `${payerNames} paid ${formatAmount(expense.cost)}`;
+            })()}
+          </p>
+        </div>
+        <div className="mt-4 pt-2 border-t border-muted/50 flex items-center text-xs text-muted-foreground">
+          <Calendar className="h-3 w-3 mr-1.5" />
+          <span>{formatDateWithSuffix(expenseDate)}</span>
+        </div>
       </Card>
     );
   };
@@ -798,8 +851,8 @@ export default function SplitvisePage() {
   return (
     <div className="container mx-auto p-4 md:p-10 max-w-7xl">
       <Header 
+        onPrivacyToggle={handlePrivacyToggle} 
         isPrivacyMode={isPrivacyMode}
-        onPrivacyToggle={handlePrivacyToggle}
       />
 
       {error && (
@@ -904,11 +957,6 @@ export default function SplitvisePage() {
           </div>
         </div>
       )}
-
-      {/* Outstanding Balance Chart */}
-      <div className="mb-8">
-        <SplitwiseBalanceChart isPrivacyMode={isPrivacyMode} />
-      </div>
 
       {/* Main Content Section */}
       <div className="mb-8">

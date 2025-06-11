@@ -10,9 +10,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const selectedCard = searchParams.get('card') || 'Total';
 
-    // Fetch credit card transactions
+    // Fetch credit card transactions from all_transactions table
     let query = supabase
-      .from('transactions')
+      .from('all_transactions')
       .select('*')
       .eq('account_type', 'Credit Card')
       .order('date', { ascending: true });

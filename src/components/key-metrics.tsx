@@ -15,7 +15,6 @@ interface MetricData {
 interface KeyMetricsData {
   currentBalance: MetricData;
   creditCardBill: MetricData;
-  realBalance: MetricData;
   rewardPoints: MetricData;
 }
 
@@ -133,24 +132,6 @@ export function KeyMetrics({ isPrivacyMode = false, filterYear }: KeyMetricsProp
             <div className={`flex items-center text-xs md:text-sm ${getChangeColor(-data.creditCardBill.change)}`}>
               {getChangeIcon(-data.creditCardBill.change)}
               <span className="ml-1">{formatChange(data.creditCardBill.change)}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Real Balance */}
-      <Card>
-        <CardContent className="p-3 md:p-6">
-          <div className="flex items-center justify-between mb-1 md:mb-2">
-            <div className="text-xs md:text-sm font-medium text-muted-foreground">AVAILABLE CREDIT</div>
-          </div>
-          <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3">
-            <div className="text-lg md:text-2xl font-bold text-blue-600">
-              {formatCurrencyInLakhs(data.realBalance.value, isPrivacyMode)}
-            </div>
-            <div className={`flex items-center text-xs md:text-sm ${getChangeColor(data.realBalance.change)}`}>
-              {getChangeIcon(data.realBalance.change)}
-              <span className="ml-1">{formatChange(data.realBalance.change)}</span>
             </div>
           </div>
         </CardContent>

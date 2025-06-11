@@ -6,182 +6,106 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const bankFilter = searchParams.get('bank'); // 'Total', 'HDFC', 'Axis', etc.
 
-    // Fetch all transactions with closing balance, ordered by date
-    let query = supabase
-      .from('transactions')
-      .select('*')
-      .order('date', { ascending: true });
-
-    // Apply bank filter if specified and not 'Total'
+    // First, fetch all the balances data
+    let balanceQuery = supabase
+      .from('balances')
+      .select('statement_month, bank_name, closing_balance, account_type')
+      .eq('account_type', 'Bank Account');
+    
     if (bankFilter && bankFilter !== 'Total') {
-      query = query.eq('bank_name', bankFilter);
+      balanceQuery = balanceQuery.eq('bank_name', bankFilter);
     }
+    
+    const { data: balances, error: balanceError } = await balanceQuery;
+    if (balanceError) throw new Error('Failed to fetch balances');
 
-    const { data: transactions, error } = await query;
-
-    if (error) {
-      console.error('Error fetching transactions:', error);
-      return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
-    }
-
-    if (!transactions || transactions.length === 0) {
-      return NextResponse.json([]);
-    }
-
-    if (bankFilter === 'Total') {
-      // For Total tab, group by bank and month, then aggregate
-      const bankMonthlyData = new Map<string, Map<string, {
-        month: string;
-        accountBalance: number | null;
-        credited: number;
-        debited: number;
-        totalCreditBill: number;
-      }>>();
-
-      // Get all transactions for aggregation
-      const { data: allTransactions, error: allTransactionsError } = await supabase
-        .from('transactions')
-        .select('*')
-        .order('date', { ascending: true });
-
-      if (allTransactionsError) {
-        console.error('Error fetching all transactions:', allTransactionsError);
-        return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 });
-      }
-
-      if (!allTransactions) {
-        return NextResponse.json([]);
-      }
-
-      allTransactions.forEach(transaction => {
-        const bankName = transaction.bank_name || 'Unknown';
-        const date = new Date(transaction.date);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        const monthName = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-        if (!bankMonthlyData.has(bankName)) {
-          bankMonthlyData.set(bankName, new Map());
-        }
-
-        const bankData = bankMonthlyData.get(bankName)!;
-        if (!bankData.has(monthKey)) {
-          bankData.set(monthKey, {
-            month: monthName,
-            accountBalance: null,
-            credited: 0,
-            debited: 0,
-            totalCreditBill: 0
-          });
-        }
-
-        const monthData = bankData.get(monthKey)!;
-
-        // Update account balance with the latest closing balance for the month (only for Bank Account)
-        if (transaction.closing_balance !== null && transaction.account_type === 'Bank Account') {
-          monthData.accountBalance = transaction.closing_balance;
-        }
-
-        // Calculate credited and debited amounts based on transaction type
-        if (transaction.type === 'income') {
-          monthData.credited += transaction.amount;
-        } else if (transaction.type === 'expense' && transaction.account_type !== 'Credit Card') {
-          // Only count bank account expenses as debited, exclude credit card expenses
-          monthData.debited += transaction.amount;
-        }
-
-        // Calculate credit card bills - expenses from Credit Card accounts
-        if (transaction.account_type === 'Credit Card' && transaction.type === 'expense') {
-          monthData.totalCreditBill += transaction.amount;
-        }
-      });
-
-      // Aggregate data across all banks for each month
-      const totalMonthlyData = new Map<string, {
-        month: string;
-        accountBalance: number | null;
-        credited: number;
-        debited: number;
-        totalCreditBill: number;
-      }>();
-
-      bankMonthlyData.forEach(bankData => {
-        bankData.forEach((monthData, monthKey) => {
-          if (!totalMonthlyData.has(monthKey)) {
-            totalMonthlyData.set(monthKey, {
-              month: monthData.month,
-              accountBalance: 0,
-              credited: 0,
-              debited: 0,
-              totalCreditBill: 0
-            });
-          }
-
-          const totalData = totalMonthlyData.get(monthKey)!;
-          totalData.credited += monthData.credited;
-          totalData.debited += monthData.debited;
-          totalData.totalCreditBill += monthData.totalCreditBill;
-          
-          if (monthData.accountBalance !== null) {
-            totalData.accountBalance = (totalData.accountBalance || 0) + monthData.accountBalance;
-          }
-        });
-      });
-
-      const result = Array.from(totalMonthlyData.entries())
-        .sort(([a], [b]) => b.localeCompare(a))
-        .map(([, data]) => data);
-
-      return NextResponse.json(result);
-    }
-
-    // For individual bank tabs
     const monthlyData = new Map<string, {
       month: string;
-      accountBalance: number | null;
+      accountBalance: number;
       credited: number;
       debited: number;
-      totalCreditBill: number;
+      sortKey: number;
     }>();
 
-    transactions.forEach(transaction => {
-      const date = new Date(transaction.date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      const monthName = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-
-      if (!monthlyData.has(monthKey)) {
-        monthlyData.set(monthKey, {
+    // Organize balances by month
+    balances?.forEach(balance => {
+      if (!balance.statement_month) return;
+      
+      // Format the month string for display
+      // Extract year and month from statement_month
+      const monthName = balance.statement_month;
+      
+      if (!monthlyData.has(monthName)) {
+        // Add a numeric sortKey to each month entry
+        const parts = monthName.split(' ');
+        const month = parts[0];
+        const year = parseInt(parts[1]);
+        const monthIndex = [
+          'January', 'February', 'March', 'April', 'May', 'June',
+          'July', 'August', 'September', 'October', 'November', 'December'
+        ].indexOf(month) + 1; // 1-12 instead of 0-11
+        
+        const sortKey = year * 100 + monthIndex; // YYYYMM format
+        
+        monthlyData.set(monthName, {
           month: monthName,
-          accountBalance: null,
+          accountBalance: 0,
           credited: 0,
           debited: 0,
-          totalCreditBill: 0
+          sortKey: sortKey
         });
       }
-
-      const monthData = monthlyData.get(monthKey)!;
-
-      // Update account balance with the latest closing balance for the month (only for Bank Account)
-      if (transaction.closing_balance !== null && transaction.account_type === 'Bank Account') {
-        monthData.accountBalance = transaction.closing_balance;
-      }
-
-      // Calculate credited and debited amounts based on transaction type
-      if (transaction.type === 'income') {
-        monthData.credited += transaction.amount;
-      } else if (transaction.type === 'expense' && transaction.account_type !== 'Credit Card') {
-        // Only count bank account expenses as debited, exclude credit card expenses
-        monthData.debited += transaction.amount;
-      }
-
-      // Calculate credit card bills - expenses from Credit Card accounts
-      if (transaction.account_type === 'Credit Card' && transaction.type === 'expense') {
-        monthData.totalCreditBill += transaction.amount;
+      
+      const entry = monthlyData.get(monthName)!;
+      
+      if (bankFilter === 'Total' || bankFilter === null) {
+        // For Total view, sum up all bank balances
+        entry.accountBalance += (balance.closing_balance || 0);
+      } else if (balance.bank_name === bankFilter) {
+        // For specific bank view, just use that bank's balance
+        entry.accountBalance = balance.closing_balance || 0;
       }
     });
 
+    // Now get transaction data for credits and debits
+    let transactionQuery = supabase
+      .from('all_transactions')
+      .select('date, amount, type, account_type, bank_name');
+
+    if (bankFilter && bankFilter !== 'Total') {
+      transactionQuery = transactionQuery.eq('bank_name', bankFilter);
+    }
+    
+    const { data: transactions, error: transactionError } = await transactionQuery;
+    if (transactionError) throw new Error('Failed to fetch transactions');
+
+    // Add transaction data to the monthly summary
+    transactions?.forEach(transaction => {
+      const date = new Date(transaction.date);
+      const monthYear = date.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+      
+      if (!monthlyData.has(monthYear)) {
+        // Skip if no balance data for this month
+        return;
+      }
+
+      const entry = monthlyData.get(monthYear)!;
+
+      if (transaction.type === 'income') {
+        entry.credited += transaction.amount;
+      } else if (transaction.type === 'expense' && transaction.account_type === 'Bank Account') {
+        entry.debited += transaction.amount;
+      }
+    });
+
+    // Sort results by month (most recent first)
     const result = Array.from(monthlyData.entries())
-      .sort(([a], [b]) => b.localeCompare(a))
-      .map(([, data]) => data);
+      .sort(([, a], [, b]) => b.sortKey - a.sortKey) // Use numeric sortKey for descending order
+      .map(([, data]) => {
+        // Remove sortKey from final response
+        const { sortKey, ...rest } = data;
+        return rest;
+      });
 
     return NextResponse.json(result);
 

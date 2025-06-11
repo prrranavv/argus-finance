@@ -32,11 +32,10 @@ export function AccountBalanceChart({ selectedBank, isPrivacyMode = false, filte
           throw new Error('Failed to fetch balance data');
         }
         const balanceData = await response.json();
-        // Filter to only show 2025 data
-        const filtered2025Data = balanceData.filter((item: BalanceData) => {
-          return item.week.includes('2025');
-        });
-        setData(filtered2025Data);
+        console.log('Balance progression data:', balanceData);
+        
+        // The API now returns data already sorted in ascending order
+        setData(balanceData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {

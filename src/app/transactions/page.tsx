@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Header } from "@/components/header";
-import { Search, Filter, List, Grid3X3 } from "lucide-react";
+import { Search, Filter, List, Grid3X3, Calendar, Mail, FileText, Wallet } from "lucide-react";
 import { TransactionsList } from "@/components/transactions-list";
 import { TransactionMetrics } from "@/components/transaction-metrics";
 import { formatCurrencyInLakhs } from "@/lib/utils";
@@ -27,6 +27,8 @@ interface TransactionData {
   statement_id: string | null;
   created_at: Date;
   updated_at: Date;
+  gmail_message_id?: string;
+  reference_number?: string;
 }
 
 interface TransactionsGridProps {
@@ -58,6 +60,20 @@ function TransactionsGrid({
   onLoadMore,
   hasMore
 }: TransactionsGridProps) {
+  // Date formatting utility
+  const formatDate = (date: Date) => {
+    const day = date.getDate();
+    const month = date.toLocaleString("en-US", { month: "long" });
+    const year = date.getFullYear();
+
+    let suffix = "th";
+    if (day === 1 || day === 21 || day === 31) suffix = "st";
+    else if (day === 2 || day === 22) suffix = "nd";
+    else if (day === 3 || day === 23) suffix = "rd";
+
+    return `${month} ${day}${suffix}, ${year}`;
+  };
+
   const getBankLogo = (bankName: string, accountType: string, source: string, description?: string) => {
     // For credit cards, use specific card images - matching main page
     if (accountType === 'Credit Card' || accountType === 'credit_card') {
@@ -181,12 +197,14 @@ function TransactionsGrid({
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000);
     const last7Days = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const last15Days = new Date(today.getTime() - 15 * 24 * 60 * 60 * 1000);
     const last30Days = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     const groups = {
       today: [] as TransactionData[],
       yesterday: [] as TransactionData[],
       last7Days: [] as TransactionData[],
+      last15Days: [] as TransactionData[],
       last30Days: [] as TransactionData[],
       older: [] as TransactionData[]
     };
@@ -199,9 +217,11 @@ function TransactionsGrid({
         groups.today.push(transaction);
       } else if (transactionDay.getTime() === yesterday.getTime()) {
         groups.yesterday.push(transaction);
-      } else if (transactionDay >= last7Days && transactionDay < yesterday) {
+      } else if (transactionDay >= last7Days) {
         groups.last7Days.push(transaction);
-      } else if (transactionDay >= last30Days && transactionDay < last7Days) {
+      } else if (transactionDay >= last15Days) {
+        groups.last15Days.push(transaction);
+      } else if (transactionDay >= last30Days) {
         groups.last30Days.push(transaction);
       } else {
         groups.older.push(transaction);
@@ -217,56 +237,67 @@ function TransactionsGrid({
   const groupedTransactions = groupTransactionsByDate(gridTransactions);
 
   const renderTransactionCard = (transaction: TransactionData) => (
-    <Card 
-      key={transaction.id} 
-      className="p-3 sm:p-4 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02] sm:hover:scale-[1.2] hover:z-10 relative group"
+    <Card
+      key={transaction.id}
+      className="p-3 sm:p-4 cursor-pointer transition-all duration-300 ease-in-out hover:shadow-xl hover:scale-[1.02] sm:hover:scale-[1.02] hover:z-10 relative group flex flex-col justify-between"
     >
-      <div className="space-y-2 sm:space-y-3">
-        {/* Bank Logo - Centered and Consistent */}
-        <div className="flex justify-center mb-2 sm:mb-3">
-          {getBankLogo(transaction.bank_name, transaction.account_type, transaction.source, transaction.description) ? (
-            <div className={`${transaction.account_type === 'Credit Card' ? 'w-16 h-10 sm:w-20 sm:h-12' : 'w-10 h-6 sm:w-12 sm:h-8'} rounded-lg bg-card shadow-sm border border-border flex items-center justify-center overflow-hidden p-1`}>
-              <Image
-                src={getBankLogo(transaction.bank_name, transaction.account_type, transaction.source, transaction.description)}
-                alt={`${transaction.source || transaction.bank_name} logo`}
-                width={transaction.account_type === 'Credit Card' ? 64 : 40}
-                height={transaction.account_type === 'Credit Card' ? 40 : 25}
-                className="object-contain filter drop-shadow-sm max-w-full max-h-full"
-                quality={100}
-                priority={false}
-              />
-            </div>
-          ) : (
-            <div className="w-12 h-8 sm:w-16 sm:h-12 rounded-lg bg-gradient-to-br from-muted to-muted/80 shadow-sm border border-border flex items-center justify-center">
-              <span className="text-sm sm:text-lg font-bold text-foreground">
-                {transaction.bank_name.charAt(0)}
-              </span>
-            </div>
-          )}
+      {/* Source Icon - top right corner */}
+      <div
+        className="absolute top-2 right-2 text-muted-foreground"
+        title={transaction.source === "email" ? "Email" : "Statement"}
+      >
+        {transaction.source === "email" ? (
+          <Mail className="h-4 w-4" />
+        ) : (
+          <FileText className="h-4 w-4" />
+        )}
+      </div>
+
+      {/* Centered Bank Logo */}
+      <div className="flex justify-center mb-2">
+        <div
+          className={`${
+            transaction.account_type === "Credit Card"
+              ? "w-16 h-10 sm:w-20 sm:h-12"
+              : "w-10 h-6 sm:w-12 sm:h-8"
+          } rounded-lg bg-card shadow-sm border border-border flex items-center justify-center overflow-hidden p-1`}
+        >
+          <Image
+            src={getBankLogo(
+              transaction.bank_name,
+              transaction.account_type,
+              transaction.source,
+              transaction.description
+            )}
+            alt={`${transaction.bank_name} logo`}
+            width={transaction.account_type === "Credit Card" ? 80 : 48}
+            height={transaction.account_type === "Credit Card" ? 48 : 32}
+            className="object-contain filter drop-shadow-sm max-w-full max-h-full"
+            quality={100}
+            priority={false}
+          />
         </div>
-        
-        {/* Amount */}
-        <div className={`text-base sm:text-lg font-bold text-center ${transaction.type === 'expense' ? 'text-red-600' : 'text-green-600'}`}>
-          {transaction.type === 'expense' ? '-' : '+'}
+      </div>
+
+      {/* Middle section: Amount and description */}
+      <div className="text-center my-1 flex-grow">
+        <div
+          className={`text-lg sm:text-xl font-bold ${
+            transaction.type === "expense" ? "text-red-600" : "text-green-600"
+          }`}
+        >
+          {transaction.type === "expense" ? "-" : "+"}
           {formatCurrencyInLakhs(transaction.amount, isPrivacyMode)}
         </div>
-        
-        {/* Transaction Description */}
-        <div className="text-xs sm:text-sm font-medium text-foreground text-center truncate px-1">
+        <div className="text-sm font-medium text-foreground truncate px-1 mt-1">
           {transaction.description}
         </div>
-        
-        {/* Date */}
-        <div className="text-xs text-muted-foreground text-center">
-          {new Date(transaction.date).toLocaleDateString()}
-        </div>
-        
-        {/* Closing Balance */}
-        {transaction.closing_balance !== null && transaction.closing_balance !== 0 && (
-          <div className="text-xs text-muted-foreground text-center">
-            Balance: {formatCurrencyInLakhs(transaction.closing_balance, isPrivacyMode)}
-          </div>
-        )}
+      </div>
+
+      {/* Bottom section: Date */}
+      <div className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1 mt-auto">
+        <Calendar className="h-3 w-3" />
+        <span>{formatDate(new Date(transaction.date))}</span>
       </div>
     </Card>
   );
@@ -287,21 +318,32 @@ function TransactionsGrid({
       {/* Date-Grouped Transactions */}
       <div className="space-y-6">
         {/* Today */}
-        {groupedTransactions.today.length > 0 && (
-          <div>
-            <h3 className="text-lg font-semibold mb-3">Today</h3>
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
-              {groupedTransactions.today.map((transaction) => renderTransactionCard(transaction))}
+        <div>
+          <h3 className="text-lg font-semibold mb-3">Today</h3>
+          {groupedTransactions.today.length > 0 ? (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
+              {groupedTransactions.today.map((transaction) =>
+                renderTransactionCard(transaction)
+              )}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-muted rounded-lg text-center">
+              <Wallet className="h-10 w-10 text-muted-foreground mb-3" />
+              <p className="font-semibold text-foreground">
+                I see we're saving some 💵 today!
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Yesterday */}
         {groupedTransactions.yesterday.length > 0 && (
           <div>
             <h3 className="text-lg font-semibold mb-3">Yesterday</h3>
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
-              {groupedTransactions.yesterday.map((transaction) => renderTransactionCard(transaction))}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
+              {groupedTransactions.yesterday.map((transaction) =>
+                renderTransactionCard(transaction)
+              )}
             </div>
           </div>
         )}
@@ -310,8 +352,22 @@ function TransactionsGrid({
         {groupedTransactions.last7Days.length > 0 && (
           <div>
             <h3 className="text-lg font-semibold mb-3">Last 7 days</h3>
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
-              {groupedTransactions.last7Days.map((transaction) => renderTransactionCard(transaction))}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
+              {groupedTransactions.last7Days.map((transaction) =>
+                renderTransactionCard(transaction)
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Last 15 days */}
+        {groupedTransactions.last15Days.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-3">Last 15 days</h3>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
+              {groupedTransactions.last15Days.map((transaction) =>
+                renderTransactionCard(transaction)
+              )}
             </div>
           </div>
         )}
@@ -320,8 +376,10 @@ function TransactionsGrid({
         {groupedTransactions.last30Days.length > 0 && (
           <div>
             <h3 className="text-lg font-semibold mb-3">Last 30 days</h3>
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
-              {groupedTransactions.last30Days.map((transaction) => renderTransactionCard(transaction))}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
+              {groupedTransactions.last30Days.map((transaction) =>
+                renderTransactionCard(transaction)
+              )}
             </div>
           </div>
         )}
@@ -330,8 +388,10 @@ function TransactionsGrid({
         {groupedTransactions.older.length > 0 && (
           <div>
             <h3 className="text-lg font-semibold mb-3">Older</h3>
-            <div className="grid grid-cols-2 gap-3 sm:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
-              {groupedTransactions.older.map((transaction) => renderTransactionCard(transaction))}
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 relative">
+              {groupedTransactions.older.map((transaction) =>
+                renderTransactionCard(transaction)
+              )}
             </div>
           </div>
         )}
@@ -360,10 +420,9 @@ function TransactionsGrid({
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionData[]>([]);
-  const [emailTransactions, setEmailTransactions] = useState<TransactionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPrivacyMode, setIsPrivacyMode] = useState(true);
-  const [activeTab, setActiveTab] = useState<"statement" | "email">("statement");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "statement" | "email">("all");
 
   // Load privacy preference from localStorage on mount
   useEffect(() => {
@@ -387,6 +446,7 @@ export default function TransactionsPage() {
   // Other filter states
   const [accountTypeFilter, setAccountTypeFilter] = useState("all");
   const [bankFilter, setBankFilter] = useState("all");
+  const [bankOptions, setBankOptions] = useState<string[]>([]);
   const [timeRangeFilter, setTimeRangeFilter] = useState("30days");
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
   
@@ -406,21 +466,54 @@ export default function TransactionsPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
+  // Fetch all possible bank names for the filter dropdown on initial load
+  useEffect(() => {
+    const fetchBankOptions = async () => {
+      try {
+        const response = await fetch('/api/bank-names');
+        if (response.ok) {
+          const data = await response.json();
+          if (Array.isArray(data)) {
+            setBankOptions(data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch bank options:", error);
+      }
+    };
+    fetchBankOptions();
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch both statement and email transactions in parallel
-        const [transactionsResponse, emailResponse] = await Promise.all([
-          fetch('/api/transactions'),
-          fetch('/api/email-transactions')
-        ]);
+        // Build query parameters for filters
+        const params = new URLSearchParams();
         
-        // Handle statement transactions
-        if (!transactionsResponse.ok) {
-          throw new Error(`HTTP error! status: ${transactionsResponse.status}`);
+        if (sourceFilter !== "all") {
+          params.append('source', sourceFilter);
         }
         
-        const transactionsData = await transactionsResponse.json();
+        if (accountTypeFilter !== "all") {
+          params.append('account_type', accountTypeFilter);
+        }
+        
+        if (bankFilter !== "all") {
+          params.append('bank_name', bankFilter);
+        }
+        
+        if (timeRangeFilter !== "all") {
+          params.append('time_range', timeRangeFilter);
+        }
+        
+        // Fetch from unified all-transactions endpoint
+        const response = await fetch(`/api/all-transactions?${params.toString()}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const transactionsData = await response.json();
         
         if (Array.isArray(transactionsData)) {
           setTransactions(transactionsData.map((t: TransactionData) => ({
@@ -433,57 +526,21 @@ export default function TransactionsPage() {
           console.error('API did not return an array:', transactionsData);
           setTransactions([]);
         }
-
-        // Handle email transactions
-        if (emailResponse.ok) {
-          const emailData = await emailResponse.json();
-          
-          if (Array.isArray(emailData)) {
-            setEmailTransactions(emailData.map((t: TransactionData) => ({
-              ...t,
-              date: new Date(t.date),
-              created_at: new Date(t.created_at),
-              updated_at: new Date(t.updated_at)
-            })));
-          } else {
-            console.error('Email transactions API did not return an array:', emailData);
-            setEmailTransactions([]);
-          }
-        } else {
-          console.error('Error fetching email transactions:', emailResponse.status);
-          setEmailTransactions([]);
-        }
       } catch (error) {
         console.error('Error fetching transactions:', error);
         setTransactions([]);
-        setEmailTransactions([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, []);
-
-  // Email transactions are now fetched on page load
-
-  // Get unique banks and sources for filter options
-  const bankOptions = useMemo(() => {
-    const banks = new Set<string>();
-    const currentTransactions = activeTab === "email" ? emailTransactions : transactions;
-    
-    currentTransactions.forEach(t => {
-      banks.add(t.bank_name);
-      if (t.source && t.source !== t.bank_name) {
-        banks.add(t.source);
-      }
-    });
-    return Array.from(banks).sort();
-  }, [transactions, emailTransactions, activeTab]);
+  }, [sourceFilter, accountTypeFilter, bankFilter, timeRangeFilter]);
 
   const clearFilters = () => {
     setSearchInput("");
     setDebouncedSearchQuery("");
+    setSourceFilter("all");
     setAccountTypeFilter("all");
     setBankFilter("all");
     setTimeRangeFilter("30days");
@@ -497,7 +554,7 @@ export default function TransactionsPage() {
     setGridPage(1);
     setListPage(1);
     setHasMoreTransactions(true);
-  }, [debouncedSearchQuery, accountTypeFilter, bankFilter, timeRangeFilter]);
+  }, [debouncedSearchQuery, sourceFilter, accountTypeFilter, bankFilter, timeRangeFilter]);
 
   // Reset pagination when view mode changes
   useEffect(() => {
@@ -515,16 +572,7 @@ export default function TransactionsPage() {
     }
   }, [viewMode]);
 
-  const hasActiveFilters = debouncedSearchQuery || accountTypeFilter !== "all" || bankFilter !== "all" || timeRangeFilter !== "30days";
-
-  // const getTimeRangeLabel = () => {
-  //   switch (timeRangeFilter) {
-  //     case "7days": return "Last 7 days";
-  //     case "30days": return "Last 30 days";
-  //     case "60days": return "Last 60 days";
-  //     default: return "All time";
-  //   }
-  // };
+  const hasActiveFilters = debouncedSearchQuery || sourceFilter !== "all" || accountTypeFilter !== "all" || bankFilter !== "all" || timeRangeFilter !== "30days";
 
   if (loading) {
     return (
@@ -535,9 +583,6 @@ export default function TransactionsPage() {
       </div>
     );
   }
-
-  // Get current transactions based on active tab
-  const currentTransactions = activeTab === "email" ? emailTransactions : transactions;
 
   return (
     <div className="container mx-auto p-4 md:p-10 max-w-7xl">
@@ -564,6 +609,18 @@ export default function TransactionsPage() {
               <SelectItem value="all">All Types</SelectItem>
               <SelectItem value="Bank Account">Bank Account</SelectItem>
               <SelectItem value="Credit Card">Credit Card</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Source Filter */}
+          <Select value={sourceFilter} onValueChange={(value) => setSourceFilter(value as "all" | "statement" | "email")}>
+            <SelectTrigger className="w-[140px]">
+              <SelectValue placeholder="Source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Sources</SelectItem>
+              <SelectItem value="statement">Statements</SelectItem>
+              <SelectItem value="email">Emails</SelectItem>
             </SelectContent>
           </Select>
 
@@ -609,7 +666,7 @@ export default function TransactionsPage() {
         accountTypeFilter={accountTypeFilter}
         bankFilter={bankFilter}
         timeRangeFilter={timeRangeFilter}
-        dataSource={activeTab}
+        dataSource={sourceFilter === "all" ? undefined : sourceFilter}
       />
 
       {/* Transactions List Section */}
@@ -641,101 +698,42 @@ export default function TransactionsPage() {
           </div>
         </div>
 
-        {/* Statement/Email Toggle Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "statement" | "email")} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 max-w-md">
-            <TabsTrigger value="statement">
-              Statement ({transactions.length})
-            </TabsTrigger>
-            <TabsTrigger value="email">
-              Email ({emailTransactions.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="statement">
+        {/* Transactions List */}
+        <Card>
+          <CardContent className="pt-6">
             {viewMode === "list" ? (
-              <Card>
-                <CardContent className="pt-6">
-                  <TransactionsList 
-                    transactions={currentTransactions} 
-                    isPrivacyMode={isPrivacyMode}
-                    searchQuery={debouncedSearchQuery}
-                    searchInput={searchInput}
-                    accountTypeFilter={accountTypeFilter}
-                    bankFilter={bankFilter}
-                    timeRangeFilter={timeRangeFilter}
-                    onSearchChange={setSearchInput}
-                    currentPage={listPage}
-                    itemsPerPage={ITEMS_PER_PAGE}
-                    onLoadMore={loadMoreTransactions}
-                    hasMore={hasMoreTransactions}
-                  />
-                </CardContent>
-              </Card>
+              <TransactionsList 
+                transactions={transactions} 
+                isPrivacyMode={isPrivacyMode}
+                searchQuery={debouncedSearchQuery}
+                searchInput={searchInput}
+                accountTypeFilter={accountTypeFilter}
+                bankFilter={bankFilter}
+                timeRangeFilter={timeRangeFilter}
+                onSearchChange={setSearchInput}
+                currentPage={listPage}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onLoadMore={loadMoreTransactions}
+                hasMore={hasMoreTransactions}
+              />
             ) : (
-              <Card>
-                <CardContent className="pt-6">
-                  <TransactionsGrid 
-                    transactions={currentTransactions} 
-                    isPrivacyMode={isPrivacyMode}
-                    searchQuery={debouncedSearchQuery}
-                    searchInput={searchInput}
-                    accountTypeFilter={accountTypeFilter}
-                    bankFilter={bankFilter}
-                    timeRangeFilter={timeRangeFilter}
-                    onSearchChange={setSearchInput}
-                    currentPage={gridPage}
-                    itemsPerPage={ITEMS_PER_PAGE}
-                    onLoadMore={loadMoreTransactions}
-                    hasMore={hasMoreTransactions}
-                  />
-                </CardContent>
-              </Card>
+              <TransactionsGrid 
+                transactions={transactions} 
+                isPrivacyMode={isPrivacyMode}
+                searchQuery={debouncedSearchQuery}
+                searchInput={searchInput}
+                accountTypeFilter={accountTypeFilter}
+                bankFilter={bankFilter}
+                timeRangeFilter={timeRangeFilter}
+                onSearchChange={setSearchInput}
+                currentPage={gridPage}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onLoadMore={loadMoreTransactions}
+                hasMore={hasMoreTransactions}
+              />
             )}
-          </TabsContent>
-
-          <TabsContent value="email">
-            {viewMode === "list" ? (
-              <Card>
-                <CardContent className="pt-6">
-                  <TransactionsList 
-                    transactions={currentTransactions} 
-                    isPrivacyMode={isPrivacyMode}
-                    searchQuery={debouncedSearchQuery}
-                    searchInput={searchInput}
-                    accountTypeFilter={accountTypeFilter}
-                    bankFilter={bankFilter}
-                    timeRangeFilter={timeRangeFilter}
-                    onSearchChange={setSearchInput}
-                    currentPage={listPage}
-                    itemsPerPage={ITEMS_PER_PAGE}
-                    onLoadMore={loadMoreTransactions}
-                    hasMore={hasMoreTransactions}
-                  />
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="pt-6">
-                  <TransactionsGrid 
-                    transactions={currentTransactions} 
-                    isPrivacyMode={isPrivacyMode}
-                    searchQuery={debouncedSearchQuery}
-                    searchInput={searchInput}
-                    accountTypeFilter={accountTypeFilter}
-                    bankFilter={bankFilter}
-                    timeRangeFilter={timeRangeFilter}
-                    onSearchChange={setSearchInput}
-                    currentPage={gridPage}
-                    itemsPerPage={ITEMS_PER_PAGE}
-                    onLoadMore={loadMoreTransactions}
-                    hasMore={hasMoreTransactions}
-                  />
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

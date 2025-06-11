@@ -44,20 +44,27 @@ export async function POST(request: NextRequest) {
     // Check for duplicate files by name and size
     const { data: existingStatement, error: findError } = await supabase
       .from('statements')
-      .select('*, transactions(*)')
+      .select('*')
       .eq('file_name', file.name)
       .eq('file_size', file.size)
       .eq('processed', true)
       .single();
 
     if (!findError && existingStatement) {
+      // Get transactions for this statement
+      const { data: statementTransactions } = await supabase
+        .from('all_transactions')
+        .select('*')
+        .eq('statement_id', existingStatement.id)
+        .eq('source', 'statement');
+      
       // Include metadata for duplicate files too so they can show updated titles
-      const metadata = existingStatement.transactions && existingStatement.transactions.length > 0 ? {
-        bankName: existingStatement.transactions[0].bank_name,
-        accountType: existingStatement.transactions[0].account_type,
+      const metadata = statementTransactions && statementTransactions.length > 0 ? {
+        bankName: statementTransactions[0].bank_name,
+        accountType: statementTransactions[0].account_type,
         dateRange: {
-          start: Math.min(...existingStatement.transactions.map((t: { date: string }) => new Date(t.date).getTime())),
-          end: Math.max(...existingStatement.transactions.map((t: { date: string }) => new Date(t.date).getTime()))
+          start: Math.min(...statementTransactions.map((t: { date: string }) => new Date(t.date).getTime())),
+          end: Math.max(...statementTransactions.map((t: { date: string }) => new Date(t.date).getTime()))
         }
       } : null;
 
@@ -67,7 +74,7 @@ export async function POST(request: NextRequest) {
         message: 'File has already been processed',
         data: {
           statementId: existingStatement.id,
-          transactionCount: existingStatement.transactions?.length || 0,
+          transactionCount: statementTransactions?.length || 0,
           uploadedAt: existingStatement.uploaded_at,
           metadata
         },
@@ -138,44 +145,61 @@ export async function POST(request: NextRequest) {
       const uniqueTransactions = [];
       
       for (const transaction of processedData.transactions) {
-        const { data: existingTransaction } = await supabase
-          .from('transactions')
+        // Step 1: Check for same-source duplicates (a statement processed twice)
+        const { data: sameSourceDuplicate } = await supabase
+          .from('all_transactions')
           .select('id')
+          .eq('source', 'statement')
           .eq('date', new Date(transaction.date).toISOString().split('T')[0])
           .eq('description', transaction.description)
           .eq('amount', transaction.amount)
           .eq('type', transaction.type)
+          .eq('bank_name', transaction.bankName)
           .single();
 
-        // Only add if transaction doesn't exist
-        if (!existingTransaction) {
+        if (sameSourceDuplicate) {
+          continue; // Skip this transaction
+        }
+
+        // Step 2: Check for cross-source duplicates (email already processed)
+        const transactionDate = new Date(transaction.date);
+        const startDate = new Date(transactionDate.setHours(0, 0, 0, 0));
+        const endDate = new Date(transactionDate.setHours(23, 59, 59, 999));
+
+        const { data: crossSourceDuplicate } = await supabase
+          .from('all_transactions')
+          .select('id')
+          .eq('source', 'email')
+          .eq('description', transaction.description)
+          .eq('amount', transaction.amount)
+          .eq('bank_name', transaction.bankName)
+          .gte('date', startDate.toISOString())
+          .lte('date', endDate.toISOString())
+          .single();
+
+        // Only add if no duplicate is found from any source
+        if (!crossSourceDuplicate) {
           uniqueTransactions.push(transaction);
         }
       }
 
-      // Save only unique transactions to database
+      // Save only unique transactions to the unified all_transactions table
       const transactionInserts = uniqueTransactions.map(transaction => ({
         date: new Date(transaction.date).toISOString().split('T')[0],
-              description: transaction.description,
-              amount: transaction.amount,
-        closing_balance: transaction.closingBalance,
-        opening_balance: transaction.openingBalance || null,
-        running_balance: transaction.runningBalance || null,
-              category: transaction.category,
-              type: transaction.type,
-              source: file.type.includes('pdf') ? 'bank' : 'csv',
+        description: transaction.description,
+        amount: transaction.amount,
+        category: transaction.category,
+        type: transaction.type,
+        source: 'statement',
         account_type: transaction.accountType,
         bank_name: transaction.bankName,
-        credit_limit: transaction.creditLimit || null,
-        due_date: transaction.dueDate || null,
-        reward_points: transaction.rewardPoints || null,
-        merchant_category: transaction.merchantCategory || null,
-              mode: transaction.mode || null,
-        statement_id: statement.id
+        statement_id: statement.id,
+        // No more fields for these as they've been moved to the balances table
+        // We'll need to add balances table entry separately if needed
       }));
 
       const { data: transactions, error: transError } = await client
-        .from('transactions')
+        .from('all_transactions')
         .insert(transactionInserts)
         .select();
 

@@ -1,131 +1,236 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 
-async function getRewardPoints() {
-  try {
-    // Get the latest two months of reward points from HDFC Diners transactions
-    const { data: rewardTransactions, error } = await supabase
-      .from('transactions')
-      .select('date, reward_points')
-      .eq('bank_name', 'HDFC Diners')
-      .not('reward_points', 'is', null)
-      .order('date', { ascending: false })
-      .limit(50);
-
-    if (error || !rewardTransactions || rewardTransactions.length === 0) {
-      // Fallback to default values if no data
-      return { currentRewardPoints: 29417, prevRewardPoints: 28100 };
-    }
-
-    // Group by month and get the latest reward points for each month
-    const monthlyRewards = new Map<string, number>();
-    
-    rewardTransactions.forEach(transaction => {
-      const date = new Date(transaction.date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      
-      // Keep the highest reward points for each month (latest balance)
-      if (!monthlyRewards.has(monthKey) || (transaction.reward_points && transaction.reward_points > (monthlyRewards.get(monthKey) || 0))) {
-        monthlyRewards.set(monthKey, transaction.reward_points || 0);
-      }
-    });
-
-    // Get the two most recent months
-    const sortedMonths = Array.from(monthlyRewards.entries())
-      .sort(([a], [b]) => b.localeCompare(a));
-
-    const currentRewardPoints = sortedMonths[0]?.[1] || 29417;
-    const prevRewardPoints = sortedMonths[1]?.[1] || 28100;
-
-    return { currentRewardPoints, prevRewardPoints };
-    
-  } catch (error) {
-    console.error('Error fetching reward points:', error);
-    // Fallback to default values on error
-    return { currentRewardPoints: 29417, prevRewardPoints: 28100 };
-  }
-}
-
-async function getMonthlyBalances(request: Request) {
-  // Use the existing monthly summary API logic to get accurate balance data
-  const baseUrl = new URL(request.url).origin;
-  const response = await fetch(`${baseUrl}/api/monthly-summary?bank=Total`);
-  const monthlyData = await response.json();
+// Helper to get the latest bank account balance
+async function getLatestBankBalance() {
+  // First, get the most recent month with bank account balance data
+  const { data, error } = await supabase
+    .from('balances')
+    .select('*')
+    .eq('account_type', 'Bank Account')
+    .order('statement_month', { ascending: false })
+    .limit(12); // Get a full year of data for percentage calculations
   
-  return monthlyData;
+  if (error) throw new Error('Failed to fetch bank balances');
+  if (!data || data.length === 0) return null;
+
+  // Group by statement_month to sum all banks for each month
+  const monthlyBalances = new Map<string, { 
+    total: number,
+    lastTransactionDate: string | null,
+    month: string
+  }>();
+  
+  data.forEach(balance => {
+    if (!balance.statement_month) return;
+    
+    if (!monthlyBalances.has(balance.statement_month)) {
+      monthlyBalances.set(balance.statement_month, {
+        total: 0,
+        lastTransactionDate: null,
+        month: balance.statement_month
+      });
+    }
+    
+    const entry = monthlyBalances.get(balance.statement_month)!;
+    entry.total += (balance.closing_balance || 0);
+    
+    // Track the latest transaction date for this month
+    if (balance.last_expense_date) {
+      if (!entry.lastTransactionDate || new Date(balance.last_expense_date) > new Date(entry.lastTransactionDate)) {
+        entry.lastTransactionDate = balance.last_expense_date;
+      }
+    }
+  });
+  
+  // Convert to array and sort by month (most recent first)
+  const sortedMonths = Array.from(monthlyBalances.values()).sort((a, b) => {
+    // Parse month names to sort them correctly
+    const parseMonth = (monthStr: string) => {
+      const parts = monthStr.split(' ');
+      const month = parts[0];
+      const year = parseInt(parts[1]);
+      const monthIndex = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ].indexOf(month);
+      return new Date(year, monthIndex);
+    };
+    
+    return parseMonth(b.month).getTime() - parseMonth(a.month).getTime();
+  });
+  
+  return sortedMonths;
 }
 
-function getMonthName(monthString: string): string {
-  return monthString; // Already formatted like "June 2025"
+// Helper to get the latest credit card statement date
+async function getLatestCreditCardInfo() {
+  const { data, error } = await supabase
+    .from('balances')
+    .select('last_expense_date, statement_month')
+    .eq('account_type', 'Credit Card')
+    .order('statement_month', { ascending: false })
+    .limit(2);
+  
+  if (error) throw new Error('Failed to fetch credit card data');
+  if (!data || data.length === 0) return { currentMonth: null, previousMonth: null };
+  
+  return {
+    currentMonth: data[0],
+    previousMonth: data[1] || null
+  };
+}
+
+// Helper to get expenses since a date
+async function getExpensesSince(date: string, accountType: 'Bank Account' | 'Credit Card') {
+  if (!date) return 0;
+  
+  const { data, error } = await supabase
+    .from('all_transactions')
+    .select('amount')
+    .eq('account_type', accountType)
+    .eq('type', 'expense')
+    .gt('date', date);
+  
+  if (error) throw new Error(`Failed to fetch ${accountType} expenses`);
+  return data?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) || 0;
+}
+
+// Helper to get reward points - now sums all reward points from the most recent month
+async function getRewardPoints() {
+  // First get the most recent month
+  const { data: latestMonth, error: monthError } = await supabase
+    .from('balances')
+    .select('statement_month')
+    .order('statement_month', { ascending: false })
+    .limit(1);
+    
+  if (monthError || !latestMonth || latestMonth.length === 0) {
+    return { currentRewardPoints: 0, prevRewardPoints: 0 };
+  }
+  
+  const currentMonth = latestMonth[0].statement_month;
+  
+  // Now get all reward points for that month and the previous month
+  const { data: currentMonthData, error: currentError } = await supabase
+    .from('balances')
+    .select('reward_points')
+    .eq('statement_month', currentMonth)
+    .not('reward_points', 'is', null);
+    
+  if (currentError) {
+    console.error('Error fetching reward points:', currentError);
+    return { currentRewardPoints: 0, prevRewardPoints: 0 };
+  }
+  
+  // Get previous month by parsing the current month
+  const getPreviousMonth = (monthStr: string) => {
+    const parts = monthStr.split(' ');
+    const month = parts[0];
+    const year = parseInt(parts[1]);
+    const monthIndex = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ].indexOf(month);
+    
+    let prevMonthIndex = monthIndex - 1;
+    let prevYear = year;
+    
+    if (prevMonthIndex < 0) {
+      prevMonthIndex = 11;
+      prevYear--;
+    }
+    
+    return `${['January', 'February', 'March', 'April', 'May', 'June',
+              'July', 'August', 'September', 'October', 'November', 'December'][prevMonthIndex]} ${prevYear}`;
+  };
+  
+  const previousMonth = getPreviousMonth(currentMonth);
+  
+  const { data: prevMonthData, error: prevError } = await supabase
+    .from('balances')
+    .select('reward_points')
+    .eq('statement_month', previousMonth)
+    .not('reward_points', 'is', null);
+    
+  if (prevError) {
+    console.error('Error fetching previous reward points:', prevError);
+    return { 
+      currentRewardPoints: currentMonthData.reduce((sum, item) => sum + (item.reward_points || 0), 0),
+      prevRewardPoints: 0 
+    };
+  }
+
+  return {
+    currentRewardPoints: currentMonthData.reduce((sum, item) => sum + (item.reward_points || 0), 0),
+    prevRewardPoints: prevMonthData.reduce((sum, item) => sum + (item.reward_points || 0), 0)
+  };
 }
 
 export async function GET(request: Request) {
   try {
-    // Get monthly balance data from the existing API
-    const monthlyBalances = await getMonthlyBalances(request);
-    
-    if (monthlyBalances.length < 2) {
-      return NextResponse.json({ error: 'Insufficient data for comparison' }, { status: 400 });
+    // --- Current Bank Balance ---
+    const bankBalances = await getLatestBankBalance();
+    if (!bankBalances || bankBalances.length < 2) {
+      return NextResponse.json({ error: 'Insufficient bank balance data' }, { status: 400 });
     }
-
-    // Get current and previous month data
-    const currentMonth = monthlyBalances[0];
-    const previousMonth = monthlyBalances[1];
-    const monthBeforePrevious = monthlyBalances[2] || { accountBalance: 0, totalCreditBill: 0 };
-
-    // 1. Current Bank Balance vs Previous Month
-    const currentBalance = currentMonth.accountBalance || 0;
-    const prevBankBalance = previousMonth.accountBalance || 0;
-
-    // 2. Credit Card Dues - Show previous month's bill (May expenses to be paid in June)
-    const lastMonthCreditCardBill = previousMonth.totalCreditBill || 0;
-    const monthBeforePreviousBill = monthBeforePrevious.totalCreditBill || 0;
-
-    // 3. Real Balance (Bank Balance - Credit Card Dues)
-    const realBalance = currentBalance - lastMonthCreditCardBill;
-    const prevRealBalance = prevBankBalance - monthBeforePreviousBill;
-
-    // 4. Get actual reward points from Supabase
+    
+    const currentMonth = bankBalances[0];
+    const prevMonth = bankBalances[1];
+    
+    // Calculate current bank balance
+    const expensesSinceLastTransaction = await getExpensesSince(
+      currentMonth.lastTransactionDate || '', 'Bank Account'
+    );
+    
+    const currentBankBalance = currentMonth.total - expensesSinceLastTransaction;
+    const prevBankBalance = prevMonth.total;
+    
+    // --- Credit Card Dues - Updated calculation ---
+    const creditCardInfo = await getLatestCreditCardInfo();
+    
+    // Simply sum all credit card expenses since the last transaction date
+    const currentCreditCardDues = creditCardInfo.currentMonth?.last_expense_date
+      ? await getExpensesSince(creditCardInfo.currentMonth.last_expense_date, 'Credit Card')
+      : 0;
+      
+    const prevCreditCardDues = creditCardInfo.previousMonth?.last_expense_date
+      ? await getExpensesSince(creditCardInfo.previousMonth.last_expense_date, 'Credit Card')
+      : 0;
+    
+    // --- Reward Points - Updated calculation ---
     const { currentRewardPoints, prevRewardPoints } = await getRewardPoints();
 
     // Calculate percentage changes
     const calculatePercentageChange = (current: number, previous: number): number => {
-      if (previous === 0) return 0;
+      if (previous === 0) return current > 0 ? 100 : 0;
       return ((current - previous) / Math.abs(previous)) * 100;
     };
 
     const response = {
       currentBalance: {
-        value: currentBalance,
-        change: calculatePercentageChange(currentBalance, prevBankBalance),
-        month: getMonthName(currentMonth.month)
+        value: currentBankBalance,
+        change: calculatePercentageChange(currentBankBalance, prevBankBalance),
+        month: currentMonth.month
       },
       creditCardBill: {
-        value: lastMonthCreditCardBill, // Show previous month's bill (May expenses)
-        change: calculatePercentageChange(lastMonthCreditCardBill, monthBeforePreviousBill),
-        month: getMonthName(previousMonth.month), // May expenses
-        paymentMonth: getMonthName(currentMonth.month) // Due in June
-      },
-      realBalance: {
-        value: realBalance,
-        change: calculatePercentageChange(realBalance, prevRealBalance),
-        month: getMonthName(currentMonth.month)
+        value: currentCreditCardDues,
+        change: calculatePercentageChange(currentCreditCardDues, prevCreditCardDues),
+        month: creditCardInfo.currentMonth?.statement_month || ''
       },
       rewardPoints: {
         value: currentRewardPoints,
-        change: calculatePercentageChange(currentRewardPoints, prevRewardPoints),
-        month: getMonthName(currentMonth.month)
+        change: calculatePercentageChange(currentRewardPoints, prevRewardPoints)
       },
-      // Add debug info
       debug: {
-        currentMonth: currentMonth.month,
-        previousMonth: previousMonth.month,
-        currentBalance,
+        currentMonthTotal: currentMonth.total,
+        expensesSinceLastTransaction,
+        currentBankBalance,
         prevBankBalance,
-        lastMonthCreditCardBill,
-        monthBeforePreviousBill,
-        realBalance,
-        prevRealBalance
+        currentCreditCardDues,
+        prevCreditCardDues,
+        currentRewardPoints,
+        prevRewardPoints
       }
     };
 

@@ -5,7 +5,7 @@ export async function POST() {
   try {
     // Find duplicate transactions based on date, description, amount, and type
     const { data: transactions, error } = await supabase
-      .from('transactions')
+      .from('all_transactions')
       .select('*')
       .order('date', { ascending: true })
       .order('description', { ascending: true })
@@ -22,7 +22,8 @@ export async function POST() {
     const seen = new Set();
 
     for (const transaction of transactions || []) {
-      const key = `${new Date(transaction.date).toISOString()}-${transaction.description}-${transaction.amount}-${transaction.type}`;
+      // Include source in the key to avoid cross-source "duplicates"
+      const key = `${transaction.source}-${new Date(transaction.date).toISOString()}-${transaction.description}-${transaction.amount}-${transaction.type}`;
       
       if (seen.has(key)) {
         duplicates.push(transaction.id);
@@ -41,7 +42,7 @@ export async function POST() {
 
     // Delete duplicate transactions (keeping the first occurrence of each)
     const { error: deleteError } = await supabase
-      .from('transactions')
+      .from('all_transactions')
       .delete()
       .in('id', duplicates);
 

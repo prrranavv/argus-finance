@@ -11,17 +11,16 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const limit = searchParams.get('limit') || '50';
     const groupId = searchParams.get('group_id');
-    const datedAfter = searchParams.get('dated_after');
     const datedBefore = searchParams.get('dated_before');
+    const datedAfterParam = searchParams.get('dated_after');
 
-    let url = `https://secure.splitwise.com/api/v3.0/get_expenses?limit=${limit}`;
+    // Default to Jan 1, 2025 if no date is provided
+    const datedAfter = datedAfterParam || '2025-01-01T00:00:00Z';
+
+    let url = `https://secure.splitwise.com/api/v3.0/get_expenses?limit=${limit}&dated_after=${datedAfter}`;
     
     if (groupId) {
       url += `&group_id=${groupId}`;
-    }
-    
-    if (datedAfter) {
-      url += `&dated_after=${datedAfter}`;
     }
     
     if (datedBefore) {
@@ -45,6 +44,14 @@ export async function GET(request: Request) {
     }
 
     const data = await response.json();
+
+    // Filter out deleted expenses and debt consolidations
+    if (data.expenses && Array.isArray(data.expenses)) {
+      data.expenses = data.expenses.filter((expense: any) => 
+        !expense.deleted_at && expense.creation_method !== 'debt_consolidation'
+      );
+    }
+
     return NextResponse.json(data);
 
   } catch (error) {
