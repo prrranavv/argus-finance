@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // Convert to array format and sort by date
+    // Convert to array format and sort by date (descending - most recent first)
     const sortedData = Object.entries(monthlySpending)
       .map(([month, amount]) => ({
         month,
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => {
         const dateA = new Date(a.month);
         const dateB = new Date(b.month);
-        return dateA.getTime() - dateB.getTime();
+        return dateB.getTime() - dateA.getTime();
       });
 
     return NextResponse.json(sortedData);

@@ -241,6 +241,24 @@ export default function SplitvisePage() {
     fetchData();
   }, []);
 
+  // Clean up tooltip when tab changes
+  useEffect(() => {
+    if (activeTab !== 'groups') {
+      if (hoverTimeout) clearTimeout(hoverTimeout);
+      if (showTimeout) clearTimeout(showTimeout);
+      setHoveredGroup(null);
+      setTooltipPosition(null);
+    }
+  }, [activeTab, hoverTimeout, showTimeout]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (hoverTimeout) clearTimeout(hoverTimeout);
+      if (showTimeout) clearTimeout(showTimeout);
+    };
+  }, [hoverTimeout, showTimeout]);
+
   const loadMoreExpenses = async () => {
     if (!hasMoreExpenses || loadingMore) return;
     
@@ -1046,6 +1064,15 @@ export default function SplitvisePage() {
                               setHoverTimeout(timeout);
                             }}
                           onClick={() => {
+                            // Clear any existing timeouts
+                            if (hoverTimeout) clearTimeout(hoverTimeout);
+                            if (showTimeout) clearTimeout(showTimeout);
+                            
+                            // Clear tooltip state immediately
+                            setHoveredGroup(null);
+                            setTooltipPosition(null);
+                            
+                            // Set selected group and switch to activity tab
                             setSelectedGroup(group);
                             setSelectedFriend(null);
                             setActiveTab('activity');

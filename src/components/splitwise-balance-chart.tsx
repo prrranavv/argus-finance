@@ -30,6 +30,7 @@ export function SplitwiseBalanceChart({ isPrivacyMode = false }: SplitwiseBalanc
       try {
         // For now, we'll create mock data until we have a real API endpoint
         // This would normally fetch from /api/splitwise/balance-progression
+        // Chart data should be in ascending order (left to right timeline)
         const mockData: BalanceData[] = [
           { week: 'Jan 2025', outstanding: 65000, borrowed: 25000, lent: 90000 },
           { week: 'Feb 2025', outstanding: 68000, borrowed: 22000, lent: 90000 },
@@ -285,7 +286,7 @@ export function SplitwiseBalanceChart({ isPrivacyMode = false }: SplitwiseBalanc
                     </tr>
                   </thead>
                   <tbody>
-                    {data.map((row, index) => (
+                    {[...data].reverse().map((row, index) => (
                       <tr 
                         key={row.week} 
                         className="transition-all duration-300 hover:bg-muted/50 animate-in slide-in-from-left border-b border-border/50 last:border-b-0"
