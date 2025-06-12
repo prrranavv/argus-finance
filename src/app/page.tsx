@@ -7,7 +7,7 @@ import { AccountBalanceChart } from "@/components/account-balance-chart";
 import { MonthlySummary } from "@/components/monthly-summary";
 import { CreditCardBalanceChart } from "@/components/credit-card-balance-chart";
 import { CreditCardMonthlySummary } from "@/components/credit-card-monthly-summary";
-import { KeyMetrics } from "@/components/key-metrics";
+import { KeyMetricsV2 } from "@/components/key-metrics-v2";
 import { Header } from "@/components/header";
 import Image from "next/image";
 
@@ -15,7 +15,6 @@ export default function Home() {
   const [selectedBank, setSelectedBank] = useState('Total');
   const [selectedCreditCard, setSelectedCreditCard] = useState('Total');
   const [isPrivacyMode, setIsPrivacyMode] = useState(true);
-  const [filterYear] = useState(2025); // Fixed filter for 2025 data only
   const banks = ['Total', 'HDFC', 'Axis'];
   const creditCards = ['Total', 'HDFC Diners', 'HDFC Swiggy', 'Axis Magnus', 'Flipkart Axis'];
 
@@ -74,7 +73,7 @@ export default function Home() {
 
       
       {/* Key Metrics Section */}
-      <KeyMetrics isPrivacyMode={isPrivacyMode} filterYear={filterYear} />
+      <KeyMetricsV2 isPrivacyMode={isPrivacyMode} />
 
       {/* Bank Accounts Section */}
       <div className="mb-8">
@@ -106,12 +105,12 @@ export default function Home() {
                 <div className="flex flex-col lg:flex-row gap-6 w-full">
                   {/* Left: Account Balance Chart - Takes 3/5 of width */}
                   <div className="w-full lg:w-3/5">
-                    <AccountBalanceChart selectedBank={selectedBank} isPrivacyMode={isPrivacyMode} filterYear={filterYear} />
+                    <AccountBalanceChart selectedBank={selectedBank} isPrivacyMode={isPrivacyMode} />
                   </div>
                   
                   {/* Right: Monthly Summary Table - Takes 2/5 of width */}
                   <div className="w-full lg:w-2/5">
-                    <MonthlySummary selectedBank={selectedBank} isPrivacyMode={isPrivacyMode} filterYear={filterYear} />
+                    <MonthlySummary selectedBank={selectedBank} isPrivacyMode={isPrivacyMode} />
                   </div>
                 </div>
               </TabsContent>
@@ -153,12 +152,12 @@ export default function Home() {
                 <div className="flex flex-col lg:flex-row gap-6 w-full">
                   {/* Left: Credit Card Balance Chart - Takes 3/5 of width */}
                   <div className="w-full lg:w-3/5">
-                    <CreditCardBalanceChart selectedCard={selectedCreditCard} isPrivacyMode={isPrivacyMode} filterYear={filterYear} />
+                    <CreditCardBalanceChart selectedCard={selectedCreditCard} isPrivacyMode={isPrivacyMode} />
                   </div>
                   
                   {/* Right: Credit Card Monthly Summary - Takes 2/5 of width */}
                   <div className="w-full lg:w-2/5">
-                    <CreditCardMonthlySummary selectedCard={selectedCreditCard} isPrivacyMode={isPrivacyMode} filterYear={filterYear} />
+                    <CreditCardMonthlySummary selectedCard={selectedCreditCard} isPrivacyMode={isPrivacyMode} />
                   </div>
                 </div>
               </TabsContent>

@@ -15,10 +15,9 @@ interface BalanceData {
 interface AccountBalanceChartProps {
   selectedBank: string;
   isPrivacyMode?: boolean;
-  filterYear?: number;
 }
 
-export function AccountBalanceChart({ selectedBank, isPrivacyMode = false, filterYear }: AccountBalanceChartProps) {
+export function AccountBalanceChart({ selectedBank, isPrivacyMode = false }: AccountBalanceChartProps) {
   const [data, setData] = useState<BalanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,8 +25,7 @@ export function AccountBalanceChart({ selectedBank, isPrivacyMode = false, filte
   useEffect(() => {
     const fetchBalanceData = async () => {
       try {
-        const url = filterYear ? `/api/balance-progression?year=${filterYear}` : '/api/balance-progression';
-        const response = await fetch(url);
+        const response = await fetch('/api/balance-progression-v2');
         if (!response.ok) {
           throw new Error('Failed to fetch balance data');
         }
@@ -44,7 +42,7 @@ export function AccountBalanceChart({ selectedBank, isPrivacyMode = false, filte
     };
 
     fetchBalanceData();
-  }, [filterYear]);
+  }, []);
 
   const formatCurrency = (value: number) => {
     if (isPrivacyMode) {

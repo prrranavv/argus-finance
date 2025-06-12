@@ -7,16 +7,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 interface CreditCardSummaryData {
   month: string;
-  amount: number;
+  accountBalance: number;
 }
 
 interface CreditCardMonthlySummaryProps {
   selectedCard: string;
   isPrivacyMode?: boolean;
-  filterYear?: number;
 }
 
-export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false, filterYear }: CreditCardMonthlySummaryProps) {
+export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false }: CreditCardMonthlySummaryProps) {
   const [data, setData] = useState<CreditCardSummaryData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,19 +23,14 @@ export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false, 
   useEffect(() => {
     const fetchCreditCardSummary = async () => {
       try {
-        const url = filterYear 
-          ? `/api/credit-card-summary?card=${encodeURIComponent(selectedCard)}&year=${filterYear}`
-          : `/api/credit-card-summary?card=${encodeURIComponent(selectedCard)}`;
+        const url = `/api/credit-card-summary-v2?card=${encodeURIComponent(selectedCard)}`;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch credit card summary');
         }
         const summaryData = await response.json();
-        // Filter to only show 2025 data
-        const filtered2025Data = summaryData.filter((item: CreditCardSummaryData) => {
-          return item.month.includes('2025');
-        });
-        setData(filtered2025Data);
+        console.log('Credit card summary data:', summaryData);
+        setData(summaryData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -45,7 +39,7 @@ export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false, 
     };
 
     fetchCreditCardSummary();
-  }, [selectedCard, filterYear]);
+  }, [selectedCard]);
 
   const formatCurrency = (amount: number) => {
     if (isPrivacyMode) {
@@ -136,7 +130,7 @@ export function CreditCardMonthlySummary({ selectedCard, isPrivacyMode = false, 
               <TableRow key={index}>
                 <TableCell className="font-medium">{row.month}</TableCell>
                 <TableCell className="text-right text-red-600 font-medium">
-                  {formatCurrency(row.amount)}
+                  {formatCurrency(row.accountBalance)}
                 </TableCell>
               </TableRow>
             ))}

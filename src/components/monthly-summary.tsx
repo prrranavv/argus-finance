@@ -15,10 +15,9 @@ interface MonthlySummaryData {
 interface MonthlySummaryProps {
   selectedBank: string;
   isPrivacyMode?: boolean;
-  filterYear?: number;
 }
 
-export function MonthlySummary({ selectedBank, isPrivacyMode = false, filterYear }: MonthlySummaryProps) {
+export function MonthlySummary({ selectedBank, isPrivacyMode = false }: MonthlySummaryProps) {
   const [data, setData] = useState<MonthlySummaryData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,9 +26,7 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false, filterYear
     const fetchData = async () => {
       try {
         setLoading(true);
-        const url = filterYear 
-          ? `/api/monthly-summary?bank=${selectedBank}&year=${filterYear}`
-          : `/api/monthly-summary?bank=${selectedBank}`;
+        const url = `/api/monthly-summary-v2?bank=${selectedBank}`;
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error('Failed to fetch monthly summary');
@@ -37,30 +34,9 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false, filterYear
         const summaryData = await response.json();
         console.log('Monthly summary data:', summaryData);
         
-        // Sort months in descending order (most recent first)
-        const sortedData = [...summaryData].sort((a, b) => {
-          // Parse month names for proper chronological sorting
-          const parseMonth = (monthStr: string) => {
-            const parts = monthStr.split(' ');
-            const month = parts[0];
-            const year = parseInt(parts[1]);
-            const monthIndex = [
-              'January', 'February', 'March', 'April', 'May', 'June',
-              'July', 'August', 'September', 'October', 'November', 'December'
-            ].indexOf(month);
-            return { year, monthIndex };
-          };
-          
-          const monthA = parseMonth(a.month);
-          const monthB = parseMonth(b.month);
-          
-          if (monthA.year !== monthB.year) {
-            return monthB.year - monthA.year; // Descending by year
-          }
-          return monthB.monthIndex - monthA.monthIndex; // Descending by month
-        });
-        
-        setData(sortedData);
+        // Sort months in descending order (most recent first) if needed
+        // API should already return data sorted correctly
+        setData(summaryData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -69,7 +45,7 @@ export function MonthlySummary({ selectedBank, isPrivacyMode = false, filterYear
     };
 
     fetchData();
-  }, [selectedBank, filterYear]);
+  }, [selectedBank]);
 
   if (loading) {
     return (

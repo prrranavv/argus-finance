@@ -12,11 +12,11 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: false,
   },
   images: {
-    domains: [
-      's3.amazonaws.com',
-      'splitwise.s3.amazonaws.com',
-      'secure.gravatar.com',
-      'avatar.splitwise.com'
+    remotePatterns: [
+      { hostname: 's3.amazonaws.com' },
+      { hostname: 'splitwise.s3.amazonaws.com' },
+      { hostname: 'secure.gravatar.com' },
+      { hostname: 'avatar.splitwise.com' }
     ],
   },
 };

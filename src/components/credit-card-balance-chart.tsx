@@ -17,10 +17,9 @@ interface CreditCardBalanceData {
 interface CreditCardBalanceChartProps {
   selectedCard: string;
   isPrivacyMode?: boolean;
-  filterYear?: number;
 }
 
-export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false, filterYear }: CreditCardBalanceChartProps) {
+export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false }: CreditCardBalanceChartProps) {
   const [data, setData] = useState<CreditCardBalanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,17 +27,12 @@ export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false, fi
   useEffect(() => {
     const fetchCreditCardData = async () => {
       try {
-        const url = filterYear ? `/api/credit-card-progression?year=${filterYear}` : '/api/credit-card-progression';
-        const response = await fetch(url);
+        const response = await fetch('/api/credit-card-progression-v2');
         if (!response.ok) {
           throw new Error('Failed to fetch credit card data');
         }
         const creditCardData = await response.json();
-        // Filter to only show 2025 data
-        const filtered2025Data = creditCardData.filter((item: CreditCardBalanceData) => {
-          return item.week.includes('2025');
-        });
-        setData(filtered2025Data);
+        setData(creditCardData);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -47,7 +41,7 @@ export function CreditCardBalanceChart({ selectedCard, isPrivacyMode = false, fi
     };
 
     fetchCreditCardData();
-  }, [filterYear]);
+  }, []);
 
   const formatCurrency = (value: number) => {
     if (isPrivacyMode) {

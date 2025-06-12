@@ -330,7 +330,7 @@ function TransactionsGrid({
             <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-muted rounded-lg text-center">
               <Wallet className="h-10 w-10 text-muted-foreground mb-3" />
               <p className="font-semibold text-foreground">
-                I see we're saving some 💵 today!
+                I see we&apos;re saving some 💵 today!
               </p>
             </div>
           )}
