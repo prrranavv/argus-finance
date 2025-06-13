@@ -86,4 +86,76 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const client = supabaseAdmin || supabase;
+    
+    console.log('💾 Creating new manual transaction...');
+    
+    // Parse the request body
+    const body = await request.json();
+    console.log('📄 Request body:', body);
+    const { type, amount, description, bank_name, account_type, category } = body;
+    
+    // Validate required fields
+    if (!type || !amount || !description || !bank_name || !account_type) {
+      console.log('❌ Missing required fields');
+      return NextResponse.json(
+        { error: 'Missing required fields: type, amount, description, bank_name, account_type' },
+        { status: 400 }
+      );
+    }
+    
+    // Prepare transaction data - only include fields that exist in the table
+    const now = new Date();
+    const transactionData = {
+      date: now.toISOString(),
+      description: description.trim(),
+      amount: parseFloat(amount),
+      type: type, // 'income' or 'expense'
+      source: 'manual',
+      account_type: account_type, // From balances table
+      bank_name: bank_name.trim(),
+      category: category ? category.trim() : null, // Optional category
+      created_at: now.toISOString(),
+      updated_at: now.toISOString()
+    };
+    
+    console.log('📝 Transaction data to insert:', transactionData);
+    
+    // Insert the transaction
+    const { data: transaction, error } = await client
+      .from('all_transactions')
+      .insert([transactionData])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('💥 Detailed error creating transaction:', error);
+      console.error('💥 Error code:', error.code);
+      console.error('💥 Error message:', error.message);
+      console.error('💥 Error details:', error.details);
+      console.error('💥 Error hint:', error.hint);
+      return NextResponse.json(
+        { 
+          error: 'Failed to create transaction', 
+          details: error.message,
+          code: error.code 
+        },
+        { status: 500 }
+      );
+    }
+    
+    console.log('✅ Created manual transaction:', transaction.id);
+    
+    return NextResponse.json(transaction, { status: 201 });
+  } catch (error) {
+    console.error('🔥 Unexpected error in POST all-transactions API:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
 } 
