@@ -5,9 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Header } from "@/components/header";
-import { Search, Filter, Grid3X3, Calendar, Mail, FileText, Wallet, Edit2, Trash2, UserPlus } from "lucide-react";
+import { Search, Filter, Calendar, Mail, FileText, Wallet, Edit2, Trash2, UserPlus } from "lucide-react";
 import { TransactionMetrics } from "@/components/transaction-metrics";
 import { AddTransactionModal } from "@/components/add-transaction-modal";
 import { DeleteTransactionModal } from "@/components/delete-transaction-modal";
@@ -299,7 +298,7 @@ export default function TransactionsPage() {
     return `${month} ${day}${suffix}, ${year}`;
   };
 
-  const getBankLogo = (bankName: string, accountType: string, source: string, description?: string) => {
+  const getBankLogo = (bankName: string, accountType: string, source: string) => {
     // For credit cards, use specific card images
     if (accountType === 'Credit Card' || accountType === 'credit_card') {
       const cardImageMap: Record<string, string> = {
@@ -539,8 +538,7 @@ export default function TransactionsPage() {
               src={getBankLogo(
                 transaction.bank_name,
                 transaction.account_type,
-                transaction.source,
-                transaction.description
+                transaction.source
               )}
               alt={`${transaction.bank_name} logo`}
               width={transaction.account_type === "Credit Card" ? 80 : 48}

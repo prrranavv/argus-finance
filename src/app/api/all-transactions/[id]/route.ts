@@ -4,11 +4,11 @@ import { supabase, supabaseAdmin } from '@/lib/supabase';
 // GET single transaction by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const client = supabaseAdmin || supabase;
-    const { id } = params;
+    const { id } = await context.params;
 
     const { data: transaction, error } = await client
       .from('all_transactions')
@@ -37,11 +37,11 @@ export async function GET(
 // UPDATE transaction by ID
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const client = supabaseAdmin || supabase;
-    const { id } = params;
+    const { id } = await context.params;
     const body = await request.json();
 
     console.log('🔄 Updating transaction:', id, body);
@@ -95,11 +95,11 @@ export async function PUT(
 // DELETE transaction by ID
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const client = supabaseAdmin || supabase;
-    const { id } = params;
+    const { id } = await context.params;
 
     console.log('🗑️ Deleting transaction:', id);
 

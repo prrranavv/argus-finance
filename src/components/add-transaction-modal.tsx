@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
+
 import { Plus, Loader2, TrendingDown, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
@@ -27,7 +27,7 @@ const CATEGORIES = [
   { id: 'movies', name: 'Movies', image: '/category-images/movies.png' }
 ];
 
-export function AddTransactionModal({ onTransactionAdded, bankOptions }: AddTransactionModalProps) {
+export function AddTransactionModal({ onTransactionAdded }: AddTransactionModalProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [banksByType, setBanksByType] = useState<BanksByType>({});
@@ -91,7 +91,7 @@ export function AddTransactionModal({ onTransactionAdded, bankOptions }: AddTran
         throw new Error(errorData.error || 'Failed to create transaction');
       }
 
-      const transaction = await response.json();
+      await response.json();
       
       toast.success(`Transaction ${formData.type === 'income' ? 'income' : 'expense'} of ₹${parseFloat(formData.amount).toLocaleString()} added successfully!`);
       
@@ -188,7 +188,7 @@ export function AddTransactionModal({ onTransactionAdded, bankOptions }: AddTran
             </Button>
             {/* Hover tooltip */}
             <div className="absolute bottom-16 right-0 bg-black/80 text-white px-3 py-2 rounded-lg text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-              🤑 Spent 'em monies?
+              🤑 Spent &apos;em monies?
             </div>
           </div>
         </DialogTrigger>
