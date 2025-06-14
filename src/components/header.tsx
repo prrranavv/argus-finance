@@ -274,6 +274,9 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
                 >
                   <FlaskConical className="h-4 w-4 text-purple-500" />
                 </Button>
+
+                {/* User Profile */}
+                <UserProfile />
               </div>
             </div>
 

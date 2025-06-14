@@ -11,12 +11,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LogOut, Settings, User } from "lucide-react"
+import { LogOut, Settings, User, LogIn } from "lucide-react"
+import { SignInForm } from "@/components/auth/sign-in-form"
+import { SignUpForm } from "@/components/auth/sign-up-form"
 
 export function UserProfile() {
   const { user, profile, signOut } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
+  const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
 
   const handleSignOut = async () => {
     setIsLoading(true)
@@ -29,8 +40,46 @@ export function UserProfile() {
     }
   }
 
+  const handleSignInClick = () => {
+    setAuthMode('signin')
+    setShowAuthDialog(true)
+  }
+
+  const switchToSignUp = () => {
+    setAuthMode('signup')
+  }
+
+  const switchToSignIn = () => {
+    setAuthMode('signin')
+  }
+
+  // If user is not logged in, show sign in button
   if (!user || !profile) {
-    return null
+    return (
+      <>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleSignInClick}
+          className="px-3 flex items-center gap-2"
+        >
+          <LogIn className="h-4 w-4" />
+          <span className="hidden sm:inline">Sign In</span>
+        </Button>
+
+        <Dialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+          <DialogContent className="sm:max-w-md p-0 bg-transparent border-none shadow-none">
+            <div className="flex items-center justify-center">
+              {authMode === 'signin' ? (
+                <SignInForm onSwitchToSignUp={switchToSignUp} />
+              ) : (
+                <SignUpForm onSwitchToSignIn={switchToSignIn} />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    )
   }
 
   const getInitials = (name: string) => {
