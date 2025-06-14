@@ -1,22 +1,28 @@
 // Helper function to get the correct base URL
 function getBaseUrl(): string {
-  // In production on Vercel - use the deployment URL
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  // For development
+  if (process.env.NODE_ENV === 'development') {
+    return 'http://localhost:3000';
   }
   
-  // Fallback for Vercel URL (branch/preview deployments)
+  // For production - try Vercel environment variables first
   if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
+    const baseUrl = `https://${process.env.VERCEL_URL}`;
+    console.log('Using VERCEL_URL:', baseUrl);
+    return baseUrl;
   }
   
-  // For production deployments without Vercel env vars, use the known production URL
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://argus-finance.vercel.app';
+  // If running on Vercel but VERCEL_URL isn't available, use the production domain
+  if (process.env.VERCEL) {
+    const baseUrl = 'https://argus-finance.vercel.app';
+    console.log('Using hardcoded production URL:', baseUrl);
+    return baseUrl;
   }
   
-  // In development
-  return 'http://localhost:3000';
+  // Final fallback for production
+  const baseUrl = 'https://argus-finance.vercel.app';
+  console.log('Using final fallback URL:', baseUrl);
+  return baseUrl;
 }
 
 // Function to get monthly expense data
