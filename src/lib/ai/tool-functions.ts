@@ -1,43 +1,49 @@
 // Helper function to get the correct base URL
 function getBaseUrl(): string {
-  // In production on Vercel
+  // In production on Vercel - use the deployment URL
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  }
+  
+  // Fallback for Vercel URL (branch/preview deployments)
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
   }
   
-  // In development or when VERCEL_URL is not available
-  if (process.env.NODE_ENV === 'development') {
-    return 'http://localhost:3000';
+  // For production deployments without Vercel env vars, use the known production URL
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://argus-finance.vercel.app';
   }
   
-  // Fallback - try to construct from environment
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const host = process.env.HOST || 'localhost';
-  const port = process.env.PORT || '3000';
-  
-  return `${protocol}://${host}${port !== '80' && port !== '443' ? `:${port}` : ''}`;
+  // In development
+  return 'http://localhost:3000';
 }
 
 // Function to get monthly expense data
 export async function getMonthlyExpense(bank?: string) {
   try {
     const baseUrl = getBaseUrl();
+    console.log('Base URL for getMonthlyExpense:', baseUrl);
     
     const url = new URL('/api/monthly-summary-v2', baseUrl);
     if (bank && bank !== 'Total') {
       url.searchParams.set('bank', bank);
     }
 
+    console.log('Fetching monthly data from:', url.toString());
     const response = await fetch(url.toString());
+    
     if (!response.ok) {
-      throw new Error('Failed to fetch monthly data');
+      console.error('Monthly data fetch failed:', response.status, response.statusText);
+      throw new Error(`Failed to fetch monthly data: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('Monthly data fetched successfully');
     return data;
   } catch (error) {
     console.error('Error fetching monthly expense data:', error);
-    return { error: 'Unable to fetch expense data' };
+    return { error: `Unable to fetch expense data: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
 }
 
@@ -45,6 +51,7 @@ export async function getMonthlyExpense(bank?: string) {
 export async function searchTransactions(query?: string, bank?: string, timeRange?: string, limit: number = 10) {
   try {
     const baseUrl = getBaseUrl();
+    console.log('Base URL for searchTransactions:', baseUrl);
     
     const url = new URL('/api/all-transactions', baseUrl);
     if (bank && bank !== 'Total') {
@@ -54,12 +61,16 @@ export async function searchTransactions(query?: string, bank?: string, timeRang
       url.searchParams.set('time_range', timeRange);
     }
 
+    console.log('Fetching transactions from:', url.toString());
     const response = await fetch(url.toString());
+    
     if (!response.ok) {
-      throw new Error('Failed to fetch transactions');
+      console.error('Transaction fetch failed:', response.status, response.statusText);
+      throw new Error(`Failed to fetch transactions: ${response.status} ${response.statusText}`);
     }
 
     let transactions = await response.json();
+    console.log('Fetched transactions count:', transactions.length);
     
     // Apply search filter if provided
     if (query) {
@@ -69,13 +80,14 @@ export async function searchTransactions(query?: string, bank?: string, timeRang
         t.amount.toString().includes(searchLower) ||
         t.category?.toLowerCase().includes(searchLower)
       );
+      console.log('Filtered transactions count:', transactions.length);
     }
 
     // Limit results
     return transactions.slice(0, limit);
   } catch (error) {
     console.error('Error searching transactions:', error);
-    return { error: 'Unable to search transactions' };
+    return { error: `Unable to search transactions: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
 }
 
@@ -83,6 +95,7 @@ export async function searchTransactions(query?: string, bank?: string, timeRang
 export async function getSpendingByCategory(timeRange?: string, bank?: string) {
   try {
     const baseUrl = getBaseUrl();
+    console.log('Base URL for getSpendingByCategory:', baseUrl);
     
     const url = new URL('/api/transaction-metrics', baseUrl);
     if (timeRange) {
@@ -92,12 +105,16 @@ export async function getSpendingByCategory(timeRange?: string, bank?: string) {
       url.searchParams.set('bank', bank);
     }
 
+    console.log('Fetching spending data from:', url.toString());
     const response = await fetch(url.toString());
+    
     if (!response.ok) {
-      throw new Error('Failed to fetch spending data');
+      console.error('Spending data fetch failed:', response.status, response.statusText);
+      throw new Error(`Failed to fetch spending data: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('Spending data fetched successfully');
     return {
       topCategories: data.breakdown?.topCategories || [],
       totalExpenses: data.metrics?.totalExpenses?.current || 0,
@@ -106,7 +123,7 @@ export async function getSpendingByCategory(timeRange?: string, bank?: string) {
     };
   } catch (error) {
     console.error('Error fetching spending by category:', error);
-    return { error: 'Unable to fetch spending data' };
+    return { error: `Unable to fetch spending data: ${error instanceof Error ? error.message : 'Unknown error'}` };
   }
 }
 

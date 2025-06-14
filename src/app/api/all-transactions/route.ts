@@ -47,6 +47,15 @@ export async function GET(request: NextRequest) {
         case '60days':
           startDate.setDate(now.getDate() - 60);
           break;
+        case '90days':
+          startDate.setDate(now.getDate() - 90);
+          break;
+        case '6months':
+          startDate.setMonth(now.getMonth() - 6);
+          break;
+        case '1year':
+          startDate.setFullYear(now.getFullYear() - 1);
+          break;
         default:
           // No time filter
           break;
