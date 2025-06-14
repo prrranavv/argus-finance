@@ -8,9 +8,9 @@ import { useGmailSync } from "@/hooks/use-gmail-sync";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Image from "next/image";
 import Link from "next/link";
-import { Eye, EyeOff, FileText, BarChart3, Users, Menu, RefreshCw, CheckCircle, Loader2 } from "lucide-react";
+import { Eye, EyeOff, FileText, BarChart3, Users, Menu, RefreshCw, CheckCircle, Loader2, FlaskConical } from "lucide-react";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Sheet,
   SheetContent,
@@ -33,6 +33,7 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const pathname = usePathname();
+  const router = useRouter();
 
   // Gmail sync functionality
   const { isRunning, currentStep, steps, results, error, runSync, reset } = useGmailSync();
@@ -261,6 +262,17 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
 
                 {/* Theme Toggle */}
                 <ThemeToggle />
+
+                {/* Experimental Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="px-2"
+                  title="Experimental Features"
+                  onClick={() => router.push('/experimental')}
+                >
+                  <FlaskConical className="h-4 w-4 text-purple-500" />
+                </Button>
               </div>
             </div>
 
@@ -352,6 +364,17 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
 
                 {/* Theme Toggle */}
                 <ThemeToggle />
+
+                {/* Experimental Button - Icon only */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="px-2"
+                  title="Experimental Features"
+                  onClick={() => router.push('/experimental')}
+                >
+                  <FlaskConical className="h-4 w-4 text-purple-500" />
+                </Button>
               </div>
             </div>
 
@@ -374,6 +397,17 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
 
               {/* Dark Mode Toggle - Before hamburger menu */}
               <ThemeToggle />
+
+              {/* Experimental Button - Always visible on mobile */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="px-2"
+                title="Experimental Features"
+                onClick={() => router.push('/experimental')}
+              >
+                <FlaskConical className="h-4 w-4 text-purple-500" />
+              </Button>
 
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
