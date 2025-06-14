@@ -1,8 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+// Create server client to get user session
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if admin client is available
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // Get user session to filter data by user
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('User not authenticated:', userError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    console.log('🔑 Gmail Save Email Data API: Processing for user:', user.id);
+
     const { emails } = await request.json();
 
     if (!emails || !Array.isArray(emails)) {
@@ -12,8 +48,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = supabaseAdmin || supabase;
-    console.log(`💾 Saving ${emails.length} emails to database...`);
+    const client = supabaseAdmin;
+    console.log(`💾 Saving ${emails.length} emails to database for user ${user.id}...`);
 
     let savedEmails = 0;
     let updatedEmails = 0;
@@ -39,14 +75,16 @@ export async function POST(request: NextRequest) {
           content: email.cleanedBody || email.fullBody || email.body,
           account_type: email.account_type ? accountTypeMapping[email.account_type] || null : null, // Transform if present
           bank_name: email.bank_name || null,   // Will be updated when transactions are analyzed
-          is_relevant: email.is_relevant || false // Will be updated when transactions are analyzed
+          is_relevant: email.is_relevant || false, // Will be updated when transactions are analyzed
+          user_id: user.id // Add user_id to email
         };
 
-        // Check if email already exists
+        // Check if email already exists for this user
         const { data: existingEmail } = await client
           .from('emails')
           .select('id')
           .eq('gmail_message_id', email.id)
+          .eq('user_id', user.id)
           .single();
 
         let emailRecord;
@@ -57,6 +95,7 @@ export async function POST(request: NextRequest) {
             .from('emails')
             .update(emailData)
             .eq('gmail_message_id', email.id)
+            .eq('user_id', user.id)
             .select()
             .single();
 

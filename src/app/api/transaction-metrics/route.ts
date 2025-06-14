@@ -1,9 +1,45 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+// Create server client to get user session
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+}
 
 export async function GET(request: Request) {
   try {
+    // Check if admin client is available
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // Get user session to filter data by user
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('User not authenticated:', userError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    console.log('🔑 Transaction Metrics API: Fetching data for user:', user.id);
+
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
     const accountType = searchParams.get('accountType');
@@ -26,9 +62,10 @@ export async function GET(request: Request) {
 
     // Build a reusable query function
     const buildSupabaseQuery = (startDate: Date, endDate: Date) => {
-      let query = supabase
+      let query = supabaseAdmin!
         .from('all_transactions')
         .select('*')
+        .eq('user_id', user.id)
         .gte('date', startDate.toISOString())
         .lt('date', endDate.toISOString());
 

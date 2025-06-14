@@ -77,6 +77,102 @@ export const FINANCIAL_ASSISTANT_TOOLS: ChatCompletionTool[] = [
   {
     type: "function",
     function: {
+      name: "get_key_metrics",
+      description: "Get key financial metrics including total balance, expenses, income, net savings, and bank-wise balances.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_balance_progression",
+      description: "Get bank account balance progression over time. Shows how balances have changed month by month.",
+      parameters: {
+        type: "object",
+        properties: {
+          bank: {
+            type: "string",
+            description: "Bank name to filter by (e.g., 'HDFC', 'Axis', or 'Total' for all banks)",
+            enum: ["Total", "HDFC", "Axis"]
+          }
+        },
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_credit_card_progression",
+      description: "Get credit card balance progression over time. Shows how credit card balances have changed month by month.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_credit_card_summary",
+      description: "Get credit card summary data by card, showing monthly balances and trends.",
+      parameters: {
+        type: "object",
+        properties: {
+          card: {
+            type: "string",
+            description: "Credit card name to filter by (e.g., 'HDFC Diners', 'Flipkart Axis', or 'Total' for all cards)",
+            enum: ["Total", "HDFC Diners", "Flipkart Axis"]
+          }
+        },
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_bank_names",
+      description: "Get list of all available bank names in the user's financial data.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_banks_with_types",
+      description: "Get list of banks with their associated account types (e.g., Savings, Credit Card, Current).",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_statements",
+      description: "Get list of uploaded bank statements and their processing status.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
       name: "get_splitwise_expenses",
       description: "Get Splitwise shared expenses and bills. Can filter by group, date range, and limit results.",
       parameters: {

@@ -1,69 +1,80 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+// Create server client to get user session
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const client = supabaseAdmin || supabase;
+    // Check if admin client is available
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // Get user session to filter data by user
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    console.log('🔍 Fetching all transactions from unified table...');
-    
-    // Extract query parameters
+    if (userError || !user) {
+      console.error('User not authenticated:', userError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    console.log('🔑 All Transactions API: Fetching data for user:', user.id);
+
     const { searchParams } = new URL(request.url);
+    const search = searchParams.get('search');
+    const accountType = searchParams.get('accountType');
+    const bank = searchParams.get('bank');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
     const source = searchParams.get('source');
-    const bankName = searchParams.get('bank_name');
-    const accountType = searchParams.get('account_type');
-    const timeRange = searchParams.get('time_range');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '100');
+    const offset = (page - 1) * limit;
+
+    console.log(`📊 Fetching transactions for user ${user.id}, page ${page}, limit ${limit}`);
     
-    // Build the query
-    let query = client
+    // Build query
+    let query = supabaseAdmin
       .from('all_transactions')
       .select('*')
-      .order('date', { ascending: false });
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+      .range(offset, offset + limit - 1);
     
     // Apply filters if provided
     if (source) {
       query = query.eq('source', source);
     }
     
-    if (bankName) {
-      query = query.eq('bank_name', bankName);
+    if (bank) {
+      query = query.eq('bank_name', bank);
     }
     
     if (accountType) {
       query = query.eq('account_type', accountType);
     }
     
-    if (timeRange) {
-      const now = new Date();
-      let startDate = new Date();
-      
-      switch (timeRange) {
-        case '7days':
-          startDate.setDate(now.getDate() - 7);
-          break;
-        case '30days':
-          startDate.setDate(now.getDate() - 30);
-          break;
-        case '60days':
-          startDate.setDate(now.getDate() - 60);
-          break;
-        case '90days':
-          startDate.setDate(now.getDate() - 90);
-          break;
-        case '6months':
-          startDate.setMonth(now.getMonth() - 6);
-          break;
-        case '1year':
-          startDate.setFullYear(now.getFullYear() - 1);
-          break;
-        default:
-          // No time filter
-          break;
-      }
-      
-      if (timeRange !== 'all') {
-        query = query.gte('date', startDate.toISOString());
-      }
+    if (startDate && endDate) {
+      query = query.gte('date', startDate).lte('date', endDate);
     }
     
     // Execute the query
@@ -99,7 +110,22 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const client = supabaseAdmin || supabase;
+    // Check if admin client is available
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // Get user session to filter data by user
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('User not authenticated:', userError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    console.log('🔑 Creating transaction for user:', user.id);
     
     console.log('💾 Creating new manual transaction...');
     
@@ -120,6 +146,7 @@ export async function POST(request: NextRequest) {
     // Prepare transaction data - only include fields that exist in the table
     const now = new Date();
     const transactionData = {
+      user_id: user.id, // Add user_id for proper data isolation
       date: now.toISOString(),
       description: description.trim(),
       amount: parseFloat(amount),
@@ -135,7 +162,7 @@ export async function POST(request: NextRequest) {
     console.log('📝 Transaction data to insert:', transactionData);
     
     // Insert the transaction
-    const { data: transaction, error } = await client
+    const { data: transaction, error } = await supabaseAdmin
       .from('all_transactions')
       .insert([transactionData])
       .select()

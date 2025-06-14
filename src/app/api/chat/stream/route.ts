@@ -10,6 +10,22 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    // Get user authentication
+    const { createServerClient } = await import('@/lib/supabase-server');
+    const supabase = await createServerClient();
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('🔑 Chat Stream API: Authentication failed:', authError);
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    console.log('🔑 Chat Stream API: Authenticated user:', user.id);
+
     const { messages } = await request.json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -119,7 +135,7 @@ export async function POST(request: NextRequest) {
               // Execute all tool calls in parallel for better performance
               const toolPromises = toolCalls.map(async (toolCall) => {
                 try {
-                  const result = await executeToolFunction(toolCall.function.name, toolCall.function.arguments);
+                  const result = await executeToolFunction(toolCall.function.name, toolCall.function.arguments, user.id);
                   
                   return {
                     role: "tool" as const,

@@ -1,0 +1,26 @@
+graph TB
+    subgraph "Current Architecture"
+        A["Single User App<br/>Password Protection Only"] --> B[Supabase Database]
+        A --> C[Statement Processing]
+        A --> D[Transaction Management]
+        A --> E[Gmail Integration]
+    end
+    
+    subgraph "Proposed Multi-User Architecture"
+        F[User Registration/Login] --> G[Supabase Auth]
+        G --> H[User Profiles Table]
+        H --> I[Row Level Security RLS]
+        I --> J[User Statements]
+        I --> K[User Transactions]
+        I --> L[User Preferences]
+    end
+    
+    subgraph "Migration Path"
+        M["Phase 1: Database Schema"] --> N["Phase 2: Authentication"]
+        N --> O["Phase 3: Data Migration"]
+        O --> P["Phase 4: UI Updates"]
+        P --> Q["Phase 5: RLS & Security"]
+    end
+    
+    A --> F
+    B --> G
