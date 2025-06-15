@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+<!-- Mermaid Diagram: Overall Application Architecture -->
+<text x="10" y="30" font-family="Arial" font-size="16" font-weight="bold">Argus Finance - Overall System Architecture</text>
+
+<!-- Frontend Layer -->
+<rect x="50" y="60" width="300" height="180" fill="#e1f5fe" stroke="#0277bd" stroke-width="2" rx="10"/>
+<text x="180" y="85" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Frontend (Next.js 15)</text>
+<text x="70" y="110" font-family="Arial" font-size="12">• User Interface</text>
+<text x="70" y="130" font-family="Arial" font-size="12">• React Components</text>
+<text x="70" y="150" font-family="Arial" font-size="12">• Pages &amp; Routes</text>
+<text x="70" y="170" font-family="Arial" font-size="12">• Custom Hooks</text>
+<text x="70" y="190" font-family="Arial" font-size="12">• React Contexts</text>
+<text x="70" y="210" font-family="Arial" font-size="12">• TypeScript</text>
+
+<!-- Backend API Layer -->
+<rect x="400" y="60" width="350" height="180" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="10"/>
+<text x="575" y="85" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Backend APIs (Next.js API Routes)</text>
+<text x="420" y="110" font-family="Arial" font-size="12">• Authentication APIs</text>
+<text x="420" y="130" font-family="Arial" font-size="12">• Transaction APIs</text>
+<text x="420" y="150" font-family="Arial" font-size="12">• Statement Processing APIs</text>
+<text x="420" y="170" font-family="Arial" font-size="12">• Analytics APIs</text>
+<text x="420" y="190" font-family="Arial" font-size="12">• Gmail Integration APIs</text>
+
+<!-- External Services -->
+<rect x="800" y="60" width="300" height="180" fill="#fff3e0" stroke="#ef6c00" stroke-width="2" rx="10"/>
+<text x="950" y="85" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">External Services</text>
+<text x="820" y="110" font-family="Arial" font-size="12">• OpenAI GPT-4 (AI Processing)</text>
+<text x="820" y="130" font-family="Arial" font-size="12">• Gmail API (Email Integration)</text>
+<text x="820" y="150" font-family="Arial" font-size="12">• Supabase (Database &amp; Auth)</text>
+
+<!-- Database Layer -->
+<rect x="50" y="300" width="350" height="200" fill="#e8f5e8" stroke="#2e7d32" stroke-width="2" rx="10"/>
+<text x="225" y="325" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Database (PostgreSQL)</text>
+<text x="70" y="350" font-family="Arial" font-size="12">• users table</text>
+<text x="70" y="370" font-family="Arial" font-size="12">• statements table</text>
+<text x="70" y="390" font-family="Arial" font-size="12">• all_transactions table</text>
+<text x="70" y="410" font-family="Arial" font-size="12">• balances table</text>
+<text x="70" y="430" font-family="Arial" font-size="12">• emails table</text>
+<text x="70" y="450" font-family="Arial" font-size="12">• Row Level Security (RLS)</text>
+
+<!-- Storage -->
+<rect x="450" y="300" width="200" height="120" fill="#fce4ec" stroke="#c2185b" stroke-width="2" rx="10"/>
+<text x="550" y="325" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Storage</text>
+<text x="470" y="350" font-family="Arial" font-size="12">• Supabase Storage</text>
+<text x="470" y="370" font-family="Arial" font-size="12">• Statement Files</text>
+<text x="470" y="390" font-family="Arial" font-size="12">• CSV, PDF, Excel</text>
+
+<!-- Key Features -->
+<rect x="700" y="300" width="400" height="200" fill="#f1f8e9" stroke="#689f38" stroke-width="2" rx="10"/>
+<text x="900" y="325" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Key Features</text>
+<text x="720" y="350" font-family="Arial" font-size="12">• AI-Powered Transaction Extraction</text>
+<text x="720" y="370" font-family="Arial" font-size="12">• Multi-Bank Support (HDFC, Axis)</text>
+<text x="720" y="390" font-family="Arial" font-size="12">• Credit Card Management</text>
+<text x="720" y="410" font-family="Arial" font-size="12">• Gmail Integration</text>
+<text x="720" y="430" font-family="Arial" font-size="12">• Real-time Analytics</text>
+<text x="720" y="450" font-family="Arial" font-size="12">• Privacy Mode</text>
+<text x="720" y="470" font-family="Arial" font-size="12">• Duplicate Prevention</text>
+
+<!-- Arrows showing data flow -->
+<defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+            refX="10" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+</defs>
+
+<!-- Frontend to Backend -->
+<line x1="350" y1="150" x2="400" y2="150" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+<!-- Backend to External Services -->
+<line x1="750" y1="150" x2="800" y2="150" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+<!-- Backend to Database -->
+<line x1="575" y1="240" x2="225" y2="300" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+<!-- Backend to Storage -->
+<line x1="575" y1="240" x2="550" y2="300" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+<text x="50" y="580" font-family="Arial" font-size="12" fill="#666">
+Built with: Next.js 15 • React 19 • TypeScript • Tailwind CSS • Supabase • OpenAI GPT-4
+</text>
+</svg> 

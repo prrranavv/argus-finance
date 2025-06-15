@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1200">
+<!-- Data Flow Examples with Real Database Fields -->
+<text x="10" y="30" font-family="Arial" font-size="16" font-weight="bold">Data Flow Examples - Real Database Fields & API Responses</text>
+
+<!-- Dashboard Load Flow -->
+<rect x="50" y="60" width="1300" height="600" fill="#f8f9fa" stroke="#6c757d" stroke-width="2" rx="10"/>
+<text x="700" y="90" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Dashboard Load Flow - Key Metrics API Example</text>
+
+<!-- User -->
+<rect x="80" y="120" width="100" height="50" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="5"/>
+<text x="130" y="150" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">User</text>
+
+<!-- Dashboard -->
+<rect x="220" y="120" width="100" height="50" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="5"/>
+<text x="270" y="150" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Dashboard</text>
+
+<!-- API -->
+<rect x="360" y="120" width="140" height="50" fill="#fff3e0" stroke="#ef6c00" stroke-width="2" rx="5"/>
+<text x="430" y="150" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">/api/key-metrics-v2</text>
+
+<!-- Database -->
+<rect x="540" y="120" width="100" height="50" fill="#e8f5e8" stroke="#2e7d32" stroke-width="2" rx="5"/>
+<text x="590" y="150" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Database</text>
+
+<!-- Lifelines -->
+<line x1="130" y1="170" x2="130" y2="620" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="270" y1="170" x2="270" y2="620" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="430" y1="170" x2="430" y2="620" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="590" y1="170" x2="590" y2="620" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+
+<!-- Messages -->
+<defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+            refX="10" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+</defs>
+
+<line x1="130" y1="200" x2="270" y2="200" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="140" y="195" font-family="Arial" font-size="11">Load Dashboard Page</text>
+
+<line x1="270" y1="220" x2="430" y2="220" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="280" y="215" font-family="Arial" font-size="11">GET /api/key-metrics-v2</text>
+
+<!-- Query balances table -->
+<rect x="320" y="240" width="300" height="40" fill="#ffeb3b" stroke="#f57f17" stroke-width="1" rx="5"/>
+<text x="470" y="265" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold">Query balances table</text>
+
+<line x1="430" y1="290" x2="590" y2="290" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+<!-- SQL Query Box -->
+<rect x="680" y="200" width="650" height="100" fill="#e8eaf6" stroke="#3f51b5" stroke-width="2" rx="5"/>
+<text x="1005" y="225" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">SQL Query Example</text>
+<text x="700" y="245" font-family="Arial" font-size="10">SELECT * FROM balances</text>
+<text x="700" y="260" font-family="Arial" font-size="10">WHERE user_id = 'user123'</text>
+<text x="700" y="275" font-family="Arial" font-size="10">AND account_type = 'Bank Account'</text>
+<text x="700" y="290" font-family="Arial" font-size="10">ORDER BY statement_month DESC</text>
+
+<!-- Database Response -->
+<line x1="590" y1="320" x2="430" y2="320" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+
+<!-- Database Result Box -->
+<rect x="680" y="320" width="650" height="140" fill="#e0f2f1" stroke="#00695c" stroke-width="2" rx="5"/>
+<text x="1005" y="345" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Database Response</text>
+<text x="700" y="365" font-family="Arial" font-size="10">[{</text>
+<text x="720" y="380" font-family="Arial" font-size="10">id: 'bal_001',</text>
+<text x="720" y="395" font-family="Arial" font-size="10">closing_balance: 45000,</text>
+<text x="720" y="410" font-family="Arial" font-size="10">bank_name: 'HDFC',</text>
+<text x="720" y="425" font-family="Arial" font-size="10">statement_month: 'November 2024',</text>
+<text x="720" y="440" font-family="Arial" font-size="10">last_transaction_id: 'txn_567'</text>
+<text x="700" y="455" font-family="Arial" font-size="10">}]</text>
+
+<!-- Calculate expenses -->
+<rect x="320" y="480" width="300" height="40" fill="#ffeb3b" stroke="#f57f17" stroke-width="1" rx="5"/>
+<text x="470" y="505" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold">Calculate expenses since last balance</text>
+
+<line x1="430" y1="530" x2="590" y2="530" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+<!-- Expenses Query Box -->
+<rect x="680" y="480" width="650" height="100" fill="#fff3e0" stroke="#ef6c00" stroke-width="2" rx="5"/>
+<text x="1005" y="505" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Expenses Calculation Query</text>
+<text x="700" y="525" font-family="Arial" font-size="10">SELECT SUM(amount) FROM all_transactions</text>
+<text x="700" y="540" font-family="Arial" font-size="10">WHERE user_id = 'user123' AND type = 'expense'</text>
+<text x="700" y="555" font-family="Arial" font-size="10">AND date > (SELECT date FROM all_transactions WHERE id = 'txn_567')</text>
+<text x="700" y="570" font-family="Arial" font-size="10">→ Result: {sum: 12500}</text>
+
+<line x1="590" y1="560" x2="430" y2="560" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+
+<!-- Final API Response -->
+<line x1="430" y1="580" x2="270" y2="580" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+
+<!-- API Response Box -->
+<rect x="680" y="590" width="650" height="130" fill="#e8f5e8" stroke="#2e7d32" stroke-width="2" rx="5"/>
+<text x="1005" y="615" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Final API Response</text>
+<text x="700" y="635" font-family="Arial" font-size="10">{</text>
+<text x="720" y="650" font-family="Arial" font-size="10">currentBankBalance: 45000,</text>
+<text x="720" y="665" font-family="Arial" font-size="10">bankBalanceChange: -5.2,</text>
+<text x="720" y="680" font-family="Arial" font-size="10">creditCardOutstanding: 25000,</text>
+<text x="720" y="695" font-family="Arial" font-size="10">monthlySpending: 85000,</text>
+<text x="720" y="710" font-family="Arial" font-size="10">transactionCount: 156</text>
+<text x="700" y="725" font-family="Arial" font-size="10">}</text>
+
+<line x1="270" y1="600" x2="130" y2="600" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<text x="140" y="595" font-family="Arial" font-size="11">Display metrics with privacy mode toggle</text>
+
+<!-- Transaction Processing Example -->
+<rect x="50" y="680" width="1300" height="460" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="10"/>
+<text x="700" y="710" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Transaction Processing Example - CSV to Database</text>
+
+<!-- CSV Input -->
+<rect x="80" y="740" width="300" height="120" fill="#fff3e0" stroke="#ef6c00" stroke-width="2" rx="5"/>
+<text x="230" y="765" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Example CSV Input</text>
+<text x="90" y="785" font-family="Arial" font-size="10">Date,Description,Amount,Type</text>
+<text x="90" y="800" font-family="Arial" font-size="10">2024-11-15,AMAZON MARKETPLACE,2499.00,Debit</text>
+<text x="90" y="815" font-family="Arial" font-size="10">2024-11-14,SALARY CREDIT,75000.00,Credit</text>
+<text x="90" y="830" font-family="Arial" font-size="10">2024-11-13,UBER TRIP,450.00,Debit</text>
+<text x="90" y="845" font-family="Arial" font-size="10">2024-11-12,SWIGGY ORDER,850.00,Debit</text>
+
+<!-- AI Processing -->
+<rect x="420" y="740" width="200" height="120" fill="#f1f8e9" stroke="#689f38" stroke-width="2" rx="5"/>
+<text x="520" y="765" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">AI Processing</text>
+<text x="520" y="785" text-anchor="middle" font-family="Arial" font-size="11">AI Extracts & Enhances:</text>
+<text x="430" y="805" font-family="Arial" font-size="10">• Clean merchant names</text>
+<text x="430" y="820" font-family="Arial" font-size="10">• Categorize transactions</text>
+<text x="430" y="835" font-family="Arial" font-size="10">• Identify bank/card type</text>
+<text x="430" y="850" font-family="Arial" font-size="10">• Parse transaction details</text>
+
+<!-- Database Output -->
+<rect x="660" y="740" width="320" height="200" fill="#e8f5e8" stroke="#2e7d32" stroke-width="2" rx="5"/>
+<text x="820" y="765" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">all_transactions records</text>
+<text x="670" y="785" font-family="Arial" font-size="10">{</text>
+<text x="680" y="800" font-family="Arial" font-size="10">id: 'txn_001',</text>
+<text x="680" y="815" font-family="Arial" font-size="10">date: '2024-11-15',</text>
+<text x="680" y="830" font-family="Arial" font-size="10">description: 'Amazon Marketplace',</text>
+<text x="680" y="845" font-family="Arial" font-size="10">amount: 2499.00,</text>
+<text x="680" y="860" font-family="Arial" font-size="10">type: 'expense',</text>
+<text x="680" y="875" font-family="Arial" font-size="10">category: 'Shopping',</text>
+<text x="680" y="890" font-family="Arial" font-size="10">account_type: 'Credit Card',</text>
+<text x="680" y="905" font-family="Arial" font-size="10">bank_name: 'HDFC Diners',</text>
+<text x="680" y="920" font-family="Arial" font-size="10">user_id: 'user123',</text>
+<text x="680" y="935" font-family="Arial" font-size="10">source: 'statement'</text>
+<text x="670" y="950" font-family="Arial" font-size="10">}</text>
+
+<!-- Balance Update -->
+<rect x="1020" y="740" width="300" height="200" fill="#fce4ec" stroke="#c2185b" stroke-width="2" rx="5"/>
+<text x="1170" y="765" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">balances table update</text>
+<text x="1030" y="785" font-family="Arial" font-size="10">{</text>
+<text x="1040" y="800" font-family="Arial" font-size="10">id: 'bal_001',</text>
+<text x="1040" y="815" font-family="Arial" font-size="10">account_type: 'Credit Card',</text>
+<text x="1040" y="830" font-family="Arial" font-size="10">bank_name: 'HDFC Diners',</text>
+<text x="1040" y="845" font-family="Arial" font-size="10">closing_balance: -28000.00,</text>
+<text x="1040" y="860" font-family="Arial" font-size="10">credit_limit: 200000.00,</text>
+<text x="1040" y="875" font-family="Arial" font-size="10">last_expense_date: '2024-11-15',</text>
+<text x="1040" y="890" font-family="Arial" font-size="10">last_transaction_id: 'txn_001',</text>
+<text x="1040" y="905" font-family="Arial" font-size="10">statement_month: 'November 2024',</text>
+<text x="1040" y="920" font-family="Arial" font-size="10">user_id: 'user123'</text>
+<text x="1030" y="935" font-family="Arial" font-size="10">}</text>
+
+<!-- Flow Arrows -->
+<line x1="380" y1="800" x2="420" y2="800" stroke="#333" stroke-width="3" marker-end="url(#arrowhead)"/>
+<line x1="620" y1="800" x2="660" y2="800" stroke="#333" stroke-width="3" marker-end="url(#arrowhead)"/>
+<line x1="980" y1="840" x2="1020" y2="840" stroke="#333" stroke-width="3" marker-end="url(#arrowhead)"/>
+
+<!-- Key Features -->
+<rect x="80" y="970" width="1240" height="100" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="5"/>
+<text x="700" y="995" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Key Database Design Features</text>
+
+<text x="100" y="1020" font-family="Arial" font-size="12" font-weight="bold">🔒 Security:</text>
+<text x="100" y="1035" font-family="Arial" font-size="11">• Row Level Security (RLS) - Every table has user_id</text>
+<text x="100" y="1050" font-family="Arial" font-size="11">• JWT authentication on every API call</text>
+
+<text x="450" y="1020" font-family="Arial" font-size="12" font-weight="bold">📊 Performance:</text>
+<text x="450" y="1035" font-family="Arial" font-size="11">• Indexed queries for fast lookups</text>
+<text x="450" y="1050" font-family="Arial" font-size="11">• Optimized aggregations for analytics</text>
+
+<text x="800" y="1020" font-family="Arial" font-size="12" font-weight="bold">🔄 Data Integrity:</text>
+<text x="800" y="1035" font-family="Arial" font-size="11">• Foreign key relationships</text>
+<text x="800" y="1050" font-family="Arial" font-size="11">• ACID compliance for consistency</text>
+
+<text x="1100" y="1020" font-family="Arial" font-size="12" font-weight="bold">🚀 Scalability:</text>
+<text x="1100" y="1035" font-family="Arial" font-size="11">• Connection pooling</text>
+<text x="1100" y="1050" font-family="Arial" font-size="11">• Real-time subscriptions</text>
+
+<text x="50" y="1180" font-family="Arial" font-size="12" fill="#666">
+Real Database Fields • JWT Security • AI Processing • Multi-Bank Support • Performance Optimized
+</text>
+</svg> 
