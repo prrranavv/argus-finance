@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { requireAuth } from '@/lib/auth-middleware';
 
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) {
+      return authResult; // Return error response
+    }
+    const { userId } = authResult;
+
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month'); // Optional: YYYY-MM format
     
     const client = supabaseAdmin || supabase;
 
-    // Build query
+    // Build query - filter by user ID
     let query = client
       .from('emails')
-      .select('gmail_message_id, received_date');
+      .select('gmail_message_id, received_date')
+      .eq('user_id', userId);
 
     // Filter by month if provided
     if (month) {

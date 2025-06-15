@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { requireAuth } from '@/lib/auth-middleware';
+import { getValidGmailToken, updateLastSync } from '@/lib/vault-tokens';
 
 // Configure OAuth2 client
 const oauth2Client = new google.auth.OAuth2(
@@ -12,6 +14,13 @@ const oauth2Client = new google.auth.OAuth2(
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) {
+      return authResult; // Return error response
+    }
+    const { userId } = authResult;
+
     const { 
       maxMessages, 
       dateRange, 
@@ -26,20 +35,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!process.env.GMAIL_ACCESS_TOKEN || !process.env.GMAIL_REFRESH_TOKEN) {
+    // Get user's Gmail token from database
+    const accessToken = await getValidGmailToken(userId);
+    if (!accessToken) {
       return NextResponse.json(
         { 
-          error: 'Gmail authentication required. Please re-authenticate using the test endpoint.',
-          authUrl: `https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgmail.readonly&prompt=consent&response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fgmail%2Ftest`
+          error: 'Gmail authentication required. Please connect your Gmail account in the onboarding or settings.',
+          requiresAuth: true
         },
         { status: 401 }
       );
     }
 
-    // Set credentials with refresh token
+    // Set credentials with user's token
     oauth2Client.setCredentials({
-      access_token: process.env.GMAIL_ACCESS_TOKEN,
-      refresh_token: process.env.GMAIL_REFRESH_TOKEN,
+      access_token: accessToken,
     });
 
     // Initialize Gmail API
@@ -179,6 +189,9 @@ export async function POST(request: NextRequest) {
 
     console.log(`✅ Successfully fetched ${emailDetails.length} new emails`);
 
+    // Update last sync timestamp
+    await updateLastSync(userId, 'gmail');
+
     return NextResponse.json({
       emails: emailDetails,
       totalEmails: emailDetails.length,
@@ -194,8 +207,8 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && error.message.includes('invalid_grant')) {
       return NextResponse.json(
         { 
-          error: 'Gmail access token expired. Please re-authenticate using the test endpoint.',
-          authUrl: `https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fgmail.readonly&prompt=consent&response_type=code&client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fgmail%2Ftest`
+          error: 'Gmail access token expired. Please reconnect your Gmail account.',
+          requiresReauth: true
         },
         { status: 401 }
       );

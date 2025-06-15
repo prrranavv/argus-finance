@@ -1,11 +1,64 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/auth-middleware';
+import { getSplitwiseTokens, updateLastSync } from '@/lib/vault-tokens';
+import crypto from 'crypto';
 
-export async function GET(request: Request) {
+// OAuth 1.0a signature generation
+function generateSignature(
+  method: string,
+  url: string,
+  params: Record<string, string>,
+  consumerSecret: string,
+  tokenSecret: string = ''
+): string {
+  // Sort parameters
+  const sortedParams = Object.keys(params)
+    .sort()
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+    .join('&')
+
+  // Create signature base string
+  const signatureBaseString = [
+    method.toUpperCase(),
+    encodeURIComponent(url),
+    encodeURIComponent(sortedParams)
+  ].join('&')
+
+  // Create signing key
+  const signingKey = `${encodeURIComponent(consumerSecret)}&${encodeURIComponent(tokenSecret)}`
+
+  // Generate signature
+  const signature = crypto
+    .createHmac('sha1', signingKey)
+    .update(signatureBaseString)
+    .digest('base64')
+
+  return signature
+}
+
+export async function GET(request: NextRequest) {
   try {
-    const apiKey = process.env.SPLITWISE_API_KEY;
-    
-    if (!apiKey) {
-      return NextResponse.json({ error: 'Splitwise API key not configured' }, { status: 500 });
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) {
+      return authResult; // Return error response
+    }
+    const { userId } = authResult;
+
+    // Get user's Splitwise tokens from database
+    const tokens = await getSplitwiseTokens(userId);
+    if (!tokens || !tokens.access_token || !tokens.access_token_secret) {
+      return NextResponse.json(
+        { error: 'Splitwise authentication required. Please connect your Splitwise account.' },
+        { status: 401 }
+      );
+    }
+
+    const consumerKey = process.env.SPLITWISE_CONSUMER_KEY;
+    const consumerSecret = process.env.SPLITWISE_CONSUMER_SECRET;
+
+    if (!consumerKey || !consumerSecret) {
+      return NextResponse.json({ error: 'Splitwise OAuth credentials not configured' }, { status: 500 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -17,20 +70,58 @@ export async function GET(request: Request) {
     // Default to Jan 1, 2025 if no date is provided
     const datedAfter = datedAfterParam || '2025-01-01T00:00:00Z';
 
-    let url = `https://secure.splitwise.com/api/v3.0/get_expenses?limit=${limit}&dated_after=${datedAfter}`;
+    // Build URL with query parameters
+    const baseUrl = 'https://secure.splitwise.com/api/v3.0/get_expenses';
+    const queryParams: Record<string, string> = {
+      limit,
+      dated_after: datedAfter
+    };
     
     if (groupId) {
-      url += `&group_id=${groupId}`;
+      queryParams.group_id = groupId;
     }
     
     if (datedBefore) {
-      url += `&dated_before=${datedBefore}`;
+      queryParams.dated_before = datedBefore;
     }
 
-    const response = await fetch(url, {
+    // OAuth parameters
+    const oauthParams = {
+      oauth_consumer_key: consumerKey,
+      oauth_nonce: crypto.randomBytes(16).toString('hex'),
+      oauth_signature_method: 'HMAC-SHA1',
+      oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+      oauth_token: tokens.access_token,
+      oauth_version: '1.0'
+    };
+
+    // Combine all parameters for signature
+    const allParams = { ...queryParams, ...oauthParams };
+    
+    // Generate signature
+    const signature = generateSignature('GET', baseUrl, allParams, consumerSecret, tokens.access_token_secret!);
+    
+    // Add signature to OAuth params
+    const finalOAuthParams = {
+      ...oauthParams,
+      oauth_signature: signature
+    };
+
+    // Create authorization header
+    const authHeader = 'OAuth ' + Object.entries(finalOAuthParams)
+      .map(([key, value]) => `${encodeURIComponent(key)}="${encodeURIComponent(value)}"`)
+      .join(', ');
+
+    // Build final URL with query parameters
+    const queryString = Object.entries(queryParams)
+      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .join('&');
+    const finalUrl = `${baseUrl}?${queryString}`;
+
+    const response = await fetch(finalUrl, {
+      method: 'GET',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+        'Authorization': authHeader
       },
     });
 
@@ -51,6 +142,9 @@ export async function GET(request: Request) {
         !expense.deleted_at && expense.creation_method !== 'debt_consolidation'
       );
     }
+
+    // Update last sync timestamp
+    await updateLastSync(userId, 'splitwise');
 
     return NextResponse.json(data);
 

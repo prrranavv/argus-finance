@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { requireAuth } from '@/lib/auth-middleware';
+import { getValidGmailToken } from '@/lib/vault-tokens';
 
 // Configure OAuth2 client
 const oauth2Client = new google.auth.OAuth2(
@@ -12,6 +14,13 @@ const oauth2Client = new google.auth.OAuth2(
 
 export async function GET(request: NextRequest) {
   try {
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) {
+      return authResult; // Return error response
+    }
+    const { userId } = authResult;
+
     const { searchParams } = new URL(request.url);
     const messageId = searchParams.get('messageId');
     const attachmentId = searchParams.get('attachmentId');
@@ -32,17 +41,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!process.env.GMAIL_ACCESS_TOKEN || !process.env.GMAIL_REFRESH_TOKEN) {
+    // Get user's Gmail token from database
+    const accessToken = await getValidGmailToken(userId);
+    if (!accessToken) {
       return NextResponse.json(
-        { error: 'Gmail authentication required' },
+        { error: 'Gmail authentication required. Please connect your Gmail account.' },
         { status: 401 }
       );
     }
 
-    // Set credentials with refresh token
+    // Set credentials with user's token
     oauth2Client.setCredentials({
-      access_token: process.env.GMAIL_ACCESS_TOKEN,
-      refresh_token: process.env.GMAIL_REFRESH_TOKEN,
+      access_token: accessToken,
     });
 
     // Initialize Gmail API

@@ -5,7 +5,10 @@ import { Header } from '@/components/header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RefreshCw, Users, Receipt, ShoppingCart, Home, Car, Utensils, Coffee, Gamepad2, Gift, TrendingUp, TrendingDown, Search, X, ChevronDown, Coins, Calendar } from 'lucide-react';
+import { RefreshCw, Users, Receipt, ShoppingCart, Home, Car, Utensils, Coffee, Gamepad2, Gift, TrendingUp, TrendingDown, Search, X, ChevronDown, Coins, Calendar, Eye, EyeOff } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { createClientClient } from '@/lib/supabase';
 
 import { format, parseISO } from 'date-fns';
 import Image from 'next/image';
@@ -131,6 +134,29 @@ export default function SplitvisePage() {
   const [showTimeout, setShowTimeout] = useState<NodeJS.Timeout | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState<{ x: number; y: number } | null>(null);
 
+  // Supabase client for getting auth token
+  const supabase = useMemo(() => createClientClient(), []);
+
+  // Helper function to get auth headers
+  const getAuthHeaders = async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('Error getting session:', error);
+      throw new Error('Failed to get authentication session');
+    }
+    
+    if (!session?.access_token) {
+      console.error('No session or access token available');
+      throw new Error('No authentication token available. Please sign in again.');
+    }
+    
+    console.log('🔑 Got access token for API call');
+    return {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json'
+    };
+  };
+
   // Load privacy preference from localStorage on mount
   useEffect(() => {
     const savedPrivacyMode = localStorage.getItem('privacyMode');
@@ -153,6 +179,9 @@ export default function SplitvisePage() {
     setError(null);
     
     try {
+      // Get authentication headers
+      const headers = await getAuthHeaders();
+      
       let expensesUrl = '/api/splitwise/expenses';
       
       if (isInitial) {
@@ -175,19 +204,30 @@ export default function SplitvisePage() {
       }
 
       const promises = [
-        fetch(expensesUrl)
+        fetch(expensesUrl, { headers })
       ];
 
       // Only fetch other data on initial load
       if (isInitial) {
         promises.unshift(
-          fetch('/api/splitwise/groups'),
-          fetch('/api/splitwise/friends'),
-          fetch('/api/splitwise/current-user')
+          fetch('/api/splitwise/groups', { headers }),
+          fetch('/api/splitwise/friends', { headers }),
+          fetch('/api/splitwise/current-user', { headers })
         );
       }
 
       const responses = await Promise.all(promises);
+      
+      // Check for authentication errors
+      for (const response of responses) {
+        if (response.status === 401) {
+          throw new Error('Authentication failed. Please refresh the page and try again.');
+        }
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+        }
+      }
+      
       const dataPromises = responses.map(res => res.json());
       const data = await Promise.all(dataPromises);
 

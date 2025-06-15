@@ -21,13 +21,7 @@ export interface GmailTokens {
  */
 export async function initiateGmailOAuth(): Promise<void> {
   try {
-    // Check if Gmail OAuth is configured
-    const clientId = process.env.GOOGLE_CLIENT_ID
-    if (!clientId) {
-      throw new Error('Gmail OAuth not configured. Please set GOOGLE_CLIENT_ID environment variable.')
-    }
-
-    // Get OAuth URL from our API
+    // Get OAuth URL from our API (server will validate configuration)
     const response = await fetch('/api/gmail/request-auth', {
       method: 'POST',
       headers: {
@@ -59,8 +53,15 @@ export async function initiateGmailOAuth(): Promise<void> {
  */
 export async function testGmailOAuthConfig(): Promise<boolean> {
   try {
-    const clientId = process.env.GOOGLE_CLIENT_ID
-    return !!clientId
+    // Test by making a request to the auth endpoint
+    const response = await fetch('/api/gmail/request-auth', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+    
+    return response.ok
   } catch (error) {
     console.error('Gmail OAuth config test error:', error)
     return false

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
+import { requireAuth } from '@/lib/auth-middleware';
 
 // Initialize OpenAI
 const openai = new OpenAI({
@@ -8,6 +9,13 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    // Authenticate user
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) {
+      return authResult; // Return error response
+    }
+    const { userId } = authResult;
+
     const { emails } = await request.json();
 
     if (!emails || !Array.isArray(emails)) {

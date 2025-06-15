@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { SyncStep } from "@/components/gmail-sync-progress-bar";
+import { createClientClient } from '@/lib/supabase';
 
 interface EmailData {
   id: string;
@@ -57,6 +58,29 @@ export function useGmailSync() {
   const [steps, setSteps] = useState<SyncStep[]>([]);
   const [results, setResults] = useState<SyncResults | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Initialize Supabase client for getting user session
+  const supabase = useMemo(() => createClientClient(), []);
+
+  // Helper function to get auth headers
+  const getAuthHeaders = async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('Error getting session:', error);
+      throw new Error('Failed to get authentication session');
+    }
+    
+    if (!session?.access_token) {
+      console.error('No session or access token available');
+      throw new Error('No authentication token available. Please sign in again.');
+    }
+    
+    console.log('🔑 Got access token for API call');
+    return {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json'
+    };
+  };
 
   const initializeSteps = useCallback(() => {
     const syncSteps: SyncStep[] = [
@@ -134,7 +158,10 @@ export function useGmailSync() {
       updateStepStatus('check-existing', 'running');
       console.log('🔍 Checking for existing emails in database...');
       
-      const existingResponse = await fetch('/api/gmail/get-existing-message-ids');
+      const authHeaders = await getAuthHeaders();
+      const existingResponse = await fetch('/api/gmail/get-existing-message-ids', {
+        headers: authHeaders
+      });
       const existingResult = await existingResponse.json();
       
       if (!existingResponse.ok) {
@@ -151,7 +178,7 @@ export function useGmailSync() {
       
       const fetchResponse = await fetch('/api/gmail/fetch-emails', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ excludeMessageIds: existingMessageIds }),
       });
 
@@ -198,7 +225,7 @@ export function useGmailSync() {
       
       const cleanResponse = await fetch('/api/gmail/clean-email-content', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ emails }),
       });
 
@@ -218,7 +245,7 @@ export function useGmailSync() {
       
       const saveEmailResponse = await fetch('/api/gmail/save-email-data', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ emails }),
       });
 
@@ -244,7 +271,7 @@ export function useGmailSync() {
         try {
           const response = await fetch('/api/gmail/process-email', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: authHeaders,
             body: JSON.stringify({ email }),
           });
 
@@ -276,7 +303,7 @@ export function useGmailSync() {
         
         const saveTransactionResponse = await fetch('/api/gmail/save-transactions', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: authHeaders,
           body: JSON.stringify({ transactions }),
         });
 

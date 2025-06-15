@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { storeIntegrationTokens } from '@/lib/vault-tokens';
 
 // Create server client to get user session
 async function createServerSupabaseClient() {
@@ -18,11 +19,6 @@ async function createServerSupabaseClient() {
       },
     }
   );
-}
-
-// Simple encryption for tokens (using base64 for now, can be enhanced)
-function encryptToken(token: string): string {
-  return Buffer.from(token).toString('base64');
 }
 
 export async function POST(request: NextRequest) {
@@ -85,33 +81,39 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Encrypt the tokens
-    const encryptedAccessToken = encryptToken(access_token);
-    const encryptedAccessTokenSecret = access_token_secret ? encryptToken(access_token_secret) : null;
-    const encryptedRefreshToken = refresh_token ? encryptToken(refresh_token) : null;
+    // Store tokens in Supabase Vault
+    // Convert expires_at to expires_in (seconds from now) if provided
+    let expires_in: number | undefined;
+    if (expires_at) {
+      const expiresAtDate = new Date(expires_at);
+      const now = new Date();
+      expires_in = Math.max(0, Math.floor((expiresAtDate.getTime() - now.getTime()) / 1000));
+    }
 
-    // Upsert the integration (replace if exists)
+    const success = await storeIntegrationTokens(user.id, integration_type, {
+      access_token,
+      access_token_secret,
+      refresh_token,
+      expires_in,
+      additional_data: additional_data || {}
+    });
+
+    if (!success) {
+      console.error('Error storing integration tokens in vault');
+      return NextResponse.json({ error: 'Failed to store integration tokens' }, { status: 500 });
+    }
+
+    // Get the stored integration for response
     const { data: integration, error } = await supabaseAdmin
       .from('user_integrations')
-      .upsert({
-        user_id: user.id,
-        integration_type,
-        access_token_encrypted: encryptedAccessToken,
-        access_token_secret_encrypted: encryptedAccessTokenSecret,
-        refresh_token_encrypted: encryptedRefreshToken,
-        token_expires_at: expires_at || null,
-        additional_data: additional_data || {},
-        is_active: true,
-        last_sync_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id,integration_type'
-      })
       .select('id, user_id, integration_type, is_active, last_sync_at, created_at, updated_at')
+      .eq('user_id', user.id)
+      .eq('integration_type', integration_type)
       .single();
 
     if (error) {
-      console.error('Error adding integration:', error);
-      return NextResponse.json({ error: 'Failed to add integration' }, { status: 500 });
+      console.error('Error fetching stored integration:', error);
+      return NextResponse.json({ error: 'Failed to fetch integration' }, { status: 500 });
     }
 
     return NextResponse.json({

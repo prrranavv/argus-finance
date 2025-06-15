@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { createClientClient } from '@/lib/supabase';
 import {
   Dialog,
   DialogContent,
@@ -98,6 +99,29 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
   const [transactionSaveResults, setTransactionSaveResults] = useState<{ savedTransactions: number; message: string } | null>(null);
   const [syncStats, setSyncStats] = useState<{ totalFound: number; newEmails: number; existingEmails: number } | null>(null);
 
+  // Supabase client for getting auth token
+  const supabase = useMemo(() => createClientClient(), []);
+
+  // Helper function to get auth headers
+  const getAuthHeaders = async () => {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (error) {
+      console.error('Error getting session:', error);
+      throw new Error('Failed to get authentication session');
+    }
+    
+    if (!session?.access_token) {
+      console.error('No session or access token available');
+      throw new Error('No authentication token available. Please sign in again.');
+    }
+    
+    console.log('🔑 Got access token for API call');
+    return {
+      'Authorization': `Bearer ${session.access_token}`,
+      'Content-Type': 'application/json'
+    };
+  };
+
   // Load sync results from header if provided
   useEffect(() => {
     if (syncResults && isOpen) {
@@ -135,9 +159,12 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
     setSyncStats(null);
     
     try {
+      // Get authentication headers
+      const headers = await getAuthHeaders();
+      
       // Step 1: Get existing message IDs from database (current month)
       console.log('🔍 Checking for existing emails in database...');
-      const existingResponse = await fetch('/api/gmail/get-existing-message-ids');
+      const existingResponse = await fetch('/api/gmail/get-existing-message-ids', { headers });
       const existingResult = await existingResponse.json();
       
       if (!existingResponse.ok) {
@@ -151,9 +178,7 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
       console.log('📧 Fetching current month emails from Gmail...');
       const response = await fetch('/api/gmail/fetch-emails', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ 
           excludeMessageIds: existingMessageIds // Smart sync: exclude existing emails
         }),
@@ -187,9 +212,7 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
       
       const cleanResponse = await fetch('/api/gmail/clean-email-content', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ emails: result.emails }),
       });
 
@@ -208,9 +231,7 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
       
       const saveEmailResponse = await fetch('/api/gmail/save-email-data', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ emails: cleanedEmails }),
       });
 
@@ -244,14 +265,15 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
     setProcessingEmails(newProcessingEmails);
 
     try {
+      // Get authentication headers
+      const headers = await getAuthHeaders();
+      
       // Process all emails in parallel
       const analysisPromises = gmailEmails.map(async (email) => {
         try {
           const response = await fetch('/api/gmail/process-email', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers,
             body: JSON.stringify({ email }),
           });
 
@@ -331,11 +353,12 @@ export function GmailSyncModal({ isOpen, onOpenChange, syncResults }: GmailSyncM
     try {
       console.log(`💰 Saving ${transactions.length} transactions to database...`);
 
+      // Get authentication headers
+      const headers = await getAuthHeaders();
+
       const response = await fetch('/api/gmail/save-transactions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           transactions
         }),
