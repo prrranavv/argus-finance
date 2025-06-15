@@ -1,5 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+// Create server client to get user session
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+}
 
 interface MonthData {
   month: string;
@@ -60,14 +79,15 @@ function sortMonthsDescending(a: { statement_month: string | null }, b: { statem
 }
 
 // Get expenses since a specific transaction ID
-async function getExpensesSinceTransactionId(lastTransactionId: string | null, accountType: string): Promise<number> {
-  if (!lastTransactionId) return 0;
+async function getExpensesSinceTransactionId(lastTransactionId: string | null, accountType: string, userId: string): Promise<number> {
+  if (!lastTransactionId || !supabaseAdmin) return 0;
   
   // First, get the date of the last transaction
-  const { data: lastTransaction, error: lastTransactionError } = await supabase
+  const { data: lastTransaction, error: lastTransactionError } = await supabaseAdmin
     .from('all_transactions')
     .select('date')
     .eq('id', lastTransactionId)
+    .eq('user_id', userId)
     .single();
   
   if (lastTransactionError || !lastTransaction) {
@@ -76,11 +96,12 @@ async function getExpensesSinceTransactionId(lastTransactionId: string | null, a
   }
   
   // Then, get all expenses since that date
-  const { data: expenses, error: expensesError } = await supabase
+  const { data: expenses, error: expensesError } = await supabaseAdmin
     .from('all_transactions')
     .select('amount')
     .eq('account_type', accountType)
     .eq('type', 'expense')
+    .eq('user_id', userId)
     .gt('date', lastTransaction.date);
   
   if (expensesError) {
@@ -100,21 +121,40 @@ function calculatePercentageChange(current: number, previous: number): number {
 
 export async function GET(request: NextRequest) {
   try {
+    // Check if admin client is available
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // Get user session to filter data by user
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('User not authenticated:', userError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    console.log('🔑 API: Fetching metrics for user:', user.id);
+    
     // No year filter needed
     
     // 1. Get the most recent month with balances data
-    const { data: latestMonthData } = await supabase
+    const { data: latestMonthData } = await supabaseAdmin
       .from('balances')
       .select('statement_month')
+      .eq('user_id', user.id)
       .order('statement_month', { ascending: false })
       .limit(1);
     
     // --- 1. Current Bank Balance ---
     // Get the last two months of bank account balances
-    const { data: bankBalances, error: bankBalancesError } = await supabase
+    const { data: bankBalances, error: bankBalancesError } = await supabaseAdmin
       .from('balances')
       .select('*')
       .eq('account_type', 'Bank Account')
+      .eq('user_id', user.id)
       .order('statement_month', { ascending: false });
     
     if (bankBalancesError) {
@@ -178,7 +218,7 @@ export async function GET(request: NextRequest) {
     
     // Calculate current bank balance by subtracting recent expenses from each bank
     const bankExpensesPromises = Object.entries(currentMonth[1].bankTotals).map(async ([bankName, bankData]) => {
-      const expenses = await getExpensesSinceTransactionId(bankData.lastTransactionId, 'Bank Account');
+      const expenses = await getExpensesSinceTransactionId(bankData.lastTransactionId, 'Bank Account', user.id);
       return { bankName, expenses };
     });
     
@@ -193,10 +233,11 @@ export async function GET(request: NextRequest) {
     
     // --- 3. Current Credit Card Dues ---
     // Get latest credit card data
-    const { data: creditCardBalances, error: creditCardError } = await supabase
+    const { data: creditCardBalances, error: creditCardError } = await supabaseAdmin
       .from('balances')
       .select('*')
       .eq('account_type', 'Credit Card')
+      .eq('user_id', user.id)
       .order('statement_month', { ascending: false });
     
     if (creditCardError) {
@@ -255,7 +296,7 @@ export async function GET(request: NextRequest) {
       
       // Calculate credit card dues by adding recent expenses to last statement dues
       const cardExpensesPromises = Object.entries(currentCreditCardMonth[1].cardTotals).map(async ([cardName, cardData]) => {
-        const expenses = await getExpensesSinceTransactionId(cardData.lastTransactionId, 'Credit Card');
+        const expenses = await getExpensesSinceTransactionId(cardData.lastTransactionId, 'Credit Card', user.id);
         return { cardName, expenses };
       });
       
@@ -266,9 +307,10 @@ export async function GET(request: NextRequest) {
     }
     
     // --- 4. Reward Points (as of last month) ---
-    const { data: rewardPointsData, error: rewardPointsError } = await supabase
+    const { data: rewardPointsData, error: rewardPointsError } = await supabaseAdmin
       .from('balances')
       .select('reward_points, statement_month')
+      .eq('user_id', user.id)
       .not('reward_points', 'is', null)
       .order('statement_month', { ascending: false });
     

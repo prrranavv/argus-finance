@@ -18,6 +18,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { UserProfile } from "@/components/user-profile";
 
 interface HeaderProps {
   isPrivacyMode: boolean;
@@ -273,6 +274,9 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
                 >
                   <FlaskConical className="h-4 w-4 text-purple-500" />
                 </Button>
+
+                {/* User Profile */}
+                <UserProfile />
               </div>
             </div>
 
@@ -375,6 +379,9 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
                 >
                   <FlaskConical className="h-4 w-4 text-purple-500" />
                 </Button>
+
+                {/* User Profile */}
+                <UserProfile />
               </div>
             </div>
 
@@ -408,6 +415,9 @@ export function Header({ isPrivacyMode, onPrivacyToggle }: HeaderProps) {
               >
                 <FlaskConical className="h-4 w-4 text-purple-500" />
               </Button>
+
+              {/* User Profile - Always visible on mobile */}
+              <UserProfile />
 
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000">
+<!-- API Endpoints Overview -->
+<text x="10" y="30" font-family="Arial" font-size="16" font-weight="bold">API Endpoints Overview - Backend Architecture</text>
+
+<!-- Authentication APIs -->
+<rect x="50" y="60" width="250" height="120" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="8"/>
+<text x="175" y="85" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Authentication APIs</text>
+<line x1="50" y1="95" x2="300" y2="95" stroke="#1976d2" stroke-width="1"/>
+<text x="60" y="115" font-family="Arial" font-size="11">🔐 /api/auth/*</text>
+<text x="60" y="135" font-family="Arial" font-size="11">• User authentication</text>
+<text x="60" y="155" font-family="Arial" font-size="11">• Session management</text>
+<text x="60" y="175" font-family="Arial" font-size="11">• JWT token handling</text>
+
+<!-- Statement APIs -->
+<rect x="320" y="60" width="280" height="180" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="8"/>
+<text x="460" y="85" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Statement APIs</text>
+<line x1="320" y1="95" x2="600" y2="95" stroke="#7b1fa2" stroke-width="1"/>
+<text x="330" y="115" font-family="Arial" font-size="11">📄 /api/process-statement</text>
+<text x="330" y="135" font-family="Arial" font-size="11">• POST: Upload & process files</text>
+<text x="330" y="155" font-family="Arial" font-size="11">• Returns: transaction count</text>
+<text x="330" y="175" font-family="Arial" font-size="11">📋 /api/statements</text>
+<text x="330" y="195" font-family="Arial" font-size="11">• GET: List user statements</text>
+<text x="330" y="215" font-family="Arial" font-size="11">🗑️ /api/delete-statement</text>
+<text x="330" y="235" font-family="Arial" font-size="11">• DELETE: Remove statement + transactions</text>
+
+<!-- Transaction APIs -->
+<rect x="620" y="60" width="280" height="180" fill="#e8f5e8" stroke="#2e7d32" stroke-width="2" rx="8"/>
+<text x="760" y="85" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Transaction APIs</text>
+<line x1="620" y1="95" x2="900" y2="95" stroke="#2e7d32" stroke-width="1"/>
+<text x="630" y="115" font-family="Arial" font-size="11">💳 /api/all-transactions</text>
+<text x="630" y="135" font-family="Arial" font-size="11">• GET: Fetch transactions</text>
+<text x="630" y="155" font-family="Arial" font-size="11">• POST: Create manual transaction</text>
+<text x="630" y="175" font-family="Arial" font-size="11">• Filters: bank, date, search</text>
+<text x="630" y="195" font-family="Arial" font-size="11">📊 /api/transaction-metrics</text>
+<text x="630" y="215" font-family="Arial" font-size="11">• GET: Transaction statistics</text>
+<text x="630" y="235" font-family="Arial" font-size="11">• Returns: totals, averages</text>
+
+<!-- Analytics APIs -->
+<rect x="920" y="60" width="280" height="300" fill="#fff3e0" stroke="#ef6c00" stroke-width="2" rx="8"/>
+<text x="1060" y="85" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Analytics APIs</text>
+<line x1="920" y1="95" x2="1200" y2="95" stroke="#ef6c00" stroke-width="1"/>
+
+<text x="930" y="115" font-family="Arial" font-size="11">📈 /api/key-metrics-v2</text>
+<text x="930" y="135" font-family="Arial" font-size="11">• GET: Dashboard metrics</text>
+<text x="930" y="155" font-family="Arial" font-size="11">• Returns: balances, spending</text>
+
+<text x="930" y="175" font-family="Arial" font-size="11">📊 /api/balance-progression-v2</text>
+<text x="930" y="195" font-family="Arial" font-size="11">• GET: Balance over time</text>
+<text x="930" y="215" font-family="Arial" font-size="11">• Params: bank filter</text>
+
+<text x="930" y="235" font-family="Arial" font-size="11">📅 /api/monthly-summary-v2</text>
+<text x="930" y="255" font-family="Arial" font-size="11">• GET: Monthly aggregations</text>
+<text x="930" y="275" font-family="Arial" font-size="11">• Returns: income/expense totals</text>
+
+<text x="930" y="295" font-family="Arial" font-size="11">💳 /api/credit-card-progression-v2</text>
+<text x="930" y="315" font-family="Arial" font-size="11">• GET: Credit card trends</text>
+<text x="930" y="335" font-family="Arial" font-size="11">• Returns: utilization data</text>
+
+<text x="930" y="355" font-family="Arial" font-size="11">📋 /api/credit-card-summary-v2</text>
+
+<!-- Gmail Integration APIs -->
+<rect x="50" y="260" width="250" height="140" fill="#fce4ec" stroke="#c2185b" stroke-width="2" rx="8"/>
+<text x="175" y="285" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Gmail Integration APIs</text>
+<line x1="50" y1="295" x2="300" y2="295" stroke="#c2185b" stroke-width="1"/>
+<text x="60" y="315" font-family="Arial" font-size="11">🔑 /api/gmail/auth</text>
+<text x="60" y="335" font-family="Arial" font-size="11">• GET: OAuth setup</text>
+<text x="60" y="355" font-family="Arial" font-size="11">• Returns: authorization URL</text>
+<text x="60" y="375" font-family="Arial" font-size="11">📧 /api/gmail/fetch</text>
+<text x="60" y="395" font-family="Arial" font-size="11">• POST: Sync email transactions</text>
+
+<!-- Utility APIs -->
+<rect x="320" y="260" width="280" height="200" fill="#f1f8e9" stroke="#689f38" stroke-width="2" rx="8"/>
+<text x="460" y="285" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Utility APIs</text>
+<line x1="320" y1="295" x2="600" y2="295" stroke="#689f38" stroke-width="1"/>
+
+<text x="330" y="315" font-family="Arial" font-size="11">🏦 /api/bank-names</text>
+<text x="330" y="335" font-family="Arial" font-size="11">• GET: Available banks</text>
+
+<text x="330" y="355" font-family="Arial" font-size="11">🏢 /api/banks-with-types</text>
+<text x="330" y="375" font-family="Arial" font-size="11">• GET: Banks with account types</text>
+
+<text x="330" y="395" font-family="Arial" font-size="11">🧹 /api/cleanup</text>
+<text x="330" y="415" font-family="Arial" font-size="11">• POST: Remove duplicates</text>
+
+<text x="330" y="435" font-family="Arial" font-size="11">🔍 /api/debug</text>
+<text x="330" y="455" font-family="Arial" font-size="11">• GET: System diagnostics</text>
+
+<!-- API Flow Diagram -->
+<rect x="50" y="480" width="1150" height="450" fill="#f5f5f5" stroke="#757575" stroke-width="2" rx="10"/>
+<text x="625" y="510" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">API Request Flow Architecture</text>
+
+<!-- Client -->
+<rect x="80" y="540" width="120" height="60" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="5"/>
+<text x="140" y="575" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Frontend Client</text>
+
+<!-- Next.js API Routes -->
+<rect x="250" y="540" width="120" height="60" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="5"/>
+<text x="310" y="575" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Next.js API Routes</text>
+
+<!-- Authentication Layer -->
+<rect x="420" y="540" width="120" height="60" fill="#fff3e0" stroke="#ef6c00" stroke-width="2" rx="5"/>
+<text x="480" y="575" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Auth Middleware</text>
+
+<!-- Database -->
+<rect x="590" y="540" width="120" height="60" fill="#e8f5e8" stroke="#2e7d32" stroke-width="2" rx="5"/>
+<text x="650" y="575" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Supabase DB</text>
+
+<!-- External Services -->
+<rect x="760" y="540" width="120" height="60" fill="#fce4ec" stroke="#c2185b" stroke-width="2" rx="5"/>
+<text x="820" y="575" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">External APIs</text>
+
+<!-- Response -->
+<rect x="930" y="540" width="120" height="60" fill="#f1f8e9" stroke="#689f38" stroke-width="2" rx="5"/>
+<text x="990" y="575" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">JSON Response</text>
+
+<!-- Arrows -->
+<defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+            refX="10" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+</defs>
+
+<line x1="200" y1="570" x2="250" y2="570" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="210" y="565" font-family="Arial" font-size="10">HTTP Request</text>
+
+<line x1="370" y1="570" x2="420" y2="570" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="380" y="565" font-family="Arial" font-size="10">Route Handler</text>
+
+<line x1="540" y1="570" x2="590" y2="570" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="550" y="565" font-family="Arial" font-size="10">User Verified</text>
+
+<line x1="710" y1="570" x2="760" y2="570" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="720" y="565" font-family="Arial" font-size="10">Query/Update</text>
+
+<line x1="880" y1="570" x2="930" y2="570" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="890" y="565" font-family="Arial" font-size="10">Process Data</text>
+
+<!-- Return arrows -->
+<line x1="930" y1="590" x2="880" y2="590" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<line x1="760" y1="590" x2="710" y2="590" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<line x1="590" y1="590" x2="540" y2="590" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<line x1="420" y1="590" x2="370" y2="590" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<line x1="250" y1="590" x2="200" y2="590" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+
+<!-- Authentication Details -->
+<rect x="80" y="650" width="480" height="120" fill="#e8eaf6" stroke="#3f51b5" stroke-width="1" rx="5"/>
+<text x="320" y="675" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Authentication & Security</text>
+<text x="100" y="700" font-family="Arial" font-size="11">🔐 JWT Token Validation on every request</text>
+<text x="100" y="720" font-family="Arial" font-size="11">🛡️ Row Level Security (RLS) enforced in database</text>
+<text x="100" y="740" font-family="Arial" font-size="11">👤 User ID extracted from session cookie</text>
+<text x="100" y="760" font-family="Arial" font-size="11">🚫 Unauthorized requests rejected with 401</text>
+
+<!-- Response Details -->
+<rect x="580" y="650" width="480" height="120" fill="#e0f2f1" stroke="#00695c" stroke-width="1" rx="5"/>
+<text x="820" y="675" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Response Handling</text>
+<text x="600" y="700" font-family="Arial" font-size="11">📊 Structured JSON responses with consistent format</text>
+<text x="600" y="720" font-family="Arial" font-size="11">⚡ Optimized queries with pagination support</text>
+<text x="600" y="740" font-family="Arial" font-size="11">🔄 Real-time data with WebSocket connections</text>
+<text x="600" y="760" font-family="Arial" font-size="11">📈 Performance monitoring and error tracking</text>
+
+<!-- Rate Limiting -->
+<rect x="80" y="790" width="480" height="100" fill="#fff3e0" stroke="#ef6c00" stroke-width="1" rx="5"/>
+<text x="320" y="815" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Performance & Limits</text>
+<text x="100" y="840" font-family="Arial" font-size="11">⏱️ API rate limiting to prevent abuse</text>
+<text x="100" y="860" font-family="Arial" font-size="11">💾 Caching for frequently accessed data</text>
+<text x="100" y="880" font-family="Arial" font-size="11">🔄 Connection pooling for database efficiency</text>
+
+<!-- Error Handling -->
+<rect x="580" y="790" width="480" height="100" fill="#ffebee" stroke="#f44336" stroke-width="1" rx="5"/>
+<text x="820" y="815" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Error Handling</text>
+<text x="600" y="840" font-family="Arial" font-size="11">🚨 Comprehensive error logging and monitoring</text>
+<text x="600" y="860" font-family="Arial" font-size="11">🔄 Graceful fallbacks for external service failures</text>
+<text x="600" y="880" font-family="Arial" font-size="11">📝 Detailed error messages for debugging</text>
+
+<text x="50" y="970" font-family="Arial" font-size="12" fill="#666">
+RESTful API Design • JWT Authentication • Row Level Security • Real-time Updates • Performance Optimized
+</text>
+</svg> 

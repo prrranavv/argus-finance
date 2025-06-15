@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000">
+<!-- Gmail Integration Flow -->
+<text x="10" y="30" font-family="Arial" font-size="16" font-weight="bold">Gmail Integration Flow - Email Transaction Extraction</text>
+
+<!-- Phase 1: Setup -->
+<rect x="50" y="60" width="600" height="200" fill="#e8f5e8" stroke="#2e7d32" stroke-width="2" rx="10"/>
+<text x="350" y="85" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Gmail Setup Phase</text>
+
+<rect x="70" y="100" width="120" height="40" fill="#e3f2fd" stroke="#1976d2" stroke-width="1" rx="5"/>
+<text x="130" y="125" text-anchor="middle" font-family="Arial" font-size="11">User</text>
+
+<rect x="220" y="100" width="120" height="40" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1" rx="5"/>
+<text x="280" y="125" text-anchor="middle" font-family="Arial" font-size="11">Frontend UI</text>
+
+<rect x="370" y="100" width="120" height="40" fill="#fff3e0" stroke="#ef6c00" stroke-width="1" rx="5"/>
+<text x="430" y="125" text-anchor="middle" font-family="Arial" font-size="11">/api/gmail/*</text>
+
+<rect x="520" y="100" width="120" height="40" fill="#fce4ec" stroke="#c2185b" stroke-width="1" rx="5"/>
+<text x="580" y="125" text-anchor="middle" font-family="Arial" font-size="11">Google Gmail API</text>
+
+<!-- Setup Steps -->
+<text x="70" y="170" font-family="Arial" font-size="11">1. Click "Fetch from Gmail"</text>
+<text x="70" y="185" font-family="Arial" font-size="11">2. GET /api/gmail/auth → OAuth URL</text>
+<text x="70" y="200" font-family="Arial" font-size="11">3. Complete OAuth flow</text>
+<text x="70" y="215" font-family="Arial" font-size="11">4. Get access & refresh tokens</text>
+<text x="70" y="230" font-family="Arial" font-size="11">5. Enter tokens in settings</text>
+
+<!-- Phase 2: Email Fetching -->
+<rect x="50" y="280" width="1300" height="650" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="10"/>
+<text x="700" y="305" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Email Fetching & Processing Phase</text>
+
+<!-- Participants -->
+<rect x="70" y="330" width="100" height="35" fill="#e3f2fd" stroke="#1976d2" stroke-width="1" rx="5"/>
+<text x="120" y="352" text-anchor="middle" font-family="Arial" font-size="11">User</text>
+
+<rect x="200" y="330" width="100" height="35" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="1" rx="5"/>
+<text x="250" y="352" text-anchor="middle" font-family="Arial" font-size="11">Frontend UI</text>
+
+<rect x="330" y="330" width="120" height="35" fill="#fff3e0" stroke="#ef6c00" stroke-width="1" rx="5"/>
+<text x="390" y="352" text-anchor="middle" font-family="Arial" font-size="11">/api/gmail/fetch</text>
+
+<rect x="480" y="330" width="120" height="35" fill="#fce4ec" stroke="#c2185b" stroke-width="1" rx="5"/>
+<text x="540" y="352" text-anchor="middle" font-family="Arial" font-size="11">Google Gmail API</text>
+
+<rect x="630" y="330" width="100" height="35" fill="#e8f5e8" stroke="#2e7d32" stroke-width="1" rx="5"/>
+<text x="680" y="352" text-anchor="middle" font-family="Arial" font-size="11">Supabase DB</text>
+
+<rect x="760" y="330" width="100" height="35" fill="#f1f8e9" stroke="#689f38" stroke-width="1" rx="5"/>
+<text x="810" y="352" text-anchor="middle" font-family="Arial" font-size="11">OpenAI GPT-4</text>
+
+<!-- Lifelines -->
+<defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+            refX="10" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+</defs>
+
+<line x1="120" y1="365" x2="120" y2="900" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="250" y1="365" x2="250" y2="900" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="390" y1="365" x2="390" y2="900" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="540" y1="365" x2="540" y2="900" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="680" y1="365" x2="680" y2="900" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+<line x1="810" y1="365" x2="810" y2="900" stroke="#666" stroke-width="1" stroke-dasharray="3,3"/>
+
+<!-- Messages -->
+<line x1="120" y1="390" x2="250" y2="390" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="150" y="385" font-family="Arial" font-size="10">Click "Sync Gmail Transactions"</text>
+
+<line x1="250" y1="410" x2="390" y2="410" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="280" y="405" font-family="Arial" font-size="10">POST /api/gmail/fetch</text>
+
+<line x1="390" y1="430" x2="540" y2="430" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="410" y="425" font-family="Arial" font-size="10">Search emails</text>
+<text x="410" y="440" font-family="Arial" font-size="9">from: known banks, subject: transaction keywords, newer_than: 10d</text>
+
+<line x1="540" y1="460" x2="390" y2="460" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<text x="420" y="455" font-family="Arial" font-size="10">Email list with message IDs</text>
+
+<!-- Loop for each email -->
+<rect x="300" y="480" width="650" height="350" fill="#fff8e1" stroke="#ff8f00" stroke-width="2" rx="5"/>
+<text x="625" y="505" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">For each email:</text>
+
+<line x1="390" y1="520" x2="540" y2="520" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="410" y="515" font-family="Arial" font-size="10">Get email content messages.get(messageId)</text>
+
+<line x1="540" y1="540" x2="390" y2="540" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<text x="420" y="535" font-family="Arial" font-size="10">Email content & metadata</text>
+
+<line x1="390" y1="560" x2="680" y2="560" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="450" y="555" font-family="Arial" font-size="10">INSERT INTO emails</text>
+<text x="450" y="570" font-family="Arial" font-size="9">{gmail_message_id, from_email, subject, content, user_id}</text>
+
+<line x1="680" y1="585" x2="390" y2="585" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<text x="480" y="580" font-family="Arial" font-size="10">Email record saved</text>
+
+<!-- AI Processing -->
+<rect x="320" y="605" width="600" height="40" fill="#e8f5e8" stroke="#2e7d32" stroke-width="1" rx="5"/>
+<text x="620" y="630" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold">AI Transaction Extraction</text>
+
+<line x1="390" y1="655" x2="810" y2="655" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="520" y="650" font-family="Arial" font-size="10">Extract transaction data</text>
+<text x="520" y="665" font-family="Arial" font-size="9">System: EMAIL_TRANSACTION_EXTRACTION, Content: email body</text>
+
+<line x1="810" y1="680" x2="390" y2="680" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<text x="520" y="675" font-family="Arial" font-size="10">Structured transaction data</text>
+<text x="520" y="690" font-family="Arial" font-size="9">{amount, date, merchant, type}</text>
+
+<!-- Conditional Transaction Saving -->
+<rect x="320" y="710" width="280" height="80" fill="#e3f2fd" stroke="#1976d2" stroke-width="1" rx="5"/>
+<text x="460" y="730" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold">Transaction found</text>
+<text x="330" y="750" font-family="Arial" font-size="10">Check for duplicate (date, amount, description)</text>
+<text x="330" y="765" font-family="Arial" font-size="10">INSERT INTO all_transactions</text>
+<text x="330" y="780" font-family="Arial" font-size="10">{source: 'gmail', gmail_message_id, email_id, user_id, ...}</text>
+
+<rect x="620" y="710" width="280" height="80" fill="#ffebee" stroke="#f44336" stroke-width="1" rx="5"/>
+<text x="760" y="730" text-anchor="middle" font-family="Arial" font-size="11" font-weight="bold">No transaction</text>
+<text x="630" y="750" font-family="Arial" font-size="10">Skip email</text>
+
+<!-- Final Response -->
+<line x1="390" y1="850" x2="250" y2="850" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<text x="270" y="845" font-family="Arial" font-size="10">Sync complete {emailsProcessed, transactionsFound}</text>
+
+<line x1="250" y1="870" x2="120" y2="870" stroke="#333" stroke-width="2" stroke-dasharray="3,3" marker-end="url(#arrowhead)"/>
+<text x="140" y="865" font-family="Arial" font-size="10">Show sync results - New transactions added</text>
+
+<!-- Configuration Box -->
+<rect x="900" y="330" width="430" height="300" fill="#f1f8e9" stroke="#689f38" stroke-width="2" rx="8"/>
+<text x="1115" y="355" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Gmail Configuration</text>
+<line x1="900" y1="365" x2="1330" y2="365" stroke="#689f38" stroke-width="1"/>
+
+<text x="920" y="390" font-family="Arial" font-size="12" font-weight="bold">🔧 OAuth Setup Required:</text>
+<text x="920" y="410" font-family="Arial" font-size="11">• Google Cloud Console project</text>
+<text x="920" y="425" font-family="Arial" font-size="11">• Gmail API enabled</text>
+<text x="920" y="440" font-family="Arial" font-size="11">• OAuth consent screen configured</text>
+<text x="920" y="455" font-family="Arial" font-size="11">• Client ID & Secret</text>
+
+<text x="920" y="480" font-family="Arial" font-size="12" font-weight="bold">📧 Email Search Criteria:</text>
+<text x="920" y="500" font-family="Arial" font-size="11">• From: bank email addresses</text>
+<text x="920" y="515" font-family="Arial" font-size="11">• Subject: transaction keywords</text>
+<text x="920" y="530" font-family="Arial" font-size="11">• Date: last 10 days</text>
+<text x="920" y="545" font-family="Arial" font-size="11">• Filter: relevant emails only</text>
+
+<text x="920" y="570" font-family="Arial" font-size="12" font-weight="bold">🔒 Privacy & Security:</text>
+<text x="920" y="590" font-family="Arial" font-size="11">• Read-only access to Gmail</text>
+<text x="920" y="605" font-family="Arial" font-size="11">• Local processing only</text>
+<text x="920" y="620" font-family="Arial" font-size="11">• No email content stored</text>
+
+<text x="50" y="970" font-family="Arial" font-size="12" fill="#666">
+OAuth 2.0 Flow • AI-Powered Email Processing • Bank Email Recognition • Duplicate Prevention
+</text>
+</svg> 

@@ -1,7 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { processFinancialStatement } from '@/lib/file-processor';
 import crypto from 'crypto';
+
+// Create server client to get user session
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+}
 
 // Function to generate file hash
 async function generateFileHash(file: File): Promise<string> {
@@ -13,6 +32,23 @@ async function generateFileHash(file: File): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if admin client is available
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // Get user session to filter data by user
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('User not authenticated:', userError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    console.log('🔑 Process Statement API: Processing for user:', user.id);
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -41,22 +77,24 @@ export async function POST(request: NextRequest) {
     // Generate file hash for content-based deduplication
     const fileHash = await generateFileHash(file);
     
-    // Check for duplicate files by name and size
-    const { data: existingStatement, error: findError } = await supabase
+    // Check for duplicate files by name and size for this user
+    const { data: existingStatement, error: findError } = await supabaseAdmin
       .from('statements')
       .select('*')
       .eq('file_name', file.name)
       .eq('file_size', file.size)
       .eq('processed', true)
+      .eq('user_id', user.id)
       .single();
 
     if (!findError && existingStatement) {
       // Get transactions for this statement
-      const { data: statementTransactions } = await supabase
+      const { data: statementTransactions } = await supabaseAdmin
         .from('all_transactions')
         .select('*')
         .eq('statement_id', existingStatement.id)
-        .eq('source', 'statement');
+        .eq('source', 'statement')
+        .eq('user_id', user.id);
       
       // Include metadata for duplicate files too so they can show updated titles
       const metadata = statementTransactions && statementTransactions.length > 0 ? {
@@ -84,7 +122,7 @@ export async function POST(request: NextRequest) {
     // Upload file to Supabase Storage
     const fileName = `${Date.now()}-${file.name}`;
     console.log('🎯 STEP 1: Attempting file upload to storage...');
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await supabaseAdmin!.storage
       .from('statements')
       .upload(fileName, file, {
         cacheControl: '3600',
@@ -102,14 +140,14 @@ export async function POST(request: NextRequest) {
     console.log('✅ STEP 1 SUCCESS - File uploaded to storage');
 
     // Get public URL for the uploaded file
-    const { data: { publicUrl } } = supabase.storage
+    const { data: { publicUrl } } = supabaseAdmin!.storage
       .from('statements')
       .getPublicUrl(fileName);
 
     // Create statement record using admin client to bypass RLS
-    const client = supabaseAdmin || supabase;
+    const client = supabaseAdmin!;
     console.log('🎯 STEP 2: Attempting database insert...');
-    console.log('Using client:', supabaseAdmin ? 'ADMIN (service role)' : 'ANON (regular)');
+    console.log('Using client: ADMIN (service role)');
     
     const statementData = {
       file_name: file.name,
@@ -118,6 +156,7 @@ export async function POST(request: NextRequest) {
       file_hash: fileHash,
       file_url: publicUrl,
       processed: false,
+      user_id: user.id,
     };
     console.log('Statement data to insert:', statementData);
     
@@ -146,7 +185,7 @@ export async function POST(request: NextRequest) {
       
       for (const transaction of processedData.transactions) {
         // Step 1: Check for same-source duplicates (a statement processed twice)
-        const { data: sameSourceDuplicate } = await supabase
+        const { data: sameSourceDuplicate } = await supabaseAdmin
           .from('all_transactions')
           .select('id')
           .eq('source', 'statement')
@@ -155,6 +194,7 @@ export async function POST(request: NextRequest) {
           .eq('amount', transaction.amount)
           .eq('type', transaction.type)
           .eq('bank_name', transaction.bankName)
+          .eq('user_id', user.id)
           .single();
 
         if (sameSourceDuplicate) {
@@ -166,13 +206,14 @@ export async function POST(request: NextRequest) {
         const startDate = new Date(transactionDate.setHours(0, 0, 0, 0));
         const endDate = new Date(transactionDate.setHours(23, 59, 59, 999));
 
-        const { data: crossSourceDuplicate } = await supabase
+        const { data: crossSourceDuplicate } = await supabaseAdmin
           .from('all_transactions')
           .select('id')
           .eq('source', 'email')
           .eq('description', transaction.description)
           .eq('amount', transaction.amount)
           .eq('bank_name', transaction.bankName)
+          .eq('user_id', user.id)
           .gte('date', startDate.toISOString())
           .lte('date', endDate.toISOString())
           .single();
@@ -194,6 +235,7 @@ export async function POST(request: NextRequest) {
         account_type: transaction.accountType,
         bank_name: transaction.bankName,
         statement_id: statement.id,
+        user_id: user.id,
         // No more fields for these as they've been moved to the balances table
         // We'll need to add balances table entry separately if needed
       }));

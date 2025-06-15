@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 interface MonthData {
   month: string;
@@ -43,14 +46,15 @@ function parseStatementMonth(statementMonth: string | null): MonthData | null {
 }
 
 // Get expenses since a specific transaction ID
-async function getExpensesSinceTransactionId(lastTransactionId: string | null, cardName: string): Promise<number> {
-  if (!lastTransactionId) return 0;
+async function getExpensesSinceTransactionId(lastTransactionId: string | null, cardName: string, userId: string): Promise<number> {
+  if (!lastTransactionId || !supabaseAdmin) return 0;
   
   // First, get the date of the last transaction
-  const { data: lastTransaction, error: lastTransactionError } = await supabase
+  const { data: lastTransaction, error: lastTransactionError } = await supabaseAdmin
     .from('all_transactions')
     .select('date')
     .eq('id', lastTransactionId)
+    .eq('user_id', userId)
     .single();
   
   if (lastTransactionError || !lastTransaction) {
@@ -59,11 +63,12 @@ async function getExpensesSinceTransactionId(lastTransactionId: string | null, c
   }
   
   // Then, get all expenses since that date for the specific credit card
-  let query = supabase
+  let query = supabaseAdmin
     .from('all_transactions')
     .select('amount')
     .eq('account_type', 'Credit Card')
     .eq('type', 'expense')
+    .eq('user_id', userId)
     .gt('date', lastTransaction.date);
   
   // Filter by card name if not 'Total'
@@ -82,16 +87,51 @@ async function getExpensesSinceTransactionId(lastTransactionId: string | null, c
   return expenses?.reduce((sum, transaction) => sum + Number(transaction.amount), 0) || 0;
 }
 
+// Create server client to get user session
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+}
+
 export async function GET(request: NextRequest) {
   try {
+    // Check if admin client is available
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // Get user session to filter data by user
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('User not authenticated:', userError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    console.log('🔑 Credit Card Summary API: Fetching data for user:', user.id);
+
     const { searchParams } = new URL(request.url);
     const selectedCard = searchParams.get('card') || 'Total';
     
-    // Fetch all credit card balances
-    let query = supabase
+    // Fetch all credit card balances for this user
+    let query = supabaseAdmin
       .from('balances')
       .select('*')
       .eq('account_type', 'Credit Card')
+      .eq('user_id', user.id)
       .order('statement_month', { ascending: false });
     
     // If specific card is selected, filter for just that card
@@ -168,7 +208,7 @@ export async function GET(request: NextRequest) {
       
       // Calculate recent expenses for each credit card
       const expensesPromises = Object.entries(mostRecentData.cardBalances).map(async ([cardName, cardData]) => {
-        const expenses = await getExpensesSinceTransactionId(cardData.lastTransactionId, cardName);
+        const expenses = await getExpensesSinceTransactionId(cardData.lastTransactionId, cardName, user.id);
         return { cardName, expenses };
       });
       

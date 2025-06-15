@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000">
+<!-- Complete Feature Map Overview -->
+<text x="10" y="30" font-family="Arial" font-size="16" font-weight="bold">Argus Finance - Complete Feature Map & Architecture Overview</text>
+
+<!-- Central Core -->
+<circle cx="700" cy="200" r="80" fill="#1976d2" stroke="#0d47a1" stroke-width="3"/>
+<text x="700" y="195" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold" fill="white">Argus Finance</text>
+<text x="700" y="210" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="white">Personal Finance</text>
+<text x="700" y="225" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="white">Management</text>
+
+<!-- Authentication Branch -->
+<rect x="100" y="50" width="180" height="120" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="10"/>
+<text x="190" y="75" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Authentication</text>
+<text x="110" y="95" font-family="Arial" font-size="11">• Supabase Auth</text>
+<text x="110" y="110" font-family="Arial" font-size="11">• JWT Tokens</text>
+<text x="110" y="125" font-family="Arial" font-size="11">• Row Level Security</text>
+<text x="110" y="140" font-family="Arial" font-size="11">• User Profiles</text>
+<text x="110" y="155" font-family="Arial" font-size="11">• Session Management</text>
+
+<!-- File Processing Branch -->
+<rect x="50" y="300" width="200" height="150" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="10"/>
+<text x="150" y="325" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">File Processing</text>
+<text x="60" y="345" font-family="Arial" font-size="11">• CSV Upload</text>
+<text x="60" y="360" font-family="Arial" font-size="11">• PDF Processing</text>
+<text x="60" y="375" font-family="Arial" font-size="11">• Excel Support</text>
+<text x="60" y="390" font-family="Arial" font-size="11">• AI Extraction</text>
+<text x="60" y="405" font-family="Arial" font-size="11">• Duplicate Prevention</text>
+<text x="60" y="420" font-family="Arial" font-size="11">• Multi-format Support</text>
+<text x="60" y="435" font-family="Arial" font-size="11">• Bulk Processing</text>
+
+<!-- Gmail Integration Branch -->
+<rect x="50" y="480" width="200" height="150" fill="#fff3e0" stroke="#ef6c00" stroke-width="2" rx="10"/>
+<text x="150" y="505" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Gmail Integration</text>
+<text x="60" y="525" font-family="Arial" font-size="11">• OAuth Setup</text>
+<text x="60" y="540" font-family="Arial" font-size="11">• Email Scanning</text>
+<text x="60" y="555" font-family="Arial" font-size="11">• Transaction Extraction</text>
+<text x="60" y="570" font-family="Arial" font-size="11">• Bank Email Recognition</text>
+<text x="60" y="585" font-family="Arial" font-size="11">• Automatic Sync</text>
+<text x="60" y="600" font-family="Arial" font-size="11">• Privacy Protection</text>
+<text x="60" y="615" font-family="Arial" font-size="11">• Real-time Processing</text>
+
+<!-- Dashboard Analytics Branch -->
+<rect x="900" y="50" width="220" height="200" fill="#e8f5e8" stroke="#2e7d32" stroke-width="2" rx="10"/>
+<text x="1010" y="75" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Dashboard Analytics</text>
+
+<text x="910" y="100" font-family="Arial" font-size="12" font-weight="bold">Key Metrics:</text>
+<text x="920" y="115" font-family="Arial" font-size="11">• Bank Balance</text>
+<text x="920" y="130" font-family="Arial" font-size="11">• Credit Card Outstanding</text>
+<text x="920" y="145" font-family="Arial" font-size="11">• Monthly Spending</text>
+<text x="920" y="160" font-family="Arial" font-size="11">• Transaction Count</text>
+
+<text x="910" y="180" font-family="Arial" font-size="12" font-weight="bold">Visualizations:</text>
+<text x="920" y="195" font-family="Arial" font-size="11">• Balance Progression Charts</text>
+<text x="920" y="210" font-family="Arial" font-size="11">• Monthly Summaries</text>
+<text x="920" y="225" font-family="Arial" font-size="11">• Credit Card Trends</text>
+<text x="920" y="240" font-family="Arial" font-size="11">• Category Breakdowns</text>
+
+<!-- Transaction Management Branch -->
+<rect x="900" y="280" width="220" height="150" fill="#fce4ec" stroke="#c2185b" stroke-width="2" rx="10"/>
+<text x="1010" y="305" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Transaction Management</text>
+<text x="910" y="325" font-family="Arial" font-size="11">• Manual Entry</text>
+<text x="910" y="340" font-family="Arial" font-size="11">• Bulk Processing</text>
+<text x="910" y="355" font-family="Arial" font-size="11">• Categorization</text>
+<text x="910" y="370" font-family="Arial" font-size="11">• Duplicate Detection</text>
+<text x="910" y="385" font-family="Arial" font-size="11">• Search & Filter</text>
+<text x="910" y="400" font-family="Arial" font-size="11">• Export Capabilities</text>
+<text x="910" y="415" font-family="Arial" font-size="11">• Real-time Updates</text>
+
+<!-- Multi-Bank Support Branch -->
+<rect x="900" y="460" width="220" height="150" fill="#f1f8e9" stroke="#689f38" stroke-width="2" rx="10"/>
+<text x="1010" y="485" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Multi-Bank Support</text>
+<text x="910" y="505" font-family="Arial" font-size="11">• HDFC Bank Accounts</text>
+<text x="910" y="520" font-family="Arial" font-size="11">• Axis Bank Accounts</text>
+<text x="910" y="535" font-family="Arial" font-size="11">• HDFC Credit Cards</text>
+<text x="910" y="550" font-family="Arial" font-size="11">• Axis Credit Cards</text>
+<text x="910" y="565" font-family="Arial" font-size="11">• Auto Bank Detection</text>
+<text x="910" y="580" font-family="Arial" font-size="11">• Multi-Account View</text>
+<text x="910" y="595" font-family="Arial" font-size="11">• Unified Analytics</text>
+
+<!-- Data Management & Security Branch -->
+<rect x="300" y="50" width="200" height="120" fill="#e0f2f1" stroke="#00695c" stroke-width="2" rx="10"/>
+<text x="400" y="75" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Data Management</text>
+<text x="310" y="95" font-family="Arial" font-size="11">• PostgreSQL Database</text>
+<text x="310" y="110" font-family="Arial" font-size="11">• Row Level Security</text>
+<text x="310" y="125" font-family="Arial" font-size="11">• Data Encryption</text>
+<text x="310" y="140" font-family="Arial" font-size="11">• Backup & Recovery</text>
+<text x="310" y="155" font-family="Arial" font-size="11">• Privacy Controls</text>
+
+<!-- AI & Processing Branch -->
+<rect x="550" y="50" width="200" height="120" fill="#ffebee" stroke="#f44336" stroke-width="2" rx="10"/>
+<text x="650" y="75" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">AI & Processing</text>
+<text x="560" y="95" font-family="Arial" font-size="11">• OpenAI GPT-4</text>
+<text x="560" y="110" font-family="Arial" font-size="11">• Smart Categorization</text>
+<text x="560" y="125" font-family="Arial" font-size="11">• Merchant Recognition</text>
+<text x="560" y="140" font-family="Arial" font-size="11">• Data Cleaning</text>
+<text x="560" y="155" font-family="Arial" font-size="11">• Pattern Detection</text>
+
+<!-- User Experience Branch -->
+<rect x="300" y="300" width="200" height="150" fill="#e8eaf6" stroke="#3f51b5" stroke-width="2" rx="10"/>
+<text x="400" y="325" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">User Experience</text>
+<text x="310" y="345" font-family="Arial" font-size="11">• Privacy Mode Toggle</text>
+<text x="310" y="360" font-family="Arial" font-size="11">• Responsive Design</text>
+<text x="310" y="375" font-family="Arial" font-size="11">• Dark/Light Themes</text>
+<text x="310" y="390" font-family="Arial" font-size="11">• Mobile Optimization</text>
+<text x="310" y="405" font-family="Arial" font-size="11">• Real-time Updates</text>
+<text x="310" y="420" font-family="Arial" font-size="11">• Interactive Charts</text>
+<text x="310" y="435" font-family="Arial" font-size="11">• User Preferences</text>
+
+<!-- Performance & Scalability Branch -->
+<rect x="550" y="300" width="200" height="150" fill="#fff8e1" stroke="#ff8f00" stroke-width="2" rx="10"/>
+<text x="650" y="325" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Performance & Scale</text>
+<text x="560" y="345" font-family="Arial" font-size="11">• Optimized Queries</text>
+<text x="560" y="360" font-family="Arial" font-size="11">• Connection Pooling</text>
+<text x="560" y="375" font-family="Arial" font-size="11">• Caching Strategies</text>
+<text x="560" y="390" font-family="Arial" font-size="11">• Lazy Loading</text>
+<text x="560" y="405" font-family="Arial" font-size="11">• Error Handling</text>
+<text x="560" y="420" font-family="Arial" font-size="11">• Monitoring</text>
+<text x="560" y="435" font-family="Arial" font-size="11">• Performance Tracking</text>
+
+<!-- Integration & APIs Branch -->
+<rect x="300" y="480" width="200" height="150" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="10"/>
+<text x="400" y="505" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Integration & APIs</text>
+<text x="310" y="525" font-family="Arial" font-size="11">• RESTful API Design</text>
+<text x="310" y="540" font-family="Arial" font-size="11">• Webhook Support</text>
+<text x="310" y="555" font-family="Arial" font-size="11">• Third-party APIs</text>
+<text x="310" y="570" font-family="Arial" font-size="11">• Data Export</text>
+<text x="310" y="585" font-family="Arial" font-size="11">• Real-time Sync</text>
+<text x="310" y="600" font-family="Arial" font-size="11">• External Services</text>
+<text x="310" y="615" font-family="Arial" font-size="11">• API Security</text>
+
+<!-- Future Features Branch -->
+<rect x="550" y="480" width="200" height="150" fill="#e0f7fa" stroke="#0097a7" stroke-width="2" rx="10"/>
+<text x="650" y="505" text-anchor="middle" font-family="Arial" font-size="13" font-weight="bold">Future Features</text>
+<text x="560" y="525" font-family="Arial" font-size="11">• Budget Planning</text>
+<text x="560" y="540" font-family="Arial" font-size="11">• Investment Tracking</text>
+<text x="560" y="555" font-family="Arial" font-size="11">• Goal Setting</text>
+<text x="560" y="570" font-family="Arial" font-size="11">• Expense Predictions</text>
+<text x="560" y="585" font-family="Arial" font-size="11">• Advanced Analytics</text>
+<text x="560" y="600" font-family="Arial" font-size="11">• Mobile App</text>
+<text x="560" y="615" font-family="Arial" font-size="11">• Team Collaboration</text>
+
+<!-- Connection Lines -->
+<defs>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" 
+            refX="8" refY="3" orient="auto">
+        <polygon points="0 0, 8 3, 0 6" fill="#666" />
+    </marker>
+</defs>
+
+<!-- Lines from center to each branch -->
+<line x1="620" y1="180" x2="280" y2="110" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="620" y1="200" x2="250" y2="375" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="620" y1="220" x2="250" y2="555" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="780" y1="180" x2="900" y2="150" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="780" y1="200" x2="900" y2="355" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="780" y1="220" x2="900" y2="535" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="700" y1="120" x2="400" y2="170" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="700" y1="120" x2="650" y2="170" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="650" y1="280" x2="400" y2="450" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="700" y1="280" x2="650" y2="450" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="650" y1="280" x2="400" y2="630" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+<line x1="700" y1="280" x2="650" y2="630" stroke="#666" stroke-width="2" stroke-dasharray="5,5"/>
+
+<!-- Tech Stack -->
+<rect x="50" y="700" width="1300" height="200" fill="#f5f5f5" stroke="#757575" stroke-width="2" rx="10"/>
+<text x="700" y="730" text-anchor="middle" font-family="Arial" font-size="14" font-weight="bold">Technology Stack & Architecture</text>
+
+<!-- Frontend -->
+<rect x="80" y="750" width="200" height="100" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" rx="5"/>
+<text x="180" y="775" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Frontend</text>
+<text x="90" y="795" font-family="Arial" font-size="11">• Next.js 15</text>
+<text x="90" y="810" font-family="Arial" font-size="11">• React 19</text>
+<text x="90" y="825" font-family="Arial" font-size="11">• TypeScript</text>
+<text x="90" y="840" font-family="Arial" font-size="11">• Tailwind CSS</text>
+
+<!-- Backend -->
+<rect x="300" y="750" width="200" height="100" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" rx="5"/>
+<text x="400" y="775" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Backend</text>
+<text x="310" y="795" font-family="Arial" font-size="11">• Next.js API Routes</text>
+<text x="310" y="810" font-family="Arial" font-size="11">• Node.js Runtime</text>
+<text x="310" y="825" font-family="Arial" font-size="11">• Zod Validation</text>
+<text x="310" y="840" font-family="Arial" font-size="11">• RESTful APIs</text>
+
+<!-- Database -->
+<rect x="520" y="750" width="200" height="100" fill="#e8f5e8" stroke="#2e7d32" stroke-width="2" rx="5"/>
+<text x="620" y="775" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">Database</text>
+<text x="530" y="795" font-family="Arial" font-size="11">• Supabase</text>
+<text x="530" y="810" font-family="Arial" font-size="11">• PostgreSQL</text>
+<text x="530" y="825" font-family="Arial" font-size="11">• Row Level Security</text>
+<text x="530" y="840" font-family="Arial" font-size="11">• Real-time</text>
+
+<!-- External -->
+<rect x="740" y="750" width="200" height="100" fill="#fff3e0" stroke="#ef6c00" stroke-width="2" rx="5"/>
+<text x="840" y="775" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">External Services</text>
+<text x="750" y="795" font-family="Arial" font-size="11">• OpenAI GPT-4</text>
+<text x="750" y="810" font-family="Arial" font-size="11">• Gmail API</text>
+<text x="750" y="825" font-family="Arial" font-size="11">• Supabase Storage</text>
+<text x="750" y="840" font-family="Arial" font-size="11">• Google OAuth</text>
+
+<!-- DevOps -->
+<rect x="960" y="750" width="200" height="100" fill="#fce4ec" stroke="#c2185b" stroke-width="2" rx="5"/>
+<text x="1060" y="775" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold">DevOps</text>
+<text x="970" y="795" font-family="Arial" font-size="11">• Vercel Deployment</text>
+<text x="970" y="810" font-family="Arial" font-size="11">• CI/CD Pipeline</text>
+<text x="970" y="825" font-family="Arial" font-size="11">• Environment Config</text>
+<text x="970" y="840" font-family="Arial" font-size="11">• Monitoring</text>
+
+<text x="50" y="950" font-family="Arial" font-size="12" fill="#666">
+Modern Full-Stack Architecture • AI-Powered Processing • Multi-Bank Support • Real-time Analytics • Secure & Scalable
+</text>
+</svg> 

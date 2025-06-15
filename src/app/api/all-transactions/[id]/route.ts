@@ -1,5 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+// Create server client to get user session
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+}
 
 // GET single transaction by ID
 export async function GET(
@@ -7,13 +26,30 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const client = supabaseAdmin || supabase;
+    // Check if admin client is available
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // Get user session to filter data by user
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('User not authenticated:', userError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    console.log('🔑 Fetching transaction for user:', user.id);
+
     const { id } = await context.params;
 
-    const { data: transaction, error } = await client
+    const { data: transaction, error } = await supabaseAdmin
       .from('all_transactions')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id) // Ensure user can only access their own transactions
       .single();
 
     if (error) {
@@ -40,7 +76,7 @@ export async function PUT(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const client = supabaseAdmin || supabase;
+    const client = supabaseAdmin!;
     const { id } = await context.params;
     const body = await request.json();
 
@@ -98,7 +134,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const client = supabaseAdmin || supabase;
+    const client = supabaseAdmin!;
     const { id } = await context.params;
 
     console.log('🗑️ Deleting transaction:', id);

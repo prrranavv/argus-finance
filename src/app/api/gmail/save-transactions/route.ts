@@ -1,8 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+// Create server client to get user session
+async function createServerSupabaseClient() {
+  const cookieStore = await cookies();
+  
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+      },
+    }
+  );
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if admin client is available
+    if (!supabaseAdmin) {
+      console.error('Supabase admin client not configured');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+
+    // Get user session to filter data by user
+    const supabase = await createServerSupabaseClient();
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      console.error('User not authenticated:', userError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    console.log('🔑 Gmail Save Transactions API: Processing for user:', user.id);
+
     const { transactions } = await request.json();
 
     if (!transactions || !Array.isArray(transactions)) {
@@ -12,8 +48,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = supabaseAdmin || supabase;
-    console.log(`💰 Saving ${transactions.length} transactions to database...`);
+    const client = supabaseAdmin;
+    console.log(`💰 Saving ${transactions.length} transactions to database for user ${user.id}...`);
 
     let savedTransactions = 0;
     let updatedTransactions = 0;
@@ -23,11 +59,12 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`💰 Processing transaction from email ${transaction.gmail_message_id}:`, transaction);
         
-        // Get email_id from database using gmail_message_id
+        // Get email_id from database using gmail_message_id for this user
         const { data: emailRecord } = await client
           .from('emails')
           .select('id')
           .eq('gmail_message_id', transaction.gmail_message_id)
+          .eq('user_id', user.id)
           .single();
         
         if (!emailRecord) {
@@ -59,15 +96,17 @@ export async function POST(request: NextRequest) {
           source: 'email',
           email_id: email_id,
           gmail_message_id: transaction.gmail_message_id,
-          reference_number: transaction.reference_number || null
+          reference_number: transaction.reference_number || null,
+          user_id: user.id
         };
 
-        // Check if transaction already exists in all_transactions
+        // Check if transaction already exists in all_transactions for this user
         const { data: existingTransaction } = await client
           .from('all_transactions')
           .select('id')
           .eq('gmail_message_id', transaction.gmail_message_id)
           .eq('source', 'email')
+          .eq('user_id', user.id)
           .single();
 
         if (existingTransaction) {
