@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
+import { useOnboarding } from '@/hooks/use-onboarding';
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { SignUpForm } from '@/components/auth/sign-up-form';
+import { OnboardingModal } from '@/components/onboarding-modal';
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -26,47 +28,48 @@ const clearAuthState = () => {
       }
     });
     
-    // Clear cookies
-    document.cookie.split(";").forEach((c) => {
-      const eqPos = c.indexOf("=");
-      const name = eqPos > -1 ? c.substr(0, eqPos).trim() : c.trim();
-      if (name.includes('supabase') || name.includes('sb-')) {
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=" + window.location.hostname;
-      }
+    // Clear cookies by setting them to expire
+    document.cookie.split(";").forEach(function(c) { 
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
     });
-    
-    console.log('🔐 AuthWrapper: Cleared all auth state');
   }
 };
 
 export function AuthWrapper({ children }: AuthWrapperProps) {
-  const { user, loading } = useAuth();
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const { onboarding, loading: onboardingLoading } = useOnboarding();
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingSkipped, setOnboardingSkipped] = useState(false);
 
+  // Check if user needs onboarding
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (user && onboarding && !onboardingLoading) {
+      // Show onboarding if user hasn't completed it and hasn't skipped it
+      const needsOnboarding = !onboarding.is_completed && !onboardingSkipped;
+      setShowOnboarding(needsOnboarding);
+    }
+  }, [user, onboarding, onboardingLoading, onboardingSkipped]);
 
-  // Don't render anything until mounted to prevent hydration mismatch
-  if (!mounted) {
-    return null;
-  }
+  // Handle onboarding completion
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    setOnboardingSkipped(false); // Reset skip state since they completed it
+  };
 
-  // Show loading spinner while authentication is being determined
-  if (loading) {
+  // Handle onboarding skip
+  const handleOnboardingSkip = () => {
+    setShowOnboarding(false);
+    setOnboardingSkipped(true); // Remember that user skipped onboarding
+  };
+
+  // Show loading state
+  if (authLoading || (user && onboardingLoading)) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-sm text-muted-foreground">Loading...</p>
-          <button 
-            onClick={clearAuthState}
-            className="text-xs text-gray-500 hover:text-gray-700 underline"
-          >
-            Clear auth state if stuck
-          </button>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -74,27 +77,30 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
 
   // Show auth forms if not authenticated
   if (!user) {
-  return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="w-full max-w-md">
-          {isSignUp ? (
-            <SignUpForm onSwitchToSignIn={() => setIsSignUp(false)} />
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="w-full max-w-md p-6">
+          {authMode === 'signin' ? (
+            <SignInForm onSwitchToSignUp={() => setAuthMode('signup')} />
           ) : (
-            <SignInForm onSwitchToSignUp={() => setIsSignUp(true)} />
+            <SignUpForm onSwitchToSignIn={() => setAuthMode('signin')} />
           )}
-          <div className="mt-4 text-center">
-            <button 
-              onClick={clearAuthState}
-              className="text-xs text-gray-500 hover:text-gray-700 underline"
-            >
-              Clear stored auth data
-            </button>
-          </div>
         </div>
-    </div>
-  );
+      </div>
+    );
   }
 
-  // User is authenticated, show the main app
-  return <>{children}</>;
+  // Show main app with optional onboarding modal
+  return (
+    <>
+      {children}
+      
+      {/* Onboarding Modal - Non-mandatory */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onComplete={handleOnboardingComplete}
+        onSkip={handleOnboardingSkip}
+      />
+    </>
+  );
 } 

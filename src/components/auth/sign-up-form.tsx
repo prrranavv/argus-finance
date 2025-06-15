@@ -14,7 +14,6 @@ interface SignUpFormProps {
 
 export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
   const { signUp } = useAuth()
-  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -43,7 +42,7 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
     }
 
     try {
-      await signUp(email, password, fullName)
+      await signUp(email, password)
       setSuccess(true)
     } catch (error: any) {
       setError(error.message || 'Failed to create account')
@@ -109,20 +108,6 @@ export function SignUpForm({ onSwitchToSignIn }: SignUpFormProps) {
       
       <CardContent className="px-6 pb-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Full Name Field */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-black">Full Name</label>
-            <Input
-              type="text"
-              placeholder="Enter your full name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="h-12 border-gray-300 text-gray-600 placeholder-gray-400"
-              required
-              disabled={loading}
-            />
-          </div>
-
           {/* Email Field */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-black">Email</label>

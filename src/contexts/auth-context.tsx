@@ -10,7 +10,7 @@ interface AuthContextType {
   profile: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
   signOut: () => Promise<void>;
 updateProfile: (updates: Partial<User>) => Promise<void>;
   inviteFriend: (email: string) => Promise<void>;
@@ -158,16 +158,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
-    const { error } = await supabase.auth.signUp({
+  const signUp = async (email: string, password: string, fullName?: string) => {
+    const signUpOptions: any = {
       email,
       password,
-      options: {
+    };
+
+    // Only add metadata if fullName is provided
+    if (fullName) {
+      signUpOptions.options = {
         data: {
           full_name: fullName,
         },
-      },
-    });
+      };
+    }
+
+    const { error } = await supabase.auth.signUp(signUpOptions);
 
     if (error) {
       throw error;
